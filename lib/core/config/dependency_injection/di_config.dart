@@ -70,6 +70,8 @@ import 'package:lekhan_ai/features/notifications/presentation/bloc/notification_
 
 
 
+import 'package:lekhan_ai/core/config/dependency_injection/offline_di.dart';
+
 final GetIt sl = GetIt.instance;
 
 Future<void> setUpServiceLocator() async {
@@ -328,4 +330,12 @@ Future<void> setUpServiceLocator() async {
       markAsReadUsecase: sl<MarkAsReadUsecase>(),
     ),
   );
+
+  //-------------------------------------------------------------------------------
+  // STEP 16: Offline-first layer (database, file store, sync engine, and the
+  // project/book/chapter/source features). Registered last because it depends on
+  // UserRepository, StorageService and the jwt NetworkService above. Nothing in
+  // this file was modified to make room for it.
+  //-------------------------------------------------------------------------------
+  await registerOfflineFirstDependencies();
 }
