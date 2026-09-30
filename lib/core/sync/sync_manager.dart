@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:lekhan_ai/core/enums/sync_operation.dart';
 import 'package:lekhan_ai/core/enums/sync_status.dart';
 import 'package:lekhan_ai/core/network/network_info.dart';
 import 'package:lekhan_ai/core/sync/sync_queue.dart';

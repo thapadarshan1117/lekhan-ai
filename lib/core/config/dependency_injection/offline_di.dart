@@ -27,6 +27,7 @@ import 'package:lekhan_ai/features/chapters/domain/repositories/chapter_reposito
 import 'package:lekhan_ai/features/chapters/domain/usecases/get_chapter_detail_usecase.dart';
 import 'package:lekhan_ai/features/chapters/domain/usecases/get_chapters_usecase.dart';
 import 'package:lekhan_ai/features/chapters/domain/usecases/save_chapter_usecase.dart';
+import 'package:lekhan_ai/features/chapters/domain/usecases/update_chapter_progress_usecase.dart';
 import 'package:lekhan_ai/features/projects/data/datasources/local/project_local_datasource.dart';
 import 'package:lekhan_ai/features/projects/data/datasources/remote/project_remote_datasource.dart';
 import 'package:lekhan_ai/features/projects/data/repositories/project_repository_impl.dart';
@@ -34,10 +35,13 @@ import 'package:lekhan_ai/features/projects/domain/repositories/project_reposito
 import 'package:lekhan_ai/features/projects/domain/usecases/get_project_detail_usecase.dart';
 import 'package:lekhan_ai/features/projects/domain/usecases/get_projects_usecase.dart';
 import 'package:lekhan_ai/features/projects/domain/usecases/save_project_usecase.dart';
+import 'package:lekhan_ai/features/projects/presentation/bloc/projects_bloc/projects_bloc.dart';
 import 'package:lekhan_ai/features/source_content/data/datasources/local/chapter_source_local_datasource.dart';
 import 'package:lekhan_ai/features/source_content/data/datasources/remote/chapter_source_remote_datasource.dart';
 import 'package:lekhan_ai/features/source_content/data/repositories/chapter_source_repository_impl.dart';
 import 'package:lekhan_ai/features/source_content/domain/repositories/chapter_source_repository.dart';
+import 'package:lekhan_ai/features/source_content/data/services/recording_service.dart';
+import 'package:lekhan_ai/features/source_content/domain/usecases/add_existing_file_usecase.dart';
 import 'package:lekhan_ai/features/source_content/domain/usecases/add_source_usecase.dart';
 import 'package:lekhan_ai/features/source_content/domain/usecases/delete_source_usecase.dart';
 import 'package:lekhan_ai/features/source_content/domain/usecases/get_chapter_sources_usecase.dart';
@@ -51,6 +55,7 @@ import 'package:lekhan_ai/features/sync/domain/repositories/sync_repository.dart
 import 'package:lekhan_ai/features/sync/domain/usecases/get_sync_status_usecase.dart';
 import 'package:lekhan_ai/features/sync/domain/usecases/retry_sync_usecase.dart';
 import 'package:lekhan_ai/features/sync/domain/usecases/sync_now_usecase.dart';
+import 'package:lekhan_ai/features/sync/presentation/bloc/sync_status_cubit.dart';
 import 'package:lekhan_ai/features/upload/data/datasources/local/upload_session_local_datasource.dart';
 import 'package:lekhan_ai/features/upload/data/datasources/remote/upload_remote_datasource.dart';
 import 'package:lekhan_ai/features/upload/data/repositories/upload_repository_impl.dart';
@@ -196,6 +201,10 @@ Future<void> registerOfflineFirstDependencies() async {
       remote: sl<UploadRemoteDataSource>(),
       sessions: sl<UploadSessionLocalDataSource>(),
     ),
+  );
+
+  sl.registerLazySingleton<RecordingService>(
+    () => RecordingService(permissionService: sl<PermissionService>()),
   );
 
   sl.registerLazySingleton<UploadRepository>(
@@ -352,6 +361,9 @@ Future<void> registerOfflineFirstDependencies() async {
   sl.registerLazySingleton(
     () => SaveChapterUsecase(repository: sl<ChapterRepository>()),
   );
+  sl.registerLazySingleton(
+    () => UpdateChapterProgressUsecase(repository: sl<ChapterRepository>()),
+  );
 
   sl.registerLazySingleton(
     () => GetChapterSourcesUsecase(repository: sl<ChapterSourceRepository>()),
@@ -364,6 +376,9 @@ Future<void> registerOfflineFirstDependencies() async {
   );
   sl.registerLazySingleton(
     () => RetryUploadUsecase(repository: sl<ChapterSourceRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => AddExistingFileUsecase(repository: sl<ChapterSourceRepository>()),
   );
   sl.registerLazySingleton(
     () => AddSourceUsecase(
@@ -405,6 +420,24 @@ Future<void> registerOfflineFirstDependencies() async {
   );
   sl.registerLazySingleton(
     () => CancelSyncTaskUsecase(repository: sl<SyncRepository>()),
+  );
+
+  // ---------------------------------------------------------------------------
+  // Step 9 - presentation (factories: a screen gets its own instance)
+  // ---------------------------------------------------------------------------
+  sl.registerFactory(
+    () => ProjectsBloc(
+      getProjects: sl<GetProjectsUsecase>(),
+      saveProject: sl<SaveProjectUsecase>(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => SyncStatusCubit(
+      getStatus: sl<GetSyncStatusUsecase>(),
+      syncNowUsecase: sl<SyncNowUsecase>(),
+      retryUsecase: sl<RetrySyncUsecase>(),
+    ),
   );
 }
 

@@ -2,6 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Recording source material in the app. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Lekhan AI records interviews and notes as source material for your chapters.</string>
+	<!-- Background sync: the OS decides when, so the app never promises a
+	     fixed interval. The identifiers must match the unique names registered
+	     in BackgroundSyncScheduler. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>lekhan.sync.periodic</string>
+		<string>lekhan.sync.oneOff</string>
+	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

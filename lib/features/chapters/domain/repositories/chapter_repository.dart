@@ -1,3 +1,4 @@
+import 'package:lekhan_ai/core/enums/entity_status.dart';
 import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';

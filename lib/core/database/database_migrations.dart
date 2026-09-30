@@ -20,7 +20,7 @@ class DatabaseMigrations {
   Future<void> run() async {
     final int stored = JsonUtils.asInt(
       metaBox.get(StorageConstants.schemaVersionKey),
-      0,
+      
     );
 
     if (stored >= currentVersion) return;

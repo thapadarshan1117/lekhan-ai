@@ -54,6 +54,13 @@ class ChapterSource extends Equatable {
   /// Absolute path inside the app's documents directory.
   final String localPath;
 
+  /// When the record was created on this device. Never overwritten by the
+  /// server, so it doubles as a stable local ordering key.
+  final DateTime createdAt;
+
+  /// Last local modification.
+  final DateTime updatedAt;
+
   final SourceType sourceType;
   final String mimeType;
   final String extension;

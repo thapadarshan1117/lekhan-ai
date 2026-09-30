@@ -1,10 +1,10 @@
+import 'package:lekhan_ai/core/enums/entity_status.dart';
 import 'package:lekhan_ai/core/enums/sync_operation.dart';
 import 'package:lekhan_ai/core/error/exception_types.dart';
 import 'package:lekhan_ai/core/error/failure_mapper.dart';
 import 'package:lekhan_ai/core/sync/conflict_resolver.dart';
 import 'package:lekhan_ai/core/sync/sync_queue.dart';
 import 'package:lekhan_ai/core/sync/sync_request_bus.dart';
-import 'package:lekhan_ai/core/sync/sync_task.dart';
 import 'package:lekhan_ai/core/sync/sync_task_builder.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
 import 'package:lekhan_ai/features/chapters/data/datasources/local/chapter_local_datasource.dart';
@@ -53,12 +53,14 @@ class ChapterRepositoryImpl implements ChapterRepository {
       return Right<AppException, List<Chapter>>(_asEntities(cachedItems));
     }
 
-    final Either<AppException, List<ChapterModel>> fetched =
-        await _fetchRemote(bookId);
+    final Either<AppException, List<ChapterModel>> fetched = await _fetchRemote(
+      bookId,
+    );
     final List<ChapterModel>? remoteItems = fetched.valueOrNull;
 
     if (remoteItems == null) {
-      if (cachedItems.isNotEmpty) return Right<AppException, List<Chapter>>(_asEntities(cachedItems));
+      if (cachedItems.isNotEmpty)
+        return Right<AppException, List<Chapter>>(_asEntities(cachedItems));
       return Left<AppException, List<Chapter>>(
         fetched.errorOrNull ??
             FailureMapper.local(
@@ -74,15 +76,17 @@ class ChapterRepositoryImpl implements ChapterRepository {
 
   @override
   Future<Either<AppException, Chapter>> getChapter(String id) async {
-    final Either<AppException, ChapterModel?> cached = await local.getChapter(id);
+    final Either<AppException, ChapterModel?> cached = await local.getChapter(
+      id,
+    );
     final ChapterModel? item = cached.valueOrNull;
 
     if (item != null && (!item.isDirty || item.remoteId == null)) {
       return Right<AppException, Chapter>(item);
     }
 
-    final Either<AppException, ChapterModel> fetched =
-        await remote.fetchChapter(item?.remoteId ?? id);
+    final Either<AppException, ChapterModel> fetched = await remote
+        .fetchChapter(item?.remoteId ?? id);
     final ChapterModel? remoteItem = fetched.valueOrNull;
 
     if (remoteItem == null) {
@@ -129,11 +133,13 @@ class ChapterRepositoryImpl implements ChapterRepository {
 
   @override
   Future<Either<AppException, Chapter>> refreshChapter(String id) async {
-    final Either<AppException, ChapterModel?> cached = await local.getChapter(id);
+    final Either<AppException, ChapterModel?> cached = await local.getChapter(
+      id,
+    );
     final ChapterModel? item = cached.valueOrNull;
 
-    final Either<AppException, ChapterModel> fetched =
-        await remote.fetchChapter(item?.remoteId ?? id);
+    final Either<AppException, ChapterModel> fetched = await remote
+        .fetchChapter(item?.remoteId ?? id);
     final ChapterModel? remoteItem = fetched.valueOrNull;
 
     if (remoteItem == null) {
@@ -189,8 +195,9 @@ class ChapterRepositoryImpl implements ChapterRepository {
       SyncTaskBuilder.metadata(
         entityType: SyncEntityType.chapter,
         entityId: stored.id,
-        operation:
-            stored.remoteId == null ? SyncOperation.create : SyncOperation.update,
+        operation: stored.remoteId == null
+            ? SyncOperation.create
+            : SyncOperation.update,
         remoteId: stored.remoteId,
         payload: <String, dynamic>{
           'entity': SyncEntityType.chapter.value,
@@ -208,7 +215,9 @@ class ChapterRepositoryImpl implements ChapterRepository {
     String id, {
     String? remoteId,
   }) async {
-    final Either<AppException, ChapterModel?> cached = await local.getChapter(id);
+    final Either<AppException, ChapterModel?> cached = await local.getChapter(
+      id,
+    );
     final ChapterModel? item = cached.valueOrNull;
 
     if (item == null) {
@@ -237,8 +246,9 @@ class ChapterRepositoryImpl implements ChapterRepository {
     required int currentWords,
     ChapterStatus? status,
   }) async {
-    final Either<AppException, ChapterModel?> cached =
-        await local.getChapter(chapterId);
+    final Either<AppException, ChapterModel?> cached = await local.getChapter(
+      chapterId,
+    );
     final ChapterModel? chapter = cached.valueOrNull;
 
     if (chapter == null) {
@@ -287,8 +297,9 @@ class ChapterRepositoryImpl implements ChapterRepository {
     required int sourceCount,
     required int pendingSourceCount,
   }) async {
-    final Either<AppException, ChapterModel?> cached =
-        await local.getChapter(chapterId);
+    final Either<AppException, ChapterModel?> cached = await local.getChapter(
+      chapterId,
+    );
     final ChapterModel? chapter = cached.valueOrNull;
 
     if (chapter == null) {
@@ -322,13 +333,29 @@ class ChapterRepositoryImpl implements ChapterRepository {
   List<Chapter> _asEntities(List<ChapterModel> items) =>
       items.map<Chapter>((ChapterModel item) => item).toList();
 
-  Future<Either<AppException, List<ChapterModel>>> _readCache(
-    String? bookId,
-  ) {
+  Future<Either<AppException, List<ChapterModel>>> _readCache(String? bookId) {
     if (bookId == null || bookId.isEmpty) {
       return local.getChapters();
     }
     return local.getChaptersByBook(bookId);
+  }
+
+  Future<String?> _remoteParentId(String localBookId) async {
+    final Either<AppException, BookModel?> result = await bookLocal.getBook(
+      localBookId,
+    );
+
+    final BookModel? book = result.valueOrNull;
+
+    if (book == null) return null;
+
+    final String? remoteId = book.remoteId;
+
+    if (remoteId == null || remoteId.isEmpty) {
+      return null;
+    }
+
+    return remoteId;
   }
 
   Future<Either<AppException, List<ChapterModel>>> _fetchRemote(
@@ -346,14 +373,17 @@ class ChapterRepositoryImpl implements ChapterRepository {
     return remote.fetchChapters(parentRemoteId: parentRemoteId);
   }
 
-  Future<List<ChapterModel>> _mergeIntoCache(List<ChapterModel> remoteItems) async {
-    final Either<AppException, List<ChapterModel>> cachedResult =
-        await local.getChapters();
+  Future<List<ChapterModel>> _mergeIntoCache(
+    List<ChapterModel> remoteItems,
+  ) async {
+    final Either<AppException, List<ChapterModel>> cachedResult = await local
+        .getChapters();
     final List<ChapterModel> cached = cachedResult.valuesOrEmpty;
 
     final Map<String, ChapterModel> byRemoteId = <String, ChapterModel>{
       for (final ChapterModel item in cached)
-        if (item.remoteId != null && item.remoteId!.isNotEmpty) item.remoteId!: item,
+        if (item.remoteId != null && item.remoteId!.isNotEmpty)
+          item.remoteId!: item,
     };
 
     final List<ChapterModel> toStore = <ChapterModel>[];
@@ -382,7 +412,8 @@ class ChapterRepositoryImpl implements ChapterRepository {
       await local.saveAll(toStore);
     }
 
-    final Either<AppException, List<ChapterModel>> refreshed = await local.getChapters();
+    final Either<AppException, List<ChapterModel>> refreshed = await local
+        .getChapters();
     return refreshed.valuesOrEmpty.isEmpty ? toStore : refreshed.valuesOrEmpty;
   }
 }

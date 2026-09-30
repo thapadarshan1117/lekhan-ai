@@ -139,7 +139,7 @@ class UploadSession extends Equatable {
     String? remoteFileId,
     String? driveFileId,
     String? errorMessage,
-    bool clearError,
+    bool clearError = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {

@@ -15,7 +15,18 @@ import 'package:lekhan_ai/features/auth/presentation/pages/otp_verification_page
 import 'package:lekhan_ai/features/auth/presentation/pages/signup_page.dart';
 import 'package:lekhan_ai/features/auth/presentation/pages/new_password.dart';
 import 'package:lekhan_ai/features/notifications/presentation/bloc/notification_bloc.dart';
+import 'package:lekhan_ai/features/books/domain/entities/book.dart';
+import 'package:lekhan_ai/features/books/presentation/pages/book_detail_page.dart';
+import 'package:lekhan_ai/features/books/presentation/pages/book_form_page.dart';
+import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
+import 'package:lekhan_ai/features/chapters/presentation/pages/chapter_detail_page.dart';
+import 'package:lekhan_ai/features/chapters/presentation/pages/chapter_form_page.dart';
 import 'package:lekhan_ai/features/notifications/presentation/pages/notification_screen.dart';
+import 'package:lekhan_ai/features/projects/domain/entities/project.dart';
+import 'package:lekhan_ai/features/projects/presentation/pages/project_detail_page.dart';
+import 'package:lekhan_ai/features/projects/presentation/pages/project_form_page.dart';
+import 'package:lekhan_ai/features/projects/presentation/pages/projects_page.dart';
+import 'package:lekhan_ai/features/sync/presentation/pages/sync_centre_page.dart';
 import 'package:lekhan_ai/features/profile/pages/profile_page.dart';
 import 'package:lekhan_ai/features/profile/pages/edit_profile_page.dart';
 import 'package:lekhan_ai/features/profile/pages/favorites_page.dart';
@@ -195,6 +206,103 @@ class RouterManager {
         );
       },
     ),
+
+    // ------------------------------------------------------------------
+    // WRITING STRUCTURE ROUTES (no bottom nav)
+    //
+    // Ordered so the literal segments win over `:id` - `/projects/new` must be
+    // declared before `/projects/:id`, otherwise "new" is read as an id.
+    // ------------------------------------------------------------------
+
+    // Create / edit a project
+    GoRoute(
+      path: '/projects/new',
+      name: 'projectForm',
+      builder: (context, state) {
+        final extras = state.extra;
+        return ProjectFormPage(
+          initial: extras is Map ? extras['project'] as Project? : null,
+        );
+      },
+    ),
+
+    // Edit an existing project
+    GoRoute(
+      path: '/projects/:id/edit',
+      name: 'projectEdit',
+      builder: (context, state) {
+        final extras = state.extra;
+        return ProjectFormPage(
+          initial: extras is Map ? extras['project'] as Project? : null,
+        );
+      },
+    ),
+
+    // One project (its books)
+    GoRoute(
+      path: '/projects/:id',
+      name: 'projectDetail',
+      builder: (context, state) {
+        final extras = state.extra;
+        return ProjectDetailPage(
+          projectId: state.pathParameters['id'] ?? '',
+          initial: extras is Map ? extras['project'] as Project? : null,
+        );
+      },
+    ),
+
+    // Create a book inside a project
+    GoRoute(
+      path: '/projects/:projectId/books/new',
+      name: 'bookForm',
+      builder: (context, state) => BookFormPage(
+        projectId: state.pathParameters['projectId'] ?? '',
+      ),
+    ),
+
+    // One book (its chapters)
+    GoRoute(
+      path: '/books/:id',
+      name: 'bookDetail',
+      builder: (context, state) {
+        final extras = state.extra;
+        return BookDetailPage(
+          bookId: state.pathParameters['id'] ?? '',
+          initial: extras is Map ? extras['book'] as Book? : null,
+        );
+      },
+    ),
+
+    // Create a chapter inside a book
+    GoRoute(
+      path: '/books/:bookId/chapters/new',
+      name: 'chapterForm',
+      builder: (context, state) => ChapterFormPage(
+        bookId: state.pathParameters['bookId'] ?? '',
+        suggestedNumber:
+            int.tryParse(state.uri.queryParameters['number'] ?? '') ?? 1,
+      ),
+    ),
+
+    // One chapter (its source material)
+    GoRoute(
+      path: '/chapters/:id',
+      name: 'chapterDetail',
+      builder: (context, state) {
+        final extras = state.extra;
+        return ChapterDetailPage(
+          chapterId: state.pathParameters['id'] ?? '',
+          initial: extras is Map ? extras['chapter'] as Chapter? : null,
+        );
+      },
+    ),
+
+    // Sync centre
+    GoRoute(
+      path: '/sync',
+      name: 'syncCentre',
+      builder: (context, state) => const SyncCentrePage(),
+    ),
   ];
 
 
@@ -214,12 +322,18 @@ class RouterManager {
             ],
           ),
 
-          // Search Tab
+          // Projects Tab
+          //
+          // This branch used to be an empty placeholder. The writing structure
+          // (project -> book -> chapter -> sources) lives here now; the other
+          // tabs are untouched, so the nav bar keeps its five items and the
+          // elevated centre button stays where it is.
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
-                path: '/search',
-                builder: (context, state) => Container(),
+                path: '/projects',
+                name: 'projects',
+                builder: (context, state) => const ProjectsPage(),
               ),
             ],
           ),

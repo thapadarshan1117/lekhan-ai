@@ -26,10 +26,7 @@ class FailureMapper {
       message: message ?? _cleanMessage(error) ?? 'Something went wrong',
       statusCode: statusCode,
       identifier: identifier,
-      data: <String, dynamic>{
-        'error': error.toString(),
-        'source': 'local',
-      },
+      data: <String, dynamic>{'error': error.toString(), 'source': 'local'},
     );
   }
 
@@ -61,7 +58,8 @@ class FailureMapper {
     final Response<dynamic>? response = error.response;
     final dynamic payload = response?.data;
 
-    String message = _messageFromPayload(payload) ??
+    String message =
+        _messageFromPayload(payload) ??
         _messageForType(error.type) ??
         error.message ??
         'Something went wrong';
@@ -97,13 +95,18 @@ class FailureMapper {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         return LocalErrorCodes.timeout;
+
       case DioExceptionType.connectionError:
         return LocalErrorCodes.noConnection;
+
       case DioExceptionType.cancel:
         return LocalErrorCodes.localFailure;
+
       case DioExceptionType.badCertificate:
         return LocalErrorCodes.noConnection;
+
       case DioExceptionType.badResponse:
       case DioExceptionType.unknown:
         return LocalErrorCodes.noConnection;
@@ -114,16 +117,25 @@ class FailureMapper {
     switch (type) {
       case DioExceptionType.connectionTimeout:
         return 'The connection timed out. Please try again.';
+
       case DioExceptionType.sendTimeout:
         return 'Upload timed out. It will resume where it stopped.';
+
       case DioExceptionType.receiveTimeout:
         return 'The server took too long to respond.';
+
+      case DioExceptionType.transformTimeout:
+        return 'Processing timed out. Please try again.';
+
       case DioExceptionType.connectionError:
         return 'You appear to be offline. Your work is stored safely on this device.';
+
       case DioExceptionType.badCertificate:
         return 'The server certificate could not be verified.';
+
       case DioExceptionType.cancel:
         return 'The request was cancelled.';
+
       case DioExceptionType.badResponse:
       case DioExceptionType.unknown:
         return null;
@@ -190,7 +202,9 @@ class FailureMapper {
     final Map<String, List<String>> errors = <String, List<String>>{};
     raw.forEach((String key, dynamic value) {
       if (value is List) {
-        errors[key] = value.map<String>((dynamic item) => item.toString()).toList();
+        errors[key] = value
+            .map<String>((dynamic item) => item.toString())
+            .toList();
       } else if (value is String) {
         errors[key] = <String>[value];
       }

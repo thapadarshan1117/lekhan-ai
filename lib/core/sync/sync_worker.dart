@@ -34,6 +34,10 @@ class SyncOutcome {
 /// Handlers are registered in DI, which is what keeps the sync engine free of
 /// any knowledge about chapters, Drive folders or upload sessions.
 abstract class SyncTaskHandler {
+  /// Const so the concrete handlers can be const too; without it the implicit
+  /// default constructor is non-const and every `const XHandler(...)` fails.
+  const SyncTaskHandler();
+
   SyncEntityType get entityType;
 
   Set<SyncOperation> get supportedOperations;

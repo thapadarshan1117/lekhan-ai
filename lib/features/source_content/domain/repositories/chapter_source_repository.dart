@@ -63,7 +63,7 @@ abstract class ChapterSourceRepository {
     UploadStatus? uploadStatus,
     double? uploadProgress,
     String? errorMessage,
-    bool clearError,
+    bool clearError = false,
     String? remoteId,
     String? remoteFileId,
     String? driveFileId,

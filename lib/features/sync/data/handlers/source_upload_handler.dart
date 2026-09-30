@@ -12,6 +12,7 @@ import 'package:lekhan_ai/features/chapters/data/models/chapter_model.dart';
 import 'package:lekhan_ai/features/source_content/domain/entities/chapter_source.dart';
 import 'package:lekhan_ai/features/source_content/domain/repositories/chapter_source_repository.dart';
 import 'package:lekhan_ai/features/upload/data/services/resumable_uploader.dart';
+import 'package:lekhan_ai/features/upload/domain/entities/upload_run_result.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
 

@@ -1,6 +1,8 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
+// `hide Response`: this file also uses the app's own Response model, and the
+// two names would otherwise collide (ambiguous_import).
+import 'package:dio/dio.dart' hide Response;
 import 'package:lekhan_ai/core/constants/api_constants.dart';
 import 'package:lekhan_ai/core/error/failure_mapper.dart';
 import 'package:lekhan_ai/core/utils/json_utils.dart';
@@ -202,7 +204,9 @@ class UploadRemoteDataSourceImpl implements UploadRemoteDataSource {
       final List<int> bytes = await reader.read(length);
       final int end = offset + bytes.length - 1;
 
-      final Response<dynamic> response = await dio.request<dynamic>(
+      // No explicit annotation: the type is dio's Response, which is hidden
+      // above to keep the app's Response unambiguous.
+      final response = await dio.request<dynamic>(
         uploadUrl,
         data: bytes,
         options: Options(

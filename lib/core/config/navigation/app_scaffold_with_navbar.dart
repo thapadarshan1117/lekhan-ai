@@ -22,7 +22,7 @@ const _inactive = Color(0xFF6B7280);
 // 5 branches: index 0..4. The center (index 2) is the elevated "lekhan_ai AI" button.
 const _tabs = [
   _TabMeta('Home', svgPath: 'assets/icons/home.svg'),
-  _TabMeta('Search', svgPath: 'assets/icons/search.svg'),
+  _TabMeta('Projects', icon: Icons.library_books_outlined),
   _TabMeta('lekhan_ai AI', icon: Icons.smart_toy, isAI: true),
   _TabMeta('Bookings', svgPath: 'assets/icons/calendar.svg'),
   _TabMeta('Profile', svgPath: 'assets/icons/user.svg'),
@@ -116,7 +116,9 @@ class _NavItem extends StatelessWidget {
                 width: 20,
                 height: 20,
                 colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-              ),
+              )
+            else if (tab.icon != null)
+              Icon(tab.icon, size: 20, color: color),
             const SizedBox(height: 2),
             Text(
               tab.label,
