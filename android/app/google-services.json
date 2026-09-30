@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "70246719949",
+    "project_id": "lekhan-ai-bc906",
+    "storage_bucket": "lekhan-ai-bc906.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:70246719949:android:b5bb8f7c5ef10fa170e484",
+        "android_client_info": {
+          "package_name": "com.example.lekkhan_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByS-RH997k_eI0E6I5S1k_p97c5Zhe-Tw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

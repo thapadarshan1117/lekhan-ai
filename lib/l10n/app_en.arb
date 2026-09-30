@@ -1,0 +1,197 @@
+{
+    "@@locale": "en",
+    "appTitle": "Sahara App",
+    "@appTitle": {
+        "description": "The title of the application"
+    },
+    "searchHint": "Search Patients, doctors",
+    "@searchHint": {
+        "description": "Hint text for search field"
+    },
+    "loginTitle": "Login",
+    "@loginTitle": {
+        "description": "Title for login page"
+    },
+    "welcomeMessage": "Welcome back",
+    "@welcomeMessage": {
+        "description": "Welcome message on login screen"
+    },
+    "createProfile": "Create Profile",
+    "@createProfile": {
+        "description": "Title for create profile page"
+    },
+    "fullName": "Full Name",
+    "@fullName": {
+        "description": "Label for full name field"
+    },
+    "fullNameHint": "Enter your full name",
+    "@fullNameHint": {
+        "description": "Hint text for full name field"
+    },
+    "specification": "Specification",
+    "@specification": {
+        "description": "Label for specification field"
+    },
+    "specificationHint": "Select your specification",
+    "@specificationHint": {
+        "description": "Hint text for specification field"
+    },
+    "dateOfBirth": "Date of Birth",
+    "@dateOfBirth": {
+        "description": "Label for date of birth field"
+    },
+    "dateOfBirthHint": "MM/DD/YYYY",
+    "@dateOfBirthHint": {
+        "description": "Hint text for date of birth field"
+    },
+    "licenceNumber": "Licence Number",
+    "@licenceNumber": {
+        "description": "Label for licence number field"
+    },
+    "licenceNumberHint": "Enter your licence number",
+    "@licenceNumberHint": {
+        "description": "Hint text for licence number field"
+    },
+    "next": "Next",
+    "@next": {
+        "description": "Text for next button"
+    },
+    "alreadyHaveAccount": "Already have an account? ",
+    "@alreadyHaveAccount": {
+        "description": "Text for login redirect prompt"
+    },
+    "login": "Login",
+    "@login": {
+        "description": "Text for login button"
+    },
+
+    "loginWithPassword":"Login With Password",
+    "loginWithOTP":"Login With OTP",
+    "letsGetStarted": "Let's Get Started",
+    "createProfileSubtitle": "Create your profile and start connecting with patients today",
+    "mobileNumber": "Mobile Number",
+    "mobileNumberHint": "Enter your mobile number",
+    "sendOtp": "Send OTP",
+    "or": "Or",
+    "dontHaveAccount": "Don't have an account? ",
+    "verifyCode": "Verify Code",
+    "verifyCodeMessage": "Enter the verification code sent to your registered mobile number or email address",
+    "didNotReceiveCode": "Did not receive the code?",
+    "resend": "Resend Code",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "signInWithGoogle": "Sign In with Google",
+    "signInWithApple": "Sign In with Apple",
+    "joinOurMedicalNetwork": "Join Our Medical Network",
+    "createProfileSubtitle": "Let’s Get You Started on Your Medical Mission",
+    "joinOurMedicalNetworkSubtitle": "Join Our Platform & Grow Your Medical Reach",
+    "onboardingTitle1": "Consult a Doctor Anytime, Anywhere",
+    "onboardingDescription1": "Get expert medical advice through video calls or online chat with certified doctors.",
+    "onboardingTitle2": "Nurse & Therapist at Your Doorstep",
+    "onboardingDescription2": "Look professional nurses and therapists for home visits, ensuring quality care at your convenience.",
+    "onboardingTitle3": "Track Your Health & Medications",
+    "onboardingDescription3": "Manage prescriptions, set medication reminders, and monitor your health metrics all in one secure place.",
+    "welcomeBack": "Welcome Back",
+    "welcomeMessagePatient":"Create your profile and start connecting with patients today",
+    "phoneNumber": "Phone Number",
+    "password": "Password",
+    "register": "Register",
+    "enterYourPhoneNumber": "Enter your phone number",
+    "enterYourPassword": "Enter your password",
+    "confirmation": "Confirmation",
+    "confirmationText": "Enter the verification code sent to your registered mobile number or email address",
+    "sendAgain": "Send Again",
+    "patientPersonalInfo": "Personal Information",
+    "patientPersonalInfoSubtitle": "Let’s Get You Started on Your Medical Mission",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "gender": "Gender",
+    "selectGender": "Select Gender",
+    "enterYourLastName": "Enter your last name",
+    "enterYourFirstName": "Enter your first name",
+    "dob": "Date of Birth",
+    "iAgree": "I agree to the",
+    "terms": "terms",
+    "and": "and",
+    "conditions": "conditions",
+    "setPassword": "Set Password",
+    "setPasswordSubtitle": "Try changing your password once in a while to keep your security stronger.",
+    "submit": "Submit",
+    "findADoctor": "Find a Doctor",
+    "videoConsult": "Video Consult",
+    "labReports": "Lab Reports",
+    "medicalRecord": "Medical Record",
+    "healthPlan": "Health Plan",
+    "emergencyHelp": "Emergency Help",
+    "keyFeatures": "Key Features",
+    "specialistCare": "Specialist Care",
+    "topDoctors": "Top Doctors",
+    "paymentAndBillings": "Payment and Billings",
+    "settings": "Settings",
+    "home": "Home",
+    "appointment": "Appointment",
+    "message": "Message",
+    "profile": "Profile",
+    "search": "Search",
+    "applyAsDoctor": "Apply as Doctor",
+    "helpAndSupport": "Help & Support",
+    "healthCareServices": "Health Care Services",
+    "healthAndWellness": "Health and Wellness",
+    "accountAndSupport": "Account and Support",
+    "becomeADoctor": "Become a Doctor",
+    "appointment": "Appointment",
+    "past" : "Past",
+    "upcoming" : "Upcoming",
+    "cancelled" : "Cancelled",
+    "ongoing" : "Ongoing",
+    "scheduled" : "Scheduled",
+    "rescheduled" : "Rescheduled",
+    "completed" : "Completed",
+    "message" : "Messages",
+    "calls" : "Calls",
+    "profile" : "Profile",
+    "email" : "Email",
+    "contactNo" : "Contact No.",
+    "alternateEmail" : "Alternate Email",
+    "bloodGroup" : "Blood Group",
+    "address" : "Address",
+    "editProfile" : "Edit Profile",
+    "bookAnAppointment" : "Book an Appointment",
+    "chooseAPatient" : "Choose a Patient",
+    "doctorBio" : "Doctor Biography",
+    "schedule": "Schedule",
+    "quickSelectionOfTimes": "Quick Selection of Times",
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "selectPatient": "Select Patient",
+    "ownSelf": "Own Self",
+    "doctorDetails": "Doctor Details",
+    "appointmentDetails": "Appointment Details",
+    "patientDetails": "Patient Details",
+    "paymentAmount": "Payment Amount",
+    "confirmAppointment": "Confirm Appointment",
+    "paymentDetails": "Payment Details",
+    "payNow": "Pay Now",
+    "addNewDependent": "Add New Dependent",
+    "dependentText":"You can book this appointment for yourself or someone else (family or friend). Select an option to continue.",
+    "otherDependent" :"Other Dependents",
+    "continuee" : "Continue",
+    "paymentMethod" : "Payment Method",
+    "addDependent" : "Add Dependent",
+    "addFamilyMember" : "Add Family Member,Friends and Relatives",
+    "uploadPhoto" : "Upload Photo",
+    "personalInformation" : "Personal Information",
+    "relationshipWithPatient" : "Relationship With Patient",
+    "relationship" : "Relationship",
+    "selectRelation" : "Select Relation",
+    "contactInformation" : "Contact Information",
+    "reasonForVisit" : "Reason For Visit",
+    "selectReason" : "Select Reason",
+    "save" : "Save",
+    "enterEmail" : "Enter Email",
+    "speciality" : "Speciality"
+
+   
+
+}

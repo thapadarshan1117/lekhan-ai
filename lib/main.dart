@@ -1,0 +1,126 @@
+import 'dart:async';
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/services.dart';
+import 'package:lekhan_ai/app/app.dart';
+import 'package:lekhan_ai/core/config/dependency_injection/di_config.dart';
+import 'package:lekhan_ai/core/config/firebase/firebase_api_config.dart';
+import 'package:lekhan_ai/core/notifications/notification_controller.dart';
+import 'package:lekhan_ai/core/services/app_timezone_service.dart';
+import 'package:lekhan_ai/core/utils/observer.dart';
+import 'package:lekhan_ai/core/theme/domain/model/app_theme_config.dart';
+import 'package:lekhan_ai/core/theme/domain/repository/app_theme_repository.dart';
+import 'package:lekhan_ai/firebase_options.dart';
+import 'package:lekhan_ai/shared/language/presentation/language_bloc/language_bloc.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
+Future<void> main() async {
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Hive.initFlutter();
+    
+    // Initialize Firebase with try-catch to handle hot reload
+    try {
+      await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform);
+    } on FirebaseException catch (e) {
+      if (e.code == 'duplicate-app') {
+        debugPrint('ℹ️ Firebase already initialized (hot reload)');
+      } else {
+        rethrow;
+      }
+    }
+    
+    AppTimezoneService.instance.initialize();
+
+    // Initialize Awesome Notifications BEFORE Firebase
+    debugPrint('📱 Initializing Awesome Notifications...');
+    await AwesomeNotifications().initialize(
+      // null channel means it will use the default
+      null,
+      [
+        NotificationChannel(
+          channelGroupKey: 'basic_channel_group',
+          channelKey: 'generic_channel',
+          channelName: 'Generic notifications',
+          channelDescription: 'Notification channel for generic messages',
+          defaultColor: const Color(0xFF9D50DD),
+          ledColor: Colors.white,
+          importance: NotificationImportance.High,
+          channelShowBadge: true,
+          defaultRingtoneType: DefaultRingtoneType.Notification,
+          enableVibration: true,
+          enableLights: true,
+        ),
+      ],
+      channelGroups: [
+        NotificationChannelGroup(
+          channelGroupKey: 'basic_channel_group',
+          channelGroupName: 'Basic',
+        ),
+      ],
+      debug: kDebugMode,
+    );
+    debugPrint('✅ Awesome Notifications initialized');
+
+    // Set up notification action listeners
+    AwesomeNotifications().setListeners(
+      onActionReceivedMethod: NotificationController.onActionReceivedMethod,
+      onNotificationCreatedMethod: NotificationController.onNotificationCreatedMethod,
+      onNotificationDisplayedMethod: NotificationController.onNotificationDisplayedMethod,
+      onDismissActionReceivedMethod: NotificationController.onDismissActionReceivedMethod,
+    );
+    debugPrint('✅ Awesome Notifications listeners set');
+
+    FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
+
+    await setUpServiceLocator();
+
+    AppThemeConfig? cachedTheme;
+    final cachedThemeRes =
+        await sl<AppThemeRepository>().getCachedActiveTheme();
+    cachedThemeRes.fold(
+      (_) {},
+      (theme) => cachedTheme = theme,
+    );
+
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+    if (kDebugMode) {
+      Bloc.observer = AppBlocObserver();
+    }
+
+    final firebaseApi = FirebaseApi();
+    // Request notifications permission early but don't await it
+    unawaited(firebaseApi.initNotifications());
+
+    runApp(
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<LanguageBloc>(
+            create: (context) =>
+                sl<LanguageBloc>()..add(FetchedSelectedLanguage()),
+          ),
+
+        ],
+        child: MyApp(initialThemeConfig: cachedTheme),
+      ),
+    );
+  }, (error, stackTrace) {
+    debugPrint(
+        'runZonedGuarded: Caught error in my root zone. $error $stackTrace');
+    if (!kDebugMode) {
+      FirebaseCrashlytics.instance.recordError(error, stackTrace);
+    }
+  });
+}
+   
