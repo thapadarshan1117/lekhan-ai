@@ -72,7 +72,8 @@ class ChapterSourceLocalDataSourceImpl implements ChapterSourceLocalDataSource {
   ) async {
     try {
       final List<ChapterSourceModel> items = await _store.where(
-        (ChapterSourceModel item) => item.chapterId == chapterId,
+        (ChapterSourceModel item) =>
+            item.chapterId == chapterId && !item.isDeleted,
       );
       return Right(_sorted(items));
     } catch (error) {
@@ -180,7 +181,8 @@ class ChapterSourceLocalDataSourceImpl implements ChapterSourceLocalDataSource {
       if (chapterId == null) return _sorted(items);
       return _sorted(
         items
-            .where((ChapterSourceModel item) => item.chapterId == chapterId)
+            .where((ChapterSourceModel item) =>
+                item.chapterId == chapterId && !item.isDeleted)
             .toList(),
       );
     });

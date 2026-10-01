@@ -232,6 +232,16 @@ class LocalFileStorage {
     await deleteDirectory(directory);
   }
 
+  /// Deletes all app-owned media (used when the signed-in account is removed).
+  /// Files selected from shared storage are copied into this root, so clearing
+  /// it never deletes the user's originals.
+  Future<void> clearAll() async {
+    final Directory root = rootDirectory;
+    await deleteDirectory(root);
+    _root = null;
+    await init();
+  }
+
   /// Removes leftovers from interrupted imports. Called on startup.
   Future<void> cleanTemp() async {
     await deleteDirectory(tempDirectory);

@@ -11,6 +11,11 @@ abstract class ChapterRepository {
     bool forceRefresh,
   });
 
+  /// Reads only the local cache, without consulting any remote datasource.
+  Future<Either<AppException, List<Chapter>>> getCachedChapters({
+    String? bookId,
+  });
+
   Future<Either<AppException, Chapter>> getChapter(String id);
 
   Stream<List<Chapter>> watchChapters({String? bookId});
@@ -21,6 +26,9 @@ abstract class ChapterRepository {
 
   /// Persists a local edit and queues it for the server.
   Future<Either<AppException, Chapter>> saveLocal(Chapter chapter);
+
+  /// Removes a chapter locally and queues its server-side tombstone when needed.
+  Future<Either<AppException, bool>> deleteLocal(String id);
 
   Future<Either<AppException, Chapter>> markSynced(
     String id, {

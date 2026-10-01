@@ -1,39 +1,22 @@
+import 'package:lekhan_ai/core/constants/api_constants.dart';
+import 'package:lekhan_ai/core/enums/upload_status.dart';
 import 'package:lekhan_ai/core/error/failure_mapper.dart';
+import 'package:lekhan_ai/core/utils/json_utils.dart';
+import 'package:lekhan_ai/core/utils/remote_json_utils.dart';
 import 'package:lekhan_ai/features/source_content/data/models/chapter_source_model.dart';
 import 'package:lekhan_ai/shared/data/remote/network_service.dart';
+import 'package:lekhan_ai/shared/domain/models/response.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
-// Mock data
-const List<Map<String, dynamic>> _mockSourcesData = [
-  {
-    'id': 'source_001',
-    'chapter_id': 'chapter_001',
-    'title': 'Chapter 1 Audio',
-    'type': 'audio',
-    'url': 'https://via.placeholder.com/audio.mp3',
-    'duration': 3600,
-    'created_at': '2024-01-01T00:00:00Z',
-  },
-  {
-    'id': 'source_002',
-    'chapter_id': 'chapter_001',
-    'title': 'Chapter 1 Video',
-    'type': 'video',
-    'url': 'https://via.placeholder.com/video.mp4',
-    'duration': 7200,
-    'created_at': '2024-01-01T00:00:00Z',
-  },
-];
-
-/// Read/delete side of source content. Creating a source happens through the
-/// upload session endpoints (`/uploads/...`), because the backend must create
-/// the Drive location before the bytes can be placed.
+/// Reads remote source metadata. The binary is never downloaded from Drive
+/// directly; the backend may expose an authorized download URL when an online
+/// preview is needed.
 abstract class ChapterSourceRemoteDataSource {
   Future<Either<AppException, List<ChapterSourceModel>>> fetchSources({
     required String chapterRemoteId,
-    int page,
-    int pageSize,
+    int page = 1,
+    int pageSize = 50,
   });
 
   Future<Either<AppException, ChapterSourceModel>> fetchSource(
@@ -45,7 +28,9 @@ abstract class ChapterSourceRemoteDataSource {
 
 class ChapterSourceRemoteDataSourceImpl
     implements ChapterSourceRemoteDataSource {
-  const ChapterSourceRemoteDataSourceImpl({NetworkService? networkService});
+  const ChapterSourceRemoteDataSourceImpl({required this.networkService});
+
+  final NetworkService networkService;
 
   static const String _identifier = 'ChapterSourceRemoteDataSourceImpl';
 
@@ -56,18 +41,21 @@ class ChapterSourceRemoteDataSourceImpl
     int pageSize = 50,
   }) async {
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      final sources = _mockSourcesData
-          .where((source) => source['chapter_id'] == chapterRemoteId)
-          .toList();
-
-      return Right<AppException, List<ChapterSourceModel>>(
-        sources
-            .map<ChapterSourceModel>(ChapterSourceModel.fromJson)
-            .where((ChapterSourceModel source) => source.id.isNotEmpty)
-            .toList(),
+      final Either<AppException, Response> result = await networkService.get(
+        ApiConstants.chapterSources(chapterRemoteId),
+        queryParameters: <String, dynamic>{'page': page, 'page_size': pageSize},
+      );
+      return result.fold(
+        (AppException error) =>
+            Left<AppException, List<ChapterSourceModel>>(error),
+        (Response response) => Right<AppException, List<ChapterSourceModel>>(
+          RemoteJsonUtils.records(response.data)
+              .map<ChapterSourceModel>(
+                (Map<String, dynamic> item) => _sourceFromRemote(item),
+              )
+              .where((ChapterSourceModel item) => item.remoteId?.isNotEmpty == true)
+              .toList(growable: false),
+        ),
       );
     } catch (error) {
       return Left<AppException, List<ChapterSourceModel>>(
@@ -81,26 +69,21 @@ class ChapterSourceRemoteDataSourceImpl
     String remoteId,
   ) async {
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      final sourceData = _mockSourcesData.firstWhere(
-        (source) => source['id'] == remoteId,
-        orElse: () => {},
+      final Either<AppException, Response> result = await networkService.get(
+        ApiConstants.sourceDetail(remoteId),
       );
-
-      if (sourceData.isEmpty) {
-        return Left<AppException, ChapterSourceModel>(
-          AppException(
-            message: 'The source could not be found.',
-            statusCode: 404,
-            identifier: '$_identifier.fetchSource.empty',
-          ),
-        );
-      }
-
-      return Right<AppException, ChapterSourceModel>(
-        ChapterSourceModel.fromJson(sourceData),
+      return result.fold(
+        (AppException error) => Left<AppException, ChapterSourceModel>(error),
+        (Response response) {
+          final Map<String, dynamic> data =
+              RemoteJsonUtils.withRemoteIdentity(
+            RemoteJsonUtils.detailRecord(response.data, entityKey: 'source'),
+            id: remoteId,
+          );
+          return Right<AppException, ChapterSourceModel>(
+            _sourceFromRemote(data),
+          );
+        },
       );
     } catch (error) {
       return Left<AppException, ChapterSourceModel>(
@@ -112,14 +95,40 @@ class ChapterSourceRemoteDataSourceImpl
   @override
   Future<Either<AppException, bool>> deleteSource(String remoteId) async {
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      return const Right<AppException, bool>(true);
+      final Either<AppException, Response> result =
+          await networkService.delete(ApiConstants.sourceDetail(remoteId));
+      return result.fold(
+        (AppException error) => Left<AppException, bool>(error),
+        (Response _) => const Right<AppException, bool>(true),
+      );
     } catch (error) {
       return Left<AppException, bool>(
         FailureMapper.from(error, identifier: '$_identifier.deleteSource'),
       );
     }
+  }
+
+  ChapterSourceModel _sourceFromRemote(Map<String, dynamic> raw) {
+    final Map<String, dynamic> data =
+        RemoteJsonUtils.withRemoteIdentity(raw);
+    data['name'] = JsonUtils.asString(
+      raw['name'],
+      fallback: JsonUtils.asString(raw['title'], fallback: 'Source file'),
+    );
+    data['file_size'] = JsonUtils.asInt(
+      raw['file_size'] ?? raw['size'] ?? raw['size_bytes'],
+    );
+    data['duration_seconds'] = raw['duration_seconds'] ?? raw['duration'];
+    data['local_path'] = JsonUtils.asString(raw['local_path']);
+    data['upload_status'] = JsonUtils.asString(
+      raw['upload_status'],
+      fallback: UploadStatus.uploaded.value,
+    );
+    data['processing_status'] = JsonUtils.asString(
+      raw['processing_status'],
+      fallback: JsonUtils.asString(raw['processing']),
+    );
+    data['is_dirty'] = false;
+    return ChapterSourceModel.fromJson(data);
   }
 }

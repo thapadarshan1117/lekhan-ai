@@ -239,6 +239,27 @@ class SyncCheckpointStore {
     );
   }
 
+  Future<DateTime?> lastPulledAt() async {
+    final Object? raw = await storageService.get(
+      StorageConstants.lastPulledAtKey,
+    );
+    if (raw == null) return null;
+    return DateTime.tryParse(raw.toString());
+  }
+
+  Future<void> markPulled([DateTime? at]) {
+    return storageService.set(
+      StorageConstants.lastPulledAtKey,
+      (at ?? DateTime.now()).toIso8601String(),
+    );
+  }
+
+  Future<void> reset() async {
+    await storageService.remove(StorageConstants.lastSyncedAtKey);
+    await storageService.remove(StorageConstants.lastPulledAtKey);
+    await storageService.remove(StorageConstants.lastSyncErrorKey);
+  }
+
   Future<String?> lastError() async {
     final Object? raw = await storageService.get(
       StorageConstants.lastSyncErrorKey,

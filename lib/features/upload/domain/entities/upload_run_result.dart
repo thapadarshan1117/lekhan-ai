@@ -11,6 +11,7 @@ class UploadRunResult {
     this.remoteSourceId,
     this.remoteFileId,
     this.driveFileId,
+    this.processingStatus,
     this.expiredSession = false,
   });
 
@@ -19,6 +20,7 @@ class UploadRunResult {
   final String? remoteSourceId;
   final String? remoteFileId;
   final String? driveFileId;
+  final String? processingStatus;
 
   /// True when the server rejected the session URL and a new one is required.
   final bool expiredSession;

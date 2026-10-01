@@ -1,40 +1,28 @@
+import 'package:lekhan_ai/core/constants/api_constants.dart';
 import 'package:lekhan_ai/core/error/failure_mapper.dart';
+import 'package:lekhan_ai/core/utils/json_utils.dart';
+import 'package:lekhan_ai/core/utils/remote_json_utils.dart';
 import 'package:lekhan_ai/features/projects/data/models/project_model.dart';
 import 'package:lekhan_ai/shared/data/remote/network_service.dart';
+import 'package:lekhan_ai/shared/domain/models/response.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
-// Mock data
-const List<Map<String, dynamic>> _mockProjectsData = [
-  {
-    'id': 'project_001',
-    'title': 'Literature Collection',
-    'description': 'A collection of classic literature',
-    'image': 'https://via.placeholder.com/300x300?text=Literature',
-    'status': 'active',
-    'created_at': '2024-01-01T00:00:00Z',
-  },
-  {
-    'id': 'project_002',
-    'title': 'Learning Series',
-    'description': 'Educational content for learners',
-    'image': 'https://via.placeholder.com/300x300?text=Learning',
-    'status': 'active',
-    'created_at': '2024-01-05T00:00:00Z',
-  },
-];
-
 abstract class ProjectRemoteDataSource {
   Future<Either<AppException, List<ProjectModel>>> fetchProjects({
-    int page,
-    int pageSize,
+    int page = 1,
+    int pageSize = 50,
   });
 
   Future<Either<AppException, ProjectModel>> fetchProject(String remoteId);
 }
 
+/// Authenticated, read-only project API. Writes use the durable `/sync/push`
+/// outbox so the same operation works online and offline.
 class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
-  const ProjectRemoteDataSourceImpl({NetworkService? networkService});
+  const ProjectRemoteDataSourceImpl({required this.networkService});
+
+  final NetworkService networkService;
 
   static const String _identifier = 'ProjectRemoteDataSourceImpl';
 
@@ -44,14 +32,18 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
     int pageSize = 50,
   }) async {
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      return Right<AppException, List<ProjectModel>>(
-        _mockProjectsData
-            .map<ProjectModel>(ProjectModel.fromJson)
-            .where((ProjectModel project) => project.id.isNotEmpty)
-            .toList(),
+      final Either<AppException, Response> result = await networkService.get(
+        ApiConstants.projects,
+        queryParameters: <String, dynamic>{'page': page, 'page_size': pageSize},
+      );
+      return result.fold(
+        (AppException error) => Left<AppException, List<ProjectModel>>(error),
+        (Response response) => Right<AppException, List<ProjectModel>>(
+          RemoteJsonUtils.records(response.data)
+              .map<ProjectModel>(_projectFromRemote)
+              .where((ProjectModel item) => item.remoteId?.isNotEmpty == true)
+              .toList(growable: false),
+        ),
       );
     } catch (error) {
       return Left<AppException, List<ProjectModel>>(
@@ -65,31 +57,40 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
     String remoteId,
   ) async {
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      final projectData = _mockProjectsData.firstWhere(
-        (project) => project['id'] == remoteId,
-        orElse: () => {},
+      final Either<AppException, Response> result = await networkService.get(
+        ApiConstants.projectDetail(remoteId),
       );
-
-      if (projectData.isEmpty) {
-        return Left<AppException, ProjectModel>(
-          AppException(
-            message: 'The project could not be found.',
-            statusCode: 404,
-            identifier: '$_identifier.fetchProject.empty',
-          ),
-        );
-      }
-
-      return Right<AppException, ProjectModel>(
-        ProjectModel.fromJson(projectData),
+      return result.fold(
+        (AppException error) => Left<AppException, ProjectModel>(error),
+        (Response response) {
+          final Map<String, dynamic> data =
+              RemoteJsonUtils.withRemoteIdentity(
+            RemoteJsonUtils.detailRecord(response.data, entityKey: 'project'),
+            id: remoteId,
+          );
+          return Right<AppException, ProjectModel>(
+            _projectFromRemote(data),
+          );
+        },
       );
     } catch (error) {
       return Left<AppException, ProjectModel>(
         FailureMapper.from(error, identifier: '$_identifier.fetchProject'),
       );
     }
+  }
+
+  ProjectModel _projectFromRemote(Map<String, dynamic> raw) {
+    final Map<String, dynamic> data =
+        RemoteJsonUtils.withRemoteIdentity(raw);
+    data['name'] = JsonUtils.asString(
+      raw['name'],
+      fallback: JsonUtils.asString(raw['title']),
+    );
+    data['description'] = JsonUtils.asString(raw['description']);
+    data['cover_image_url'] = JsonUtils.asStringOrNull(
+      raw['cover_image_url'] ?? raw['cover_image'] ?? raw['image'],
+    );
+    return ProjectModel.fromJson(data);
   }
 }

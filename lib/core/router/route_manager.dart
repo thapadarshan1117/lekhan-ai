@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lekhan_ai/core/config/backend_mode.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lekhan_ai/core/error/error_page.dart';
 import 'package:lekhan_ai/features/auth/presentation/pages/forgot_password_page.dart';
@@ -7,6 +8,8 @@ import 'package:lekhan_ai/features/auth/presentation/pages/otp_verification_page
 import 'package:lekhan_ai/features/auth/presentation/pages/signup_page.dart';
 import 'package:lekhan_ai/features/auth/presentation/pages/new_password.dart';
 import 'package:lekhan_ai/features/projects/domain/entities/project.dart';
+import 'package:lekhan_ai/features/books/domain/entities/book.dart';
+import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
 import 'package:lekhan_ai/features/projects/presentation/pages/projects_page.dart';
 import 'package:lekhan_ai/features/projects/presentation/pages/project_detail_page.dart';
 import 'package:lekhan_ai/features/projects/presentation/pages/project_form_page.dart';
@@ -43,14 +46,16 @@ class RouterManager {
     debugPrint('🏗️ Creating standalone app router');
 
     return GoRouter(
-      initialLocation: '/',
+      initialLocation: BackendMode.useMockBackend ? '/projects' : '/',
       debugLogDiagnostics: true,
       errorBuilder: (context, state) => const ErrorPage(),
       routes: <RouteBase>[
         // Splash Screen
         GoRoute(
           path: '/',
-          builder: (context, state) => SplashScreen(),
+          redirect: (context, state) =>
+              BackendMode.useMockBackend ? '/projects' : null,
+          builder: (context, state) => const SplashScreen(),
         ),
 
         // Authentication Routes (pre-app)
@@ -93,7 +98,8 @@ class RouterManager {
           name: 'bookDetail',
           builder: (context, state) {
             final bookId = state.pathParameters['id']!;
-            return BookDetailPage(bookId: bookId);
+            final initial = state.extra as Book?;
+            return BookDetailPage(bookId: bookId, initial: initial);
           },
         ),
 
@@ -103,7 +109,8 @@ class RouterManager {
           name: 'bookForm',
           builder: (context, state) {
             final projectId = state.uri.queryParameters['projectId'] ?? '';
-            return BookFormPage(projectId: projectId);
+            final initial = state.extra as Book?;
+            return BookFormPage(projectId: projectId, initial: initial);
           },
         ),
 
@@ -113,7 +120,8 @@ class RouterManager {
           name: 'chapterDetail',
           builder: (context, state) {
             final chapterId = state.pathParameters['id']!;
-            return ChapterDetailPage(chapterId: chapterId);
+            final initial = state.extra as Chapter?;
+            return ChapterDetailPage(chapterId: chapterId, initial: initial);
           },
         ),
 
@@ -122,11 +130,16 @@ class RouterManager {
           path: '/chapters/new',
           name: 'chapterForm',
           builder: (context, state) {
-            final bookId = state.uri.queryParameters['bookId'];
-            final number = int.tryParse(state.uri.queryParameters['number'] ?? '1') ?? 1;
+            final initial = state.extra as Chapter?;
+            final bookId =
+                state.uri.queryParameters['bookId'] ?? initial?.bookId ?? '';
+            final number = int.tryParse(state.uri.queryParameters['number'] ?? '') ??
+                initial?.number ??
+                1;
             return ChapterFormPage(
-              bookId: bookId ?? '',
+              bookId: bookId,
               suggestedNumber: number,
+              initial: initial,
             );
           },
         ),

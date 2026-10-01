@@ -99,8 +99,8 @@ class AuthDataSourceImpl implements AuthDatasource {
       log("Mock Login: $email");
 
       // Save mock tokens
-      tokenStorageService.saveAccessToken(_mockAccessToken);
-      tokenStorageService.saveRefreshToken(_mockRefreshToken);
+      await tokenStorageService.saveAccessToken(_mockAccessToken);
+      await tokenStorageService.saveRefreshToken(_mockRefreshToken);
 
       // Create and save mock user
       final mockUser = User(
@@ -181,8 +181,8 @@ class AuthDataSourceImpl implements AuthDatasource {
 
       if (!isForgot) {
         // For signup OTP: save tokens and user
-        tokenStorageService.saveAccessToken(_mockAccessToken);
-        tokenStorageService.saveRefreshToken(_mockRefreshToken);
+        await tokenStorageService.saveAccessToken(_mockAccessToken);
+        await tokenStorageService.saveRefreshToken(_mockRefreshToken);
 
         final mockUser = User(
           userId: 'mock_user_123',

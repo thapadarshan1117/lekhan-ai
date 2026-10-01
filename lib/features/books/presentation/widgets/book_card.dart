@@ -5,10 +5,18 @@ import 'package:lekhan_ai/features/books/domain/entities/book.dart';
 
 /// One book inside a project.
 class BookCard extends StatelessWidget {
-  const BookCard({super.key, required this.book, required this.onTap});
+  const BookCard({
+    super.key,
+    required this.book,
+    required this.onTap,
+    this.onEdit,
+    this.onDelete,
+  });
 
   final Book book;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +50,37 @@ class BookCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  if (onEdit != null) ...<Widget>[
+                    IconButton(
+                      tooltip: 'Edit book',
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      color: AppColors.textSecondary,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 32,
+                        height: 32,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    const SizedBox(width: 2),
+                  ] else
+                    const SizedBox(width: 8),
+                  if (onDelete != null) ...<Widget>[
+                    IconButton(
+                      tooltip: 'Delete book',
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      color: Theme.of(context).colorScheme.error,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 32,
+                        height: 32,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                   _BookStatusChip(status: book.status),
                 ],
               ),

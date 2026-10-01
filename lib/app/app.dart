@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:lekhan_ai/core/config/dependency_injection/di_config.dart';
+import 'package:lekhan_ai/core/sync/sync_bootstrap.dart';
 import 'package:lekhan_ai/core/config/size_config/size.config.dart';
 import 'package:lekhan_ai/main.dart' show scaffoldMessengerKey;
 import 'package:lekhan_ai/core/router/route_manager.dart';
@@ -45,6 +48,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     RouterManager.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(sl<SyncBootstrap>().onAppResumed());
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(sl<SyncBootstrap>().onAppPaused());
+    }
   }
 
   @override
@@ -100,10 +113,26 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 builder: (context, child) {
                   final MediaQueryData data = MediaQuery.of(context);
                   SizeConfig.init(context);
-                  return BlocListener<
-                    InternetConnectionCubit,
-                    InternetConnectionState
-                  >(
+                  return BlocListener<AuthBloc, AuthState>(
+                    listenWhen: (AuthState previous, AuthState current) =>
+                        current.maybeWhen(
+                      success: (_, __) => true,
+                      otpVerified: (_, __, ___) => true,
+                      orElse: () => false,
+                    ),
+                    listener: (BuildContext context, AuthState state) {
+                      state.maybeWhen(
+                        success: (_, __) =>
+                            unawaited(sl<SyncBootstrap>().onSignedIn()),
+                        otpVerified: (_, __, ___) =>
+                            unawaited(sl<SyncBootstrap>().onSignedIn()),
+                        orElse: () {},
+                      );
+                    },
+                    child: BlocListener<
+                      InternetConnectionCubit,
+                      InternetConnectionState
+                    >(
                     listener: (context, state) {
                       if (state.status == ConnectivityStatus.disconnected) {
                         SnackbarUtils.internetConnectionSnackBar(
@@ -121,6 +150,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                         ),
                       ),
                       child: child!,
+                    ),
                     ),
                   );
                 },

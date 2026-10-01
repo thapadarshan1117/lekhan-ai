@@ -29,23 +29,35 @@ class MetadataPushService {
   final SyncEntityApplier applier;
 
   Future<SyncOutcome> push(SyncTask task) async {
-    final Map<String, dynamic> data = JsonUtils.asMap(task.payload?['data']);
-
-    // Local ids -> remote ids for every parent reference in the payload.
-    final Either<AppException, Map<String, dynamic>> resolved =
-        await resolver.resolve(
-      entityType: task.entityType,
-      entityId: task.entityId,
-      data: data,
+    final Map<String, dynamic> payload = Map<String, dynamic>.of(
+      task.payload ?? const <String, dynamic>{},
     );
+    final Map<String, dynamic> data = payload['data'] is Map
+        ? JsonUtils.asMap(payload['data'])
+        : Map<String, dynamic>.of(payload);
+    final DateTime? localVersion =
+        JsonUtils.asDateTime(payload['local_updated_at']);
+    data.remove('local_updated_at');
 
-    final Map<String, dynamic>? resolvedData = resolved.valueOrNull;
-    if (resolvedData == null) {
-      // Most commonly "the parent has not been pushed yet": retryable, and the
-      // P0 ordering means the next pass will usually succeed.
-      return SyncOutcome.failure(
-        resolved.errorOrNull?.message ?? 'This change could not be prepared.',
+    Map<String, dynamic> resolvedData = data;
+    if (task.operation != SyncOperation.delete) {
+      // Local ids -> remote ids for every parent reference in the payload.
+      final Either<AppException, Map<String, dynamic>> resolved =
+          await resolver.resolve(
+        entityType: task.entityType,
+        entityId: task.entityId,
+        data: data,
       );
+
+      final Map<String, dynamic>? value = resolved.valueOrNull;
+      if (value == null) {
+        // Most commonly "the parent has not been pushed yet": retryable, and
+        // P0 ordering puts metadata ahead of file bytes.
+        return SyncOutcome.failure(
+          resolved.errorOrNull?.message ?? 'This change could not be prepared.',
+        );
+      }
+      resolvedData = value;
     }
 
     final String? remoteId = task.remoteId ??
@@ -73,10 +85,17 @@ class MetadataPushService {
     }
 
     final SyncChangeResult? result = response.resultFor(task.entityId);
-
-    if (result != null && !result.isAccepted) {
+    if (result == null) {
+      return const SyncOutcome.failure(
+        'The server did not confirm that this change was saved.',
+      );
+    }
+    if (!result.isAccepted) {
       return SyncOutcome.failure(
-        result.error ?? 'The server rejected this change.',
+        result.error ??
+            (result.isConflict
+                ? 'This item changed on another device. It will be retried safely.'
+                : 'The server rejected this change.'),
       );
     }
 
@@ -88,11 +107,19 @@ class MetadataPushService {
       return const SyncOutcome.success();
     }
 
-    final String? assignedRemoteId = result?.remoteId ?? remoteId;
+    final String? assignedRemoteId = result.remoteId ?? remoteId;
+    if ((task.operation == SyncOperation.create || remoteId == null) &&
+        (assignedRemoteId == null || assignedRemoteId.isEmpty)) {
+      return const SyncOutcome.failure(
+        'The server accepted the change but did not return its record id.',
+      );
+    }
+
     await applier.markSynced(
       entityType: task.entityType,
       entityId: task.entityId,
       remoteId: assignedRemoteId,
+      expectedUpdatedAt: localVersion,
     );
 
     return SyncOutcome.success(remoteId: assignedRemoteId);

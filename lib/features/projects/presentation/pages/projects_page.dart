@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lekhan_ai/core/config/dependency_injection/di_config.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
 import 'package:lekhan_ai/features/projects/domain/entities/project.dart';
+import 'package:lekhan_ai/features/projects/domain/usecases/delete_project_usecase.dart';
 import 'package:lekhan_ai/features/projects/presentation/bloc/projects_bloc/projects_bloc.dart';
 import 'package:lekhan_ai/features/projects/presentation/widgets/project_card.dart';
 import 'package:lekhan_ai/features/projects/presentation/widgets/projects_empty_state.dart';
@@ -116,9 +117,15 @@ class _ProjectsView extends StatelessWidget {
                     final Project project = projects[index];
                     return ProjectCard(
                       project: project,
+                      onEdit: () => context.pushNamed(
+                        'projectForm',
+                        extra: project,
+                      ),
+                      onDelete: () => _deleteProject(context, project),
                       onTap: () => context.pushNamed(
                         'projectDetail',
                         pathParameters: <String, String>{'id': project.id},
+                        extra: project,
                       ),
                     );
                   },
@@ -127,6 +134,50 @@ class _ProjectsView extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+
+  Future<void> _deleteProject(BuildContext context, Project project) async {
+    final bool confirmed = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext dialogContext) => AlertDialog(
+            title: const Text('Delete project?'),
+            content: Text(
+              '“${project.name}” and all of its books, chapters, and source files '
+              'will be removed from this device. The server deletion will sync '
+              'when available.',
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(dialogContext).colorScheme.error,
+                ),
+                child: const Text('Delete project'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed || !context.mounted) return;
+
+    final result = await sl<DeleteProjectUsecase>()(project.id);
+    if (!context.mounted) return;
+    result.fold(
+      (failure) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not delete project: ${failure.message}')),
+      ),
+      (deleted) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            deleted ? 'Project deleted.' : 'Project could not be deleted.',
+          ),
+        ),
       ),
     );
   }

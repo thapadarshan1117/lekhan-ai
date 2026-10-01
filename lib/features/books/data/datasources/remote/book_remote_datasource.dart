@@ -1,57 +1,28 @@
+import 'package:lekhan_ai/core/constants/api_constants.dart';
 import 'package:lekhan_ai/core/error/failure_mapper.dart';
+import 'package:lekhan_ai/core/utils/json_utils.dart';
+import 'package:lekhan_ai/core/utils/remote_json_utils.dart';
 import 'package:lekhan_ai/features/books/data/models/book_model.dart';
 import 'package:lekhan_ai/shared/data/remote/network_service.dart';
+import 'package:lekhan_ai/shared/domain/models/response.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
-// Mock data
-const List<Map<String, dynamic>> _mockBooksData = [
-  {
-    'id': 'book_001',
-    'title': 'The Great Gatsby',
-    'description': 'A classic novel about dreams and ambition',
-    'author': 'F. Scott Fitzgerald',
-    'cover_image': 'https://via.placeholder.com/300x400?text=Gatsby',
-    'status': 'published',
-    'created_at': '2024-01-01T00:00:00Z',
-    'updated_at': '2024-01-15T00:00:00Z',
-  },
-  {
-    'id': 'book_002',
-    'title': '1984',
-    'description': 'A dystopian novel about totalitarianism',
-    'author': 'George Orwell',
-    'cover_image': 'https://via.placeholder.com/300x400?text=1984',
-    'status': 'published',
-    'created_at': '2024-01-02T00:00:00Z',
-    'updated_at': '2024-01-14T00:00:00Z',
-  },
-  {
-    'id': 'book_003',
-    'title': 'To Kill a Mockingbird',
-    'description': 'A story of racial injustice and moral growth',
-    'author': 'Harper Lee',
-    'cover_image': 'https://via.placeholder.com/300x400?text=Mockingbird',
-    'status': 'published',
-    'created_at': '2024-01-03T00:00:00Z',
-    'updated_at': '2024-01-13T00:00:00Z',
-  },
-];
-
 abstract class BookRemoteDataSource {
-  /// All books of the account, or only those of one project/book when
-  /// [parentRemoteId] is given.
+  /// All books of the account, or only those belonging to [parentRemoteId].
   Future<Either<AppException, List<BookModel>>> fetchBooks({
     String? parentRemoteId,
-    int page,
-    int pageSize,
+    int page = 1,
+    int pageSize = 50,
   });
 
   Future<Either<AppException, BookModel>> fetchBook(String remoteId);
 }
 
 class BookRemoteDataSourceImpl implements BookRemoteDataSource {
-  const BookRemoteDataSourceImpl({NetworkService? networkService});
+  const BookRemoteDataSourceImpl({required this.networkService});
+
+  final NetworkService networkService;
 
   static const String _identifier = 'BookRemoteDataSourceImpl';
 
@@ -62,14 +33,30 @@ class BookRemoteDataSourceImpl implements BookRemoteDataSource {
     int pageSize = 50,
   }) async {
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 300));
+      final String endpoint = parentRemoteId == null || parentRemoteId.isEmpty
+          ? ApiConstants.books
+          : ApiConstants.projectBooks(parentRemoteId);
+      final Either<AppException, Response> result = await networkService.get(
+        endpoint,
+        queryParameters: <String, dynamic>{
+          'page': page,
+          'page_size': pageSize,
+          if (parentRemoteId != null && parentRemoteId.isNotEmpty)
+            'project_id': parentRemoteId,
+        },
+      );
 
-      return Right<AppException, List<BookModel>>(
-        _mockBooksData
-            .map<BookModel>(BookModel.fromJson)
-            .where((BookModel item) => item.id.isNotEmpty)
-            .toList(),
+      return result.fold(
+        (AppException error) => Left<AppException, List<BookModel>>(error),
+        (Response response) => Right<AppException, List<BookModel>>(
+          RemoteJsonUtils.records(response.data)
+              .map<BookModel>(
+                (Map<String, dynamic> item) =>
+                    _bookFromRemote(item, parentRemoteId: parentRemoteId),
+              )
+              .where((BookModel item) => item.remoteId?.isNotEmpty == true)
+              .toList(growable: false),
+        ),
       );
     } catch (error) {
       return Left<AppException, List<BookModel>>(
@@ -81,29 +68,54 @@ class BookRemoteDataSourceImpl implements BookRemoteDataSource {
   @override
   Future<Either<AppException, BookModel>> fetchBook(String remoteId) async {
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      final bookData = _mockBooksData.firstWhere(
-        (book) => book['id'] == remoteId,
-        orElse: () => {},
+      final Either<AppException, Response> result = await networkService.get(
+        ApiConstants.bookDetail(remoteId),
       );
-
-      if (bookData.isEmpty) {
-        return Left<AppException, BookModel>(
-          AppException(
-            message: 'The book could not be found.',
-            statusCode: 404,
-            identifier: '$_identifier.fetchBook.empty',
-          ),
-        );
-      }
-
-      return Right<AppException, BookModel>(BookModel.fromJson(bookData));
+      return result.fold(
+        (AppException error) => Left<AppException, BookModel>(error),
+        (Response response) {
+          final Map<String, dynamic> data =
+              RemoteJsonUtils.withRemoteIdentity(
+            RemoteJsonUtils.detailRecord(response.data, entityKey: 'book'),
+            id: remoteId,
+          );
+          return Right<AppException, BookModel>(_bookFromRemote(data));
+        },
+      );
     } catch (error) {
       return Left<AppException, BookModel>(
         FailureMapper.from(error, identifier: '$_identifier.fetchBook'),
       );
     }
+  }
+
+  BookModel _bookFromRemote(
+    Map<String, dynamic> raw, {
+    String? parentRemoteId,
+  }) {
+    final Map<String, dynamic> data =
+        RemoteJsonUtils.withRemoteIdentity(raw);
+    data['project_id'] = _relationId(
+      raw['project_id'] ?? raw['project'] ?? parentRemoteId,
+    );
+    data['title'] = JsonUtils.asString(
+      raw['title'],
+      fallback: JsonUtils.asString(raw['name']),
+    );
+    data['summary'] = JsonUtils.asString(
+      raw['summary'],
+      fallback: JsonUtils.asString(raw['description']),
+    );
+    data['cover_image_url'] = JsonUtils.asStringOrNull(
+      raw['cover_image_url'] ?? raw['cover_image'],
+    );
+    return BookModel.fromJson(data);
+  }
+
+  static String _relationId(dynamic value) {
+    if (value is Map) {
+      return RemoteJsonUtils.remoteId(JsonUtils.asMap(value));
+    }
+    return JsonUtils.asString(value);
   }
 }

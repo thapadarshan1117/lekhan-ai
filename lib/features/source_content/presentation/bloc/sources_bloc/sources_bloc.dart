@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +25,7 @@ class SourcesBloc extends Bloc<SourcesEvent, SourcesState> {
   SourcesBloc({
     required this.chapter,
     required this.watchSources,
+    required this.getSources,
     required this.addSource,
     required this.addExistingFile,
     required this.deleteSource,
@@ -41,46 +41,56 @@ class SourcesBloc extends Bloc<SourcesEvent, SourcesState> {
 
   final Chapter chapter;
   final WatchChapterSourcesUsecase watchSources;
+  final GetChapterSourcesUsecase getSources;
   final AddSourceUsecase addSource;
   final AddExistingFileUsecase addExistingFile;
   final DeleteSourceUsecase deleteSource;
   final RetryUploadUsecase retryUpload;
 
-  StreamSubscription<List<ChapterSource>>? _subscription;
-
   Future<void> _onStarted(_Started event, Emitter<SourcesState> emit) async {
     emit(const SourcesState.loading());
 
-    await _subscription?.cancel();
-    
-    // Emit initial documents before subscribing to changes
-    try {
-      final List<ChapterSource> initialItems = await watchSources(chapter.id).first;
-      _publish(emit, initialItems);
-    } catch (error) {
-      if (!emit.isDone) {
-        emit(SourcesState.error('Sources could not be read from this device.'));
-      }
-      return;
+    final result = await getSources(
+      GetChapterSourcesParams(
+        chapterId: chapter.id,
+        chapterRemoteId: chapter.remoteId,
+        forceRefresh: chapter.remoteId?.isNotEmpty == true,
+      ),
+    );
+    final List<ChapterSource>? initialSources = result.valueOrNull;
+    if (initialSources != null) {
+      emit(SourcesState.loaded(sources: initialSources));
+    } else {
+      emit(SourcesState.loaded(
+        sources: const <ChapterSource>[],
+        message: result.errorOrNull?.message ?? 'Sources could not be loaded.',
+      ));
     }
 
-    // Now subscribe to future changes
-    _subscription = watchSources(chapter.id).listen(
-      (List<ChapterSource> items) {
-        if (!emit.isDone) {
-          _publish(emit, items);
-        }
-      },
-      onError: (Object error) {
-        if (!emit.isDone) {
-          emit(SourcesState.error('Sources could not be read from this device.'));
-        }
-      },
+    await emit.forEach<List<ChapterSource>>(
+      watchSources(chapter.id),
+      onData: (List<ChapterSource> items) => SourcesState.loaded(
+        sources: items,
+        isBusy: state.maybeWhen(
+          loaded: (_, bool busy, __) => busy,
+          orElse: () => false,
+        ),
+      ),
+      onError: (Object error, StackTrace stackTrace) =>
+          SourcesState.error('Sources could not be read from this device.'),
     );
   }
 
   Future<void> _onRefreshed(_Refreshed event, Emitter<SourcesState> emit) async {
-    final List<ChapterSource> items = await watchSources(chapter.id).first;
+    final result = await getSources(
+      GetChapterSourcesParams(
+        chapterId: chapter.id,
+        chapterRemoteId: chapter.remoteId,
+        forceRefresh: chapter.remoteId?.isNotEmpty == true,
+      ),
+    );
+    final List<ChapterSource> items =
+        result.valueOrNull ?? await watchSources(chapter.id).first;
     _publish(emit, items);
   }
 
@@ -179,10 +189,4 @@ class SourcesBloc extends Bloc<SourcesEvent, SourcesState> {
     emit(SourcesState.loaded(sources: items, isBusy: isBusy));
   }
 
-  @override
-  Future<void> close() async {
-    await _subscription?.cancel();
-    _subscription = null;
-    return super.close();
-  }
 }

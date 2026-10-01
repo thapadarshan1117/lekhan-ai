@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:lekhan_ai/core/config/backend_mode.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 part 'internet_connection_cubit.freezed.dart';
@@ -10,12 +11,17 @@ class InternetConnectionCubit extends Cubit<InternetConnectionState> {
   InternetConnectionCubit() : super(const InternetConnectionState()) {
     init();
   }
-  /// A subscription to listen to internet connection changes.
-  late StreamSubscription<List<ConnectivityResult>> _subscription;
+
+  /// A subscription to listen to real device changes outside mock mode.
+  StreamSubscription<List<ConnectivityResult>>? _subscription;
   /// Initializes the cubit.
   /// This method is called when the cubit is initialized. It checks the current
   /// internet connection status and listens to internet connection changes.
   void init() {
+    if (BackendMode.useMockBackend) {
+      emit(const InternetConnectionState(status: ConnectivityStatus.connected));
+      return;
+    }
     checkConntectivity();
     listenToConnectivityChanges();
   }
@@ -43,7 +49,7 @@ class InternetConnectionCubit extends Cubit<InternetConnectionState> {
   /// Closes the subscription when the cubit is closed.
   @override
   Future<void> close() {
-    _subscription.cancel();
+    _subscription?.cancel();
     return super.close();
   }
 } 

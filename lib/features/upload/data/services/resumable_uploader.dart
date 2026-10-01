@@ -212,6 +212,7 @@ class ResumableUploader {
         remoteSourceId: completion.remoteSourceId,
         remoteFileId: finished.remoteFileId,
         driveFileId: finished.driveFileId,
+        processingStatus: completion.processingStatus,
       ),
     );
   }

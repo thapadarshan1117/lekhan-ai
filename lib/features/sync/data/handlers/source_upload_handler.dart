@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:lekhan_ai/core/enums/sync_operation.dart';
 import 'package:lekhan_ai/core/enums/sync_status.dart';
+import 'package:lekhan_ai/core/enums/processing_status.dart';
 import 'package:lekhan_ai/core/enums/upload_status.dart';
 import 'package:lekhan_ai/core/sync/sync_queue.dart';
 import 'package:lekhan_ai/core/sync/sync_task.dart';
@@ -117,8 +118,14 @@ class SourceUploadHandler extends SyncTaskHandler {
     }
 
     if (!result.completed) {
-      // Session expired or dropped mid-flight: retryable by design, the next
-      // run opens a fresh session and resumes from the last offset.
+      // Session expired or dropped mid-flight: the durable offset is retained,
+      // and the source leaves the active state while the queue backs off.
+      await sourceRepository.updateUploadStatus(
+        source.id,
+        uploadStatus: UploadStatus.paused,
+        uploadProgress: result.session.progress,
+        errorMessage: 'The upload was interrupted and will resume automatically.',
+      );
       return const SyncOutcome.failure(
         'The upload was interrupted and will resume automatically.',
       );
@@ -133,6 +140,13 @@ class SourceUploadHandler extends SyncTaskHandler {
       driveFileId: result.driveFileId,
       clearError: true,
     );
+    if (result.processingStatus != null &&
+        result.processingStatus!.isNotEmpty) {
+      await sourceRepository.updateProcessingStatus(
+        source.id,
+        ProcessingStatus.fromString(result.processingStatus ?? 'queued'),
+      );
+    }
 
     return SyncOutcome.success(
       remoteId: result.remoteSourceId ?? source.remoteId,

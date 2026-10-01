@@ -147,6 +147,9 @@ class StorageManager {
 
   Future<int> totalSize() => localFileStorage.totalSize();
 
+  /// Clears media owned by the app when the local account cache is removed.
+  Future<void> clearUserFiles() => localFileStorage.clearAll();
+
   /// Startup housekeeping: drop abandoned staging/temp files.
   Future<void> cleanUp() async {
     await localFileStorage.cleanTemp();

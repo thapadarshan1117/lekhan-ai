@@ -72,6 +72,20 @@ class BookRepositoryImpl implements BookRepository {
   }
 
   @override
+  Future<Either<AppException, List<Book>>> getCachedBooks({
+    String? projectId,
+  }) async {
+    final Either<AppException, List<BookModel>> cached = await _readCache(
+      projectId,
+    );
+    return cached.fold(
+      (AppException error) => Left<AppException, List<Book>>(error),
+      (List<BookModel> items) =>
+          Right<AppException, List<Book>>(_asEntities(items)),
+    );
+  }
+
+  @override
   Future<Either<AppException, Book>> getBook(String id) async {
     final Either<AppException, BookModel?> cached = await local.getBook(id);
     final BookModel? item = cached.valueOrNull;
@@ -107,7 +121,10 @@ class BookRepositoryImpl implements BookRepository {
       }
     }
 
-    final BookModel stored = remoteItem.markSynced();
+    final BookModel stored = remoteItem.markSynced().copyWith(
+      id: item?.id ?? remoteItem.id,
+      projectId: item?.projectId ?? remoteItem.projectId,
+    );
     await local.save(stored);
     return Right<AppException, Book>(stored);
   }
@@ -156,7 +173,10 @@ class BookRepositoryImpl implements BookRepository {
       }
     }
 
-    final BookModel stored = remoteItem.markSynced();
+    final BookModel stored = remoteItem.markSynced().copyWith(
+      id: item?.id ?? remoteItem.id,
+      projectId: item?.projectId ?? remoteItem.projectId,
+    );
     await local.save(stored);
     return Right<AppException, Book>(stored);
   }
@@ -192,6 +212,7 @@ class BookRepositoryImpl implements BookRepository {
         remoteId: stored.remoteId,
         payload: <String, dynamic>{
           'entity': SyncEntityType.book.value,
+          'local_updated_at': stored.updatedAt.toIso8601String(),
           'data': data,
         },
       ),
@@ -199,6 +220,46 @@ class BookRepositoryImpl implements BookRepository {
 
     requestBus.request();
     return Right<AppException, Book>(stored);
+  }
+
+  @override
+  Future<Either<AppException, bool>> deleteLocal(String id) async {
+    final Either<AppException, BookModel?> found = await local.getBook(id);
+    final AppException? readError = found.errorOrNull;
+    if (readError != null) return Left<AppException, bool>(readError);
+
+    final BookModel? book = found.valueOrNull;
+    if (book == null) return const Right<AppException, bool>(true);
+
+    final Either<AppException, bool> deleted = await local.delete(id);
+    if (deleted.valueOrNull != true) {
+      return Left<AppException, bool>(
+        deleted.errorOrNull ??
+            FailureMapper.local(
+              StateError('Book could not be removed'),
+              identifier: '$_identifier.deleteLocal',
+              statusCode: LocalErrorCodes.databaseFailure,
+            ),
+      );
+    }
+
+    await queue.enqueue(
+      SyncTaskBuilder.metadata(
+        entityType: SyncEntityType.book,
+        entityId: id,
+        operation: SyncOperation.delete,
+        remoteId: book.remoteId,
+      ),
+    );
+    for (final task in await queue.all()) {
+      if (task.entityType == SyncEntityType.book &&
+          task.entityId == id &&
+          task.operation != SyncOperation.delete) {
+        await queue.remove(task.id);
+      }
+    }
+    requestBus.request();
+    return const Right<AppException, bool>(true);
   }
 
   @override
@@ -286,7 +347,12 @@ class BookRepositoryImpl implements BookRepository {
       );
 
       if (resolution.shouldApplyRemote) {
-        toStore.add(remoteItem.markSynced());
+        toStore.add(
+          remoteItem.markSynced().copyWith(
+            id: existing.id,
+            projectId: existing.projectId,
+          ),
+        );
       } else if (resolution.shouldDeleteLocal) {
         await local.delete(existing.id);
       }

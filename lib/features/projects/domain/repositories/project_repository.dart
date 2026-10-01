@@ -23,6 +23,9 @@ abstract class ProjectRepository {
   /// Applies a local edit immediately and queues it for the server.
   Future<Either<AppException, Project>> saveLocal(Project project);
 
+  /// Removes a project locally and queues its server-side tombstone when needed.
+  Future<Either<AppException, bool>> deleteLocal(String id);
+
   /// Records the remote id returned by the backend for a local record.
   Future<Either<AppException, Project>> markSynced(
     String id, {

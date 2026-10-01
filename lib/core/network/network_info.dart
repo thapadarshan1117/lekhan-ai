@@ -24,12 +24,17 @@ enum NetworkQuality {
 /// stays exactly as it is). It only answers "is there a usable transport right
 /// now, and may we spend it on a 400 MB video?".
 class NetworkInfo {
-  NetworkInfo({Connectivity? connectivity})
+  NetworkInfo({Connectivity? connectivity, this.alwaysOnline = false})
       : _connectivity = connectivity ?? Connectivity();
 
   final Connectivity _connectivity;
 
+  /// The mock backend is local, so simulated sync must not depend on device
+  /// connectivity or attempt to infer API reachability.
+  final bool alwaysOnline;
+
   Future<NetworkQuality> currentQuality() async {
+    if (alwaysOnline) return NetworkQuality.wifi;
     try {
       final List<ConnectivityResult> results =
           await _connectivity.checkConnectivity();
@@ -44,8 +49,9 @@ class NetworkInfo {
 
   Future<bool> get isUnmetered async => (await currentQuality()).isUnmetered;
 
-  Stream<NetworkQuality> get onQualityChanged =>
-      _connectivity.onConnectivityChanged.map(_map);
+  Stream<NetworkQuality> get onQualityChanged => alwaysOnline
+      ? Stream<NetworkQuality>.empty()
+      : _connectivity.onConnectivityChanged.map(_map);
 
   Stream<bool> get onStatusChanged =>
       onQualityChanged.map((NetworkQuality quality) => quality.isOnline);

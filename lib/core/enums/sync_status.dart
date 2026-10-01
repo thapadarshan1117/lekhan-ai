@@ -92,6 +92,7 @@ enum SyncPriority {
 /// What woke the sync engine up. Useful in logs and in the sync centre.
 enum SyncTrigger {
   appStartup('app_startup'),
+  appResume('app_resume'),
   networkRestored('network_restored'),
   background('background'),
   manual('manual'),

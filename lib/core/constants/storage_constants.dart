@@ -43,6 +43,8 @@ class StorageConstants {
   // ---------------------------------------------------------------------------
 
   static const String lastSyncedAtKey = '${boxPrefix}last_synced_at';
+  static const String lastPulledAtKey = '${boxPrefix}last_pulled_at';
+  static const String syncOwnerUserIdKey = '${boxPrefix}sync_owner_user_id';
   static const String lastSyncErrorKey = '${boxPrefix}last_sync_error';
   static const String syncWifiOnlyKey = '${boxPrefix}sync_wifi_only';
   static const String syncChargingOnlyKey = '${boxPrefix}sync_charging_only';
