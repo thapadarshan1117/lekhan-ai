@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
@@ -20,11 +22,13 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
   }) : super(const BooksState.initial()) {
     on<_Started>(_onStarted);
     on<_Refreshed>(_onRefreshed);
+    on<_Changed>(_onChanged);
   }
 
   final String projectId;
   final GetBooksUsecase getBooks;
   final WatchBooksUsecase watchBooks;
+  StreamSubscription<List<Book>>? _booksSubscription;
 
   Future<void> _onStarted(_Started event, Emitter<BooksState> emit) async {
     emit(const BooksState.loading());
@@ -41,30 +45,21 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
       ));
     }
 
-    await emit.forEach<List<Book>>(
-      watchBooks(projectId: projectId),
-      onData: (List<Book> items) => BooksState.loaded(
-        books: items,
-        isRefreshing: state.maybeWhen(
-          loaded: (_, bool refreshing, __, ___) => refreshing,
-          orElse: () => false,
-        ),
-      ),
-      onError: (Object error, StackTrace stackTrace) {
-        final BooksState current = state;
-        if (current is _Loaded) {
-          return current.copyWith(
-            isRefreshing: false,
-            message: 'Books could not be loaded.',
-          );
-        }
-        return BooksState.loaded(
-          books: const <Book>[],
-          message: 'Books could not be loaded.',
-          isEmptyBecauseOfError: true,
-        );
-      },
+    await _booksSubscription?.cancel();
+    _booksSubscription = watchBooks(projectId: projectId).listen(
+      (List<Book> items) => add(BooksEvent.changed(items)),
+      onError: (_, __) => add(const BooksEvent.changed(<Book>[])),
     );
+  }
+
+  void _onChanged(_Changed event, Emitter<BooksState> emit) {
+    final BooksState current = state;
+    if (event.books.isEmpty &&
+        current is _Loaded &&
+        current.books.isNotEmpty) {
+      return;
+    }
+    emit(BooksState.loaded(books: event.books));
   }
 
   Future<void> _onRefreshed(_Refreshed event, Emitter<BooksState> emit) async {
@@ -98,6 +93,12 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
     }
 
     emit(BooksState.loaded(books: books));
+  }
+
+  @override
+  Future<void> close() async {
+    await _booksSubscription?.cancel();
+    return super.close();
   }
 
 }

@@ -64,21 +64,16 @@ class _ProjectDetailView extends StatelessWidget {
           ),
         ),
         actions: const <Widget>[
-          Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: SyncStatusChip(),
-          ),
+          Padding(padding: EdgeInsets.only(right: 12), child: SyncStatusChip()),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          final bool? saved = await context.pushNamed<bool>(
+          await context.pushNamed<bool>(
             'bookForm',
             queryParameters: <String, String>{'projectId': projectId},
           );
-          if (saved == true && context.mounted) {
-            context.read<BooksBloc>().add(const BooksEvent.refreshed());
-          }
+          // The local watcher receives a successfully saved book immediately.
         },
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
@@ -104,14 +99,19 @@ class _ProjectDetailView extends StatelessWidget {
             child: BlocConsumer<BooksBloc, BooksState>(
               listener: (BuildContext context, BooksState state) {
                 state.maybeWhen(
-                  loaded: (List<Book> books, bool isRefreshing, String? message,
-                      bool isEmptyBecauseOfError) {
-                    if (message != null && !isEmptyBecauseOfError) {
-                      ScaffoldMessenger.of(context)
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(SnackBar(content: Text(message)));
-                    }
-                  },
+                  loaded:
+                      (
+                        List<Book> books,
+                        bool isRefreshing,
+                        String? message,
+                        bool isEmptyBecauseOfError,
+                      ) {
+                        if (message != null && !isEmptyBecauseOfError) {
+                          ScaffoldMessenger.of(context)
+                            ..hideCurrentSnackBar()
+                            ..showSnackBar(SnackBar(content: Text(message)));
+                        }
+                      },
                   orElse: () {},
                 );
               },
@@ -127,56 +127,64 @@ class _ProjectDetailView extends StatelessWidget {
                       style: const TextStyle(color: AppColors.textSecondary),
                     ),
                   ),
-                  loaded: (List<Book> books, bool isRefreshing, String? message,
-                      bool isEmptyBecauseOfError) {
-                    if (books.isEmpty) {
-                      return RefreshIndicator(
-                        color: AppColors.primary,
-                        onRefresh: () async => context
-                            .read<BooksBloc>()
-                            .add(const BooksEvent.refreshed()),
-                        child: ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: const <Widget>[
-                            SizedBox(height: 60),
-                            _NoBooksYet(),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return RefreshIndicator(
-                      color: AppColors.primary,
-                      onRefresh: () async => context
-                          .read<BooksBloc>()
-                          .add(const BooksEvent.refreshed()),
-                      child: ListView.separated(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                        itemCount: books.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (BuildContext context, int index) {
-                          final Book book = books[index];
-                          return BookCard(
-                            book: book,
-                            onEdit: () => context.pushNamed(
-                              'bookForm',
-                              queryParameters: <String, String>{
-                                'projectId': projectId,
-                              },
-                              extra: book,
-                            ),
-                            onDelete: () => _deleteBook(context, book),
-                            onTap: () => context.pushNamed(
-                              'bookDetail',
-                              pathParameters: <String, String>{'id': book.id},
-                              extra: book,
+                  loaded:
+                      (
+                        List<Book> books,
+                        bool isRefreshing,
+                        String? message,
+                        bool isEmptyBecauseOfError,
+                      ) {
+                        if (books.isEmpty) {
+                          return RefreshIndicator(
+                            color: AppColors.primary,
+                            onRefresh: () async => context
+                                .read<BooksBloc>()
+                                .add(const BooksEvent.refreshed()),
+                            child: ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: const <Widget>[
+                                SizedBox(height: 60),
+                                _NoBooksYet(),
+                              ],
                             ),
                           );
-                        },
-                      ),
-                    );
-                  },
+                        }
+
+                        return RefreshIndicator(
+                          color: AppColors.primary,
+                          onRefresh: () async => context.read<BooksBloc>().add(
+                            const BooksEvent.refreshed(),
+                          ),
+                          child: ListView.separated(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                            itemCount: books.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (BuildContext context, int index) {
+                              final Book book = books[index];
+                              return BookCard(
+                                book: book,
+                                onEdit: () => context.pushNamed(
+                                  'bookForm',
+                                  queryParameters: <String, String>{
+                                    'projectId': projectId,
+                                  },
+                                  extra: book,
+                                ),
+                                onDelete: () => _deleteBook(context, book),
+                                onTap: () => context.pushNamed(
+                                  'bookDetail',
+                                  pathParameters: <String, String>{
+                                    'id': book.id,
+                                  },
+                                  extra: book,
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
                 );
               },
             ),
@@ -187,7 +195,8 @@ class _ProjectDetailView extends StatelessWidget {
   }
 
   Future<void> _deleteBook(BuildContext context, Book book) async {
-    final bool confirmed = await showDialog<bool>(
+    final bool confirmed =
+        await showDialog<bool>(
           context: context,
           builder: (BuildContext dialogContext) => AlertDialog(
             title: const Text('Delete book?'),
@@ -220,7 +229,11 @@ class _ProjectDetailView extends StatelessWidget {
         SnackBar(content: Text('Could not delete book: ${failure.message}')),
       ),
       (deleted) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(deleted ? 'Book deleted.' : 'Book could not be deleted.')),
+        SnackBar(
+          content: Text(
+            deleted ? 'Book deleted.' : 'Book could not be deleted.',
+          ),
+        ),
       ),
     );
   }
@@ -241,19 +254,22 @@ class _ProjectHeader extends StatelessWidget {
     // No `extra` (deep link): read it from the local store via the repository.
     return FutureBuilder<Either<AppException, Project>>(
       future: sl<GetProjectDetailUsecase>()(projectId),
-      builder: (BuildContext context,
-          AsyncSnapshot<Either<AppException, Project>> snapshot) {
-        final Project? loaded = snapshot.data?.valueOrNull;
-        if (loaded == null) {
-          return const SizedBox(
-            height: 90,
-            child: Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-          );
-        }
-        return _buildHeader(loaded);
-      },
+      builder:
+          (
+            BuildContext context,
+            AsyncSnapshot<Either<AppException, Project>> snapshot,
+          ) {
+            final Project? loaded = snapshot.data?.valueOrNull;
+            if (loaded == null) {
+              return const SizedBox(
+                height: 90,
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              );
+            }
+            return _buildHeader(loaded);
+          },
     );
   }
 

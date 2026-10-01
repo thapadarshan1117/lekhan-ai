@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:lekhan_ai/core/utils/either_utils.dart';
 import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
 import 'package:lekhan_ai/features/source_content/domain/entities/chapter_source.dart';
 import 'package:lekhan_ai/core/enums/source_type.dart';

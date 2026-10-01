@@ -5,4 +5,6 @@ class BooksEvent with _$BooksEvent {
   const factory BooksEvent.started() = _Started;
 
   const factory BooksEvent.refreshed() = _Refreshed;
+
+  const factory BooksEvent.changed(List<Book> books) = _Changed;
 }

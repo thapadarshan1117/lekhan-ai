@@ -21,32 +21,38 @@ mixin _$BooksEvent {
   TResult when<TResult extends Object?>({
     required TResult Function() started,
     required TResult Function() refreshed,
+    required TResult Function(List<Book> books) changed,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? started,
     TResult? Function()? refreshed,
+    TResult? Function(List<Book> books)? changed,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? started,
     TResult Function()? refreshed,
+    TResult Function(List<Book> books)? changed,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(_Started value) started,
     required TResult Function(_Refreshed value) refreshed,
+    required TResult Function(_Changed value) changed,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Started value)? started,
     TResult? Function(_Refreshed value)? refreshed,
+    TResult? Function(_Changed value)? changed,
   }) => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Started value)? started,
     TResult Function(_Refreshed value)? refreshed,
+    TResult Function(_Changed value)? changed,
     required TResult orElse(),
   }) => throw _privateConstructorUsedError;
 }
@@ -118,6 +124,7 @@ class _$StartedImpl implements _Started {
   TResult when<TResult extends Object?>({
     required TResult Function() started,
     required TResult Function() refreshed,
+    required TResult Function(List<Book> books) changed,
   }) {
     return started();
   }
@@ -127,6 +134,7 @@ class _$StartedImpl implements _Started {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? started,
     TResult? Function()? refreshed,
+    TResult? Function(List<Book> books)? changed,
   }) {
     return started?.call();
   }
@@ -136,6 +144,7 @@ class _$StartedImpl implements _Started {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? started,
     TResult Function()? refreshed,
+    TResult Function(List<Book> books)? changed,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -149,6 +158,7 @@ class _$StartedImpl implements _Started {
   TResult map<TResult extends Object?>({
     required TResult Function(_Started value) started,
     required TResult Function(_Refreshed value) refreshed,
+    required TResult Function(_Changed value) changed,
   }) {
     return started(this);
   }
@@ -158,6 +168,7 @@ class _$StartedImpl implements _Started {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Started value)? started,
     TResult? Function(_Refreshed value)? refreshed,
+    TResult? Function(_Changed value)? changed,
   }) {
     return started?.call(this);
   }
@@ -167,6 +178,7 @@ class _$StartedImpl implements _Started {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Started value)? started,
     TResult Function(_Refreshed value)? refreshed,
+    TResult Function(_Changed value)? changed,
     required TResult orElse(),
   }) {
     if (started != null) {
@@ -225,6 +237,7 @@ class _$RefreshedImpl implements _Refreshed {
   TResult when<TResult extends Object?>({
     required TResult Function() started,
     required TResult Function() refreshed,
+    required TResult Function(List<Book> books) changed,
   }) {
     return refreshed();
   }
@@ -234,6 +247,7 @@ class _$RefreshedImpl implements _Refreshed {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? started,
     TResult? Function()? refreshed,
+    TResult? Function(List<Book> books)? changed,
   }) {
     return refreshed?.call();
   }
@@ -243,6 +257,7 @@ class _$RefreshedImpl implements _Refreshed {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? started,
     TResult Function()? refreshed,
+    TResult Function(List<Book> books)? changed,
     required TResult orElse(),
   }) {
     if (refreshed != null) {
@@ -256,6 +271,7 @@ class _$RefreshedImpl implements _Refreshed {
   TResult map<TResult extends Object?>({
     required TResult Function(_Started value) started,
     required TResult Function(_Refreshed value) refreshed,
+    required TResult Function(_Changed value) changed,
   }) {
     return refreshed(this);
   }
@@ -265,6 +281,7 @@ class _$RefreshedImpl implements _Refreshed {
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_Started value)? started,
     TResult? Function(_Refreshed value)? refreshed,
+    TResult? Function(_Changed value)? changed,
   }) {
     return refreshed?.call(this);
   }
@@ -274,6 +291,7 @@ class _$RefreshedImpl implements _Refreshed {
   TResult maybeMap<TResult extends Object?>({
     TResult Function(_Started value)? started,
     TResult Function(_Refreshed value)? refreshed,
+    TResult Function(_Changed value)? changed,
     required TResult orElse(),
   }) {
     if (refreshed != null) {
@@ -285,6 +303,160 @@ class _$RefreshedImpl implements _Refreshed {
 
 abstract class _Refreshed implements BooksEvent {
   const factory _Refreshed() = _$RefreshedImpl;
+}
+
+/// @nodoc
+abstract class _$$ChangedImplCopyWith<$Res> {
+  factory _$$ChangedImplCopyWith(
+    _$ChangedImpl value,
+    $Res Function(_$ChangedImpl) then,
+  ) = __$$ChangedImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({List<Book> books});
+}
+
+/// @nodoc
+class __$$ChangedImplCopyWithImpl<$Res>
+    extends _$BooksEventCopyWithImpl<$Res, _$ChangedImpl>
+    implements _$$ChangedImplCopyWith<$Res> {
+  __$$ChangedImplCopyWithImpl(
+    _$ChangedImpl _value,
+    $Res Function(_$ChangedImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of BooksEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? books = null}) {
+    return _then(
+      _$ChangedImpl(
+        null == books
+            ? _value._books
+            : books // ignore: cast_nullable_to_non_nullable
+                  as List<Book>,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$ChangedImpl implements _Changed {
+  const _$ChangedImpl(final List<Book> books) : _books = books;
+
+  final List<Book> _books;
+  @override
+  List<Book> get books {
+    if (_books is EqualUnmodifiableListView) return _books;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_books);
+  }
+
+  @override
+  String toString() {
+    return 'BooksEvent.changed(books: $books)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ChangedImpl &&
+            const DeepCollectionEquality().equals(other._books, _books));
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, const DeepCollectionEquality().hash(_books));
+
+  /// Create a copy of BooksEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ChangedImplCopyWith<_$ChangedImpl> get copyWith =>
+      __$$ChangedImplCopyWithImpl<_$ChangedImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() started,
+    required TResult Function() refreshed,
+    required TResult Function(List<Book> books) changed,
+  }) {
+    return changed(books);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? started,
+    TResult? Function()? refreshed,
+    TResult? Function(List<Book> books)? changed,
+  }) {
+    return changed?.call(books);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? started,
+    TResult Function()? refreshed,
+    TResult Function(List<Book> books)? changed,
+    required TResult orElse(),
+  }) {
+    if (changed != null) {
+      return changed(books);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_Started value) started,
+    required TResult Function(_Refreshed value) refreshed,
+    required TResult Function(_Changed value) changed,
+  }) {
+    return changed(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(_Started value)? started,
+    TResult? Function(_Refreshed value)? refreshed,
+    TResult? Function(_Changed value)? changed,
+  }) {
+    return changed?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_Started value)? started,
+    TResult Function(_Refreshed value)? refreshed,
+    TResult Function(_Changed value)? changed,
+    required TResult orElse(),
+  }) {
+    if (changed != null) {
+      return changed(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class _Changed implements BooksEvent {
+  const factory _Changed(final List<Book> books) = _$ChangedImpl;
+
+  List<Book> get books;
+
+  /// Create a copy of BooksEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$ChangedImplCopyWith<_$ChangedImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc

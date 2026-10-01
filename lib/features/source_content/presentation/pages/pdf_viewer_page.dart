@@ -150,7 +150,7 @@ class PdfViewerPage extends StatelessWidget {
           child: PdfViewPinch(
             controller: controller,
 
-            builders: PdfViewPinchBuilders(
+            builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
               /// Required by the current pdfx API.
               options: const DefaultBuilderOptions(),
 

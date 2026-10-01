@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
@@ -20,11 +22,13 @@ class ChaptersBloc extends Bloc<ChaptersEvent, ChaptersState> {
   }) : super(const ChaptersState.initial()) {
     on<_Started>(_onStarted);
     on<_Refreshed>(_onRefreshed);
+    on<_Changed>(_onChanged);
   }
 
   final String bookId;
   final GetChaptersUsecase getChapters;
   final WatchChaptersUsecase watchChapters;
+  StreamSubscription<List<Chapter>>? _chaptersSubscription;
 
   Future<void> _onStarted(_Started event, Emitter<ChaptersState> emit) async {
     emit(const ChaptersState.loading());
@@ -41,30 +45,21 @@ class ChaptersBloc extends Bloc<ChaptersEvent, ChaptersState> {
       ));
     }
 
-    await emit.forEach<List<Chapter>>(
-      watchChapters(bookId: bookId),
-      onData: (List<Chapter> items) => ChaptersState.loaded(
-        chapters: items,
-        isRefreshing: state.maybeWhen(
-          loaded: (_, bool refreshing, __, ___) => refreshing,
-          orElse: () => false,
-        ),
-      ),
-      onError: (Object error, StackTrace stackTrace) {
-        final ChaptersState current = state;
-        if (current is _Loaded) {
-          return current.copyWith(
-            isRefreshing: false,
-            message: 'Chapters could not be loaded.',
-          );
-        }
-        return ChaptersState.loaded(
-          chapters: const <Chapter>[],
-          message: 'Chapters could not be loaded.',
-          isEmptyBecauseOfError: true,
-        );
-      },
+    await _chaptersSubscription?.cancel();
+    _chaptersSubscription = watchChapters(bookId: bookId).listen(
+      (List<Chapter> items) => add(ChaptersEvent.changed(items)),
+      onError: (_, __) => add(const ChaptersEvent.changed(<Chapter>[])),
     );
+  }
+
+  void _onChanged(_Changed event, Emitter<ChaptersState> emit) {
+    final ChaptersState current = state;
+    if (event.chapters.isEmpty &&
+        current is _Loaded &&
+        current.chapters.isNotEmpty) {
+      return;
+    }
+    emit(ChaptersState.loaded(chapters: event.chapters));
   }
 
   Future<void> _onRefreshed(_Refreshed event, Emitter<ChaptersState> emit) async {
@@ -99,6 +94,12 @@ class ChaptersBloc extends Bloc<ChaptersEvent, ChaptersState> {
     }
 
     emit(ChaptersState.loaded(chapters: chapters));
+  }
+
+  @override
+  Future<void> close() async {
+    await _chaptersSubscription?.cancel();
+    return super.close();
   }
 
 }
