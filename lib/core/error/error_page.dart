@@ -86,7 +86,7 @@ class ErrorPage extends StatelessWidget {
                                 } else if (context.canPop()) {
                                   context.pop();
                                 } else {
-                                  context.go('/home');
+                                  context.go('/projects');
                                 }
                               },
                           icon: const Icon(Icons.refresh_rounded, size: 20),

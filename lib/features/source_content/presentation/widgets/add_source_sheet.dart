@@ -18,6 +18,9 @@ class AddSourceSheet {
   const AddSourceSheet._();
 
   static Future<void> show(BuildContext context, Chapter chapter) {
+    // Get the bloc reference before showing modal to ensure proper scope
+    final SourcesBloc sourcesBloc = context.read<SourcesBloc>();
+    
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -25,15 +28,22 @@ class AddSourceSheet {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => _AddSourceSheetBody(chapter: chapter),
+      builder: (_) => _AddSourceSheetBody(
+        chapter: chapter,
+        sourcesBloc: sourcesBloc,
+      ),
     );
   }
 }
 
 class _AddSourceSheetBody extends StatefulWidget {
-  const _AddSourceSheetBody({required this.chapter});
+  const _AddSourceSheetBody({
+    required this.chapter,
+    required this.sourcesBloc,
+  });
 
   final Chapter chapter;
+  final SourcesBloc sourcesBloc;
 
   @override
   State<_AddSourceSheetBody> createState() => _AddSourceSheetBodyState();
@@ -73,9 +83,9 @@ class _AddSourceSheetBodyState extends State<_AddSourceSheetBody> {
       }
 
       if (!mounted) return;
-      context.read<SourcesBloc>().add(
-            SourcesEvent.fileAdded(file: File(path)),
-          );
+      widget.sourcesBloc.add(
+        SourcesEvent.fileAdded(file: File(path)),
+      );
       Navigator.of(context).pop();
     } catch (_) {
       if (!mounted) return;
@@ -141,9 +151,9 @@ class _AddSourceSheetBodyState extends State<_AddSourceSheetBody> {
 
     // The file is already inside the chapter folder; the bloc registers it and
     // queues the upload.
-    context.read<SourcesBloc>().add(
-          SourcesEvent.recordingAdded(localPath: path),
-        );
+    widget.sourcesBloc.add(
+      SourcesEvent.recordingAdded(localPath: path),
+    );
     Navigator.of(context).pop();
   }
 

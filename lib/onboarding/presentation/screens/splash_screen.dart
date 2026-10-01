@@ -15,8 +15,8 @@ class SplashScreen extends StatelessWidget {
         listener: (context, state) {
           state.whenOrNull(
             authenticated: () {
-              debugPrint("Navigating to home");
-              GoRouter.of(context).go('/home');
+              debugPrint("Navigating to projects");
+              GoRouter.of(context).go('/projects');
             },
             unauthenticated: () {
               debugPrint("Navigating to login");

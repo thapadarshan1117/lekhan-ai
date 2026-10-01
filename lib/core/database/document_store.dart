@@ -90,10 +90,44 @@ class DocumentStore<T> {
   Future<int> count() async => _box.length;
 
   /// Emits the collection on subscribe and after every change to the box.
-  Stream<List<T>> watch() async* {
-    yield _decoded;
-    await for (final _ in _box.watch()) {
-      yield _decoded;
-    }
+  /// 
+  /// Guarantees that at least the initial state is emitted on subscribe,
+  /// using BroadcastStream with micro-task scheduling for immediate delivery.
+  Stream<List<T>> watch() {
+    final StreamController<List<T>> controller = StreamController<List<T>>.broadcast();
+    
+    // Schedule initial emit on micro-task to ensure listener is ready
+    // but before any box.watch() events
+    Future.microtask(() {
+      if (!controller.isClosed) {
+        controller.add(_decoded);
+      }
+    });
+    
+    // Listen to box changes and emit
+    late StreamSubscription<void> subscription;
+    subscription = _box.watch().listen(
+      (_) {
+        if (!controller.isClosed) {
+          controller.add(_decoded);
+        }
+      },
+      onError: (Object error) {
+        if (!controller.isClosed) {
+          controller.addError(error);
+        }
+      },
+      onDone: () {
+        if (!controller.isClosed) {
+          controller.close();
+        }
+      },
+    );
+    
+    controller.onCancel = () async {
+      await subscription.cancel();
+    };
+    
+    return controller.stream;
   }
 }

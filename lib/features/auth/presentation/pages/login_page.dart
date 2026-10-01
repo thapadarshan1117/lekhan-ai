@@ -225,7 +225,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         height: 40,
                         child: ElevatedButton(
-                          onPressed: ()=>context.push('/home'),
+                          onPressed: ()=>context.go('/projects'),
                           // onPressed: isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(

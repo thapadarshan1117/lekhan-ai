@@ -52,10 +52,30 @@ class SourcesBloc extends Bloc<SourcesEvent, SourcesState> {
     emit(const SourcesState.loading());
 
     await _subscription?.cancel();
+    
+    // Emit initial documents before subscribing to changes
+    try {
+      final List<ChapterSource> initialItems = await watchSources(chapter.id).first;
+      _publish(emit, initialItems);
+    } catch (error) {
+      if (!emit.isDone) {
+        emit(SourcesState.error('Sources could not be read from this device.'));
+      }
+      return;
+    }
+
+    // Now subscribe to future changes
     _subscription = watchSources(chapter.id).listen(
-      (List<ChapterSource> items) => _publish(emit, items),
-      onError: (Object error) =>
-          emit(SourcesState.error('Sources could not be read from this device.')),
+      (List<ChapterSource> items) {
+        if (!emit.isDone) {
+          _publish(emit, items);
+        }
+      },
+      onError: (Object error) {
+        if (!emit.isDone) {
+          emit(SourcesState.error('Sources could not be read from this device.'));
+        }
+      },
     );
   }
 
@@ -148,6 +168,9 @@ class SourcesBloc extends Bloc<SourcesEvent, SourcesState> {
 
   /// Emits a new list while preserving the busy flag and any pending message.
   void _publish(Emitter<SourcesState> emit, List<ChapterSource> items) {
+    // Check if emit is done before emitting
+    if (emit.isDone) return;
+    
     final bool isBusy = state.maybeWhen(
       loaded: (List<ChapterSource> _, bool isBusy, String? __) => isBusy,
       orElse: () => false,

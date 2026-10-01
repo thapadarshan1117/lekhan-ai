@@ -34,6 +34,7 @@ class ProjectDetailPage extends StatelessWidget {
       create: (BuildContext context) => BooksBloc(
         projectId: projectId,
         getBooks: sl<GetBooksUsecase>(),
+        watchBooks: sl<WatchBooksUsecase>(),
       )..add(const BooksEvent.started()),
       child: _ProjectDetailView(projectId: projectId, initial: initial),
     );
@@ -72,7 +73,7 @@ class _ProjectDetailView extends StatelessWidget {
         onPressed: () async {
           final bool? saved = await context.pushNamed<bool>(
             'bookForm',
-            pathParameters: <String, String>{'projectId': projectId},
+            queryParameters: <String, String>{'projectId': projectId},
           );
           if (saved == true && context.mounted) {
             context.read<BooksBloc>().add(const BooksEvent.refreshed());

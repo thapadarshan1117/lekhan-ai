@@ -187,8 +187,7 @@ class ChapterRepositoryImpl implements ChapterRepository {
     }
 
     final Map<String, dynamic> data = stored.toRemoteJson();
-    // Parents are referenced by their *local* id here; the sync layer swaps in
-    // the remote id right before the record is pushed.
+    // The sync reference resolver translates the local parent id when online.
     data['book_id'] = stored.bookId;
 
     await queue.enqueue(

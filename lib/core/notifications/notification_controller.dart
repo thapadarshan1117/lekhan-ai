@@ -149,7 +149,7 @@ class NotificationController {
 
   /// Returns the home route based on the current user's type.
   static Future<String> _getHomeRouteForCurrentUser() async {
-    return '/insight';
+    return '/projects';
   }
 
   /// Call this method to navigate to a pending route after app is fully initialized.

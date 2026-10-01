@@ -27,6 +27,7 @@ class BookDetailPage extends StatelessWidget {
       create: (BuildContext context) => ChaptersBloc(
         bookId: bookId,
         getChapters: sl<GetChaptersUsecase>(),
+        watchChapters: sl<WatchChaptersUsecase>(),
       )..add(const ChaptersEvent.started()),
       child: _BookDetailView(bookId: bookId, initial: initial),
     );
@@ -62,7 +63,7 @@ class _BookDetailView extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+        onPressed: () async {
           final ChaptersState state = context.read<ChaptersBloc>().state;
           final int next = state.maybeWhen(
             loaded: (List<Chapter> chapters, bool _, String? __, bool ___) =>
@@ -75,11 +76,16 @@ class _BookDetailView extends StatelessWidget {
             orElse: () => 1,
           );
 
-          context.pushNamed<bool>(
+          final bool? saved = await context.pushNamed<bool>(
             'chapterForm',
-            pathParameters: <String, String>{'bookId': bookId},
-            queryParameters: <String, String>{'number': '$next'},
+            queryParameters: <String, String>{
+              'bookId': bookId,
+              'number': '$next',
+            },
           );
+          if (saved == true && context.mounted) {
+            context.read<ChaptersBloc>().add(const ChaptersEvent.refreshed());
+          }
         },
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,

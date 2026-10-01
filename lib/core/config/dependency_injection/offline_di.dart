@@ -20,6 +20,7 @@ import 'package:lekhan_ai/features/books/domain/repositories/book_repository.dar
 import 'package:lekhan_ai/features/books/domain/usecases/get_book_detail_usecase.dart';
 import 'package:lekhan_ai/features/books/domain/usecases/get_books_usecase.dart';
 import 'package:lekhan_ai/features/books/domain/usecases/save_book_usecase.dart';
+import 'package:lekhan_ai/features/books/presentation/bloc/books_bloc/books_bloc.dart';
 import 'package:lekhan_ai/features/chapters/data/datasources/local/chapter_local_datasource.dart';
 import 'package:lekhan_ai/features/chapters/data/datasources/remote/chapter_remote_datasource.dart';
 import 'package:lekhan_ai/features/chapters/data/repositories/chapter_repository_impl.dart';
@@ -28,6 +29,7 @@ import 'package:lekhan_ai/features/chapters/domain/usecases/get_chapter_detail_u
 import 'package:lekhan_ai/features/chapters/domain/usecases/get_chapters_usecase.dart';
 import 'package:lekhan_ai/features/chapters/domain/usecases/save_chapter_usecase.dart';
 import 'package:lekhan_ai/features/chapters/domain/usecases/update_chapter_progress_usecase.dart';
+import 'package:lekhan_ai/features/chapters/presentation/bloc/chapters_bloc/chapters_bloc.dart';
 import 'package:lekhan_ai/features/projects/data/datasources/local/project_local_datasource.dart';
 import 'package:lekhan_ai/features/projects/data/datasources/remote/project_remote_datasource.dart';
 import 'package:lekhan_ai/features/projects/data/repositories/project_repository_impl.dart';
@@ -428,7 +430,24 @@ Future<void> registerOfflineFirstDependencies() async {
   sl.registerFactory(
     () => ProjectsBloc(
       getProjects: sl<GetProjectsUsecase>(),
+      watchProjects: sl<WatchProjectsUsecase>(),
       saveProject: sl<SaveProjectUsecase>(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => BooksBloc(
+      projectId: '', // Will be provided by the page
+      getBooks: sl<GetBooksUsecase>(),
+      watchBooks: sl<WatchBooksUsecase>(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => ChaptersBloc(
+      bookId: '', // Will be provided by the page
+      getChapters: sl<GetChaptersUsecase>(),
+      watchChapters: sl<WatchChaptersUsecase>(),
     ),
   );
 

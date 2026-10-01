@@ -35,7 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _handleEditProfile() {
     // Placeholder for future navigation to edit-profile page
-    context.push(RouterManager.rEditProfile);
+    // context.push(RouterManager.rEditProfile);
   }
 
   void _handleFavorites() {

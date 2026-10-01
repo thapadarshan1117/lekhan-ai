@@ -102,9 +102,16 @@ class _ChapterFormPageState extends State<ChapterFormPage> {
 
     setState(() => _saving = true);
 
+    if (_projectId == null && widget.projectId == null) {
+      await _resolveProjectId();
+    }
+
+    if (!mounted) return;
+
     final String? projectId = _projectId ?? widget.projectId;
 
     if (projectId == null || projectId.isEmpty) {
+      setState(() => _saving = false);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(

@@ -1,38 +1,27 @@
-
-import 'package:lekhan_ai/features/profile/pages/help_center_page.dart';
-import 'package:lekhan_ai/features/profile/pages/terms_and_policy_page.dart';
-import 'package:lekhan_ai/features/home/presentations/pages/home_page.dart';
-import 'package:lekhan_ai/features/home/data/models/service_category_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lekhan_ai/core/config/dependency_injection/di_config.dart';
-import 'package:lekhan_ai/core/config/navigation/app_scaffold_with_navbar.dart';
 import 'package:lekhan_ai/core/error/error_page.dart';
 import 'package:lekhan_ai/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:lekhan_ai/features/auth/presentation/pages/login_page.dart';
 import 'package:lekhan_ai/features/auth/presentation/pages/otp_verification_page.dart';
 import 'package:lekhan_ai/features/auth/presentation/pages/signup_page.dart';
 import 'package:lekhan_ai/features/auth/presentation/pages/new_password.dart';
-import 'package:lekhan_ai/features/notifications/presentation/bloc/notification_bloc.dart';
-import 'package:lekhan_ai/features/books/domain/entities/book.dart';
-import 'package:lekhan_ai/features/books/presentation/pages/book_detail_page.dart';
-import 'package:lekhan_ai/features/books/presentation/pages/book_form_page.dart';
-import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
-import 'package:lekhan_ai/features/chapters/presentation/pages/chapter_detail_page.dart';
-import 'package:lekhan_ai/features/chapters/presentation/pages/chapter_form_page.dart';
-import 'package:lekhan_ai/features/notifications/presentation/pages/notification_screen.dart';
 import 'package:lekhan_ai/features/projects/domain/entities/project.dart';
+import 'package:lekhan_ai/features/projects/presentation/pages/projects_page.dart';
 import 'package:lekhan_ai/features/projects/presentation/pages/project_detail_page.dart';
 import 'package:lekhan_ai/features/projects/presentation/pages/project_form_page.dart';
-import 'package:lekhan_ai/features/projects/presentation/pages/projects_page.dart';
+import 'package:lekhan_ai/features/books/presentation/pages/book_detail_page.dart';
+import 'package:lekhan_ai/features/books/presentation/pages/book_form_page.dart';
+import 'package:lekhan_ai/features/chapters/presentation/pages/chapter_detail_page.dart';
+import 'package:lekhan_ai/features/chapters/presentation/pages/chapter_form_page.dart';
+import 'package:lekhan_ai/features/source_content/domain/entities/chapter_source.dart';
+import 'package:lekhan_ai/features/source_content/presentation/pages/image_viewer_page.dart';
+import 'package:lekhan_ai/features/source_content/presentation/pages/audio_player_page.dart';
+import 'package:lekhan_ai/features/source_content/presentation/pages/video_player_page.dart';
+import 'package:lekhan_ai/features/source_content/presentation/pages/pdf_viewer_page.dart';
+import 'package:lekhan_ai/features/source_content/presentation/pages/document_viewer_page.dart';
 import 'package:lekhan_ai/features/sync/presentation/pages/sync_centre_page.dart';
-import 'package:lekhan_ai/features/profile/pages/profile_page.dart';
-import 'package:lekhan_ai/features/profile/pages/edit_profile_page.dart';
-import 'package:lekhan_ai/features/profile/pages/favorites_page.dart';
-import 'package:lekhan_ai/features/profile/pages/address_page.dart';
 import 'package:lekhan_ai/onboarding/presentation/screens/splash_screen.dart';
-
 
 class RouterManager {
   static GoRouter? _router;
@@ -40,7 +29,7 @@ class RouterManager {
 
   static GoRouter get router {
     if (!_isInitialized) {
-      debugPrint('🏗️ Initializing router');
+      debugPrint('🏗️ Initializing Standalone Application Router');
       _router = _createRouter();
       _isInitialized = true;
     }
@@ -48,8 +37,10 @@ class RouterManager {
     return _router!;
   }
 
+  /// Standalone Application Router
+  /// No bottom navbar - linear navigation flow through projects → books → chapters
   static GoRouter _createRouter() {
-    debugPrint('🏗️ Creating router');
+    debugPrint('🏗️ Creating standalone app router');
 
     return GoRouter(
       initialLocation: '/',
@@ -62,15 +53,136 @@ class RouterManager {
           builder: (context, state) => SplashScreen(),
         ),
 
-        // Authentication Routes
+        // Authentication Routes (pre-app)
         ..._authRoutes,
 
+        // Main Application Routes (No Shell/Bottom Nav)
+        // Linear navigation: Projects → Books → Chapters
+        
+        // Projects List (Main)
+        GoRoute(
+          path: '/projects',
+          name: 'projects',
+          builder: (context, state) => const ProjectsPage(),
+        ),
 
-        // Bottom Navigation Shell
-        _navigationShell,
+        // Project Form (Create/Edit)
+        GoRoute(
+          path: '/projects/new',
+          name: 'projectForm',
+          builder: (context, state) {
+            final initial = state.extra as Project?;
+            return ProjectFormPage(initial: initial);
+          },
+        ),
 
-        // Detail Pages (No Bottom Nav) - These are shown without navbar
-        ..._detailRoutes,
+        // Project Detail
+        GoRoute(
+          path: '/projects/:id',
+          name: 'projectDetail',
+          builder: (context, state) {
+            final projectId = state.pathParameters['id']!;
+            final initial = state.extra as Project?;
+            return ProjectDetailPage(projectId: projectId, initial: initial);
+          },
+        ),
+
+        // Book Detail
+        GoRoute(
+          path: '/books/:id',
+          name: 'bookDetail',
+          builder: (context, state) {
+            final bookId = state.pathParameters['id']!;
+            return BookDetailPage(bookId: bookId);
+          },
+        ),
+
+        // Book Form (Create/Edit)
+        GoRoute(
+          path: '/books/new',
+          name: 'bookForm',
+          builder: (context, state) {
+            final projectId = state.uri.queryParameters['projectId'] ?? '';
+            return BookFormPage(projectId: projectId);
+          },
+        ),
+
+        // Chapter Detail
+        GoRoute(
+          path: '/chapters/:id',
+          name: 'chapterDetail',
+          builder: (context, state) {
+            final chapterId = state.pathParameters['id']!;
+            return ChapterDetailPage(chapterId: chapterId);
+          },
+        ),
+
+        // Chapter Form (Create/Edit)
+        GoRoute(
+          path: '/chapters/new',
+          name: 'chapterForm',
+          builder: (context, state) {
+            final bookId = state.uri.queryParameters['bookId'];
+            final number = int.tryParse(state.uri.queryParameters['number'] ?? '1') ?? 1;
+            return ChapterFormPage(
+              bookId: bookId ?? '',
+              suggestedNumber: number,
+            );
+          },
+        ),
+
+        // Media Viewers
+        GoRoute(
+          path: '/viewer/image',
+          name: 'imageViewer',
+          builder: (context, state) {
+            final source = state.extra as ChapterSource;
+            return ImageViewerPage(source: source);
+          },
+        ),
+
+        GoRoute(
+          path: '/viewer/audio',
+          name: 'audioPlayer',
+          builder: (context, state) {
+            final source = state.extra as ChapterSource;
+            return AudioPlayerPage(source: source);
+          },
+        ),
+
+        GoRoute(
+          path: '/viewer/video',
+          name: 'videoPlayer',
+          builder: (context, state) {
+            final source = state.extra as ChapterSource;
+            return VideoPlayerPage(source: source);
+          },
+        ),
+
+        GoRoute(
+          path: '/viewer/pdf',
+          name: 'pdfViewer',
+          builder: (context, state) {
+            final source = state.extra as ChapterSource;
+            return PdfViewerPage(source: source);
+          },
+        ),
+
+        GoRoute(
+          path: '/viewer/document',
+          name: 'documentViewer',
+          builder: (context, state) {
+            final source = state.extra as ChapterSource;
+            return DocumentViewerPage(source: source);
+          },
+        ),
+
+        // Sync Centre
+        GoRoute(
+          path: '/sync-centre',
+          name: 'syncCentre',
+          builder: (context, state) => const SyncCentrePage(),
+        ),
       ],
     );
   }
@@ -79,10 +191,19 @@ class RouterManager {
   // AUTHENTICATION ROUTES
   // ============================================
   static List<RouteBase> get _authRoutes => [
-    GoRoute(path: '/login', builder: (context, state) => LoginPage()),
-    GoRoute(path: '/signup', builder: (context, state) => SignUpPage()),
+    GoRoute(
+      path: '/login',
+      name: 'login',
+      builder: (context, state) => LoginPage(),
+    ),
+    GoRoute(
+      path: '/signup',
+      name: 'signup',
+      builder: (context, state) => SignUpPage(),
+    ),
     GoRoute(
       path: '/otp-verification',
+      name: 'otpVerification',
       builder: (context, state) {
         final raw = state.extra;
         final extras = raw is Map ? Map<String, dynamic>.from(raw) : null;
@@ -102,6 +223,7 @@ class RouterManager {
     ),
     GoRoute(
       path: '/forgot-password',
+      name: 'forgotPassword',
       builder: (context, state) {
         final email = state.extra as String? ?? '';
         return TeacherForgotPasswordPage(
@@ -111,6 +233,7 @@ class RouterManager {
     ),
     GoRoute(
       path: '/reset-password',
+      name: 'resetPassword',
       builder: (context, state) {
         final raw = state.extra;
         final extras = raw is Map ? Map<String, dynamic>.from(raw) : null;
@@ -119,324 +242,39 @@ class RouterManager {
         return NewPassword(email: email, resetToken: resetToken);
       },
     ),
-    GoRoute(
-      path: "/notification",
-      pageBuilder: (context, state) => MaterialPage(
-        child: BlocProvider(
-          create: (context) => sl<NotificationBloc>(),
-          child: NotificationScreen(),
-        ),
-      ),
-    ),
-  ];
-
-  // ============================================
-  // ROUTE NAMES (use these instead of building path strings)
-  // ============================================
-  // Booking flow is intentionally FLAT. Every step is a top-level route and
-  // all data travels through `extra`, so navigation is a simple
-  // `context.pushNamed(AppRoute.addIssue, extra: {...})` and the URLs stay short.
-  static const String rCategoryPros = '/category-pros/:categoryName';
-  static const String rWorkerDetail = '/worker/:workerName';
-  static const String rCategoryDetail = '/category-detail';
-  static const String rAddIssue = '/add-issue';
-  static const String rMediaUpload = '/media-upload';
-  static const String rAddress = '/address';
-  static const String rAddNewAddress = '/address/add-new';
-  static const String rAddAddressInformation = '/address/add-information';
-  static const String rPayment = '/payment';
-  static const String rBookingDetail = '/booking-detail';
-  static const String rBookingTabDetail = '/booking-tab-detail';
-  static const String rRateAndReview = '/rate-and-review';
-  static const String rHelpCenter = '/help-center';
-  static const String rEditProfile = '/edit-profile';
-
-
-  // ============================================
-  // DETAIL ROUTES (No Bottom Nav) - all flat, data passed via `extra`
-  // ============================================
-  static List<RouteBase> get _detailRoutes => [
-    // Booking Detail Route
- 
-
-    // Category detail - REMOVED (now nested in Home tab)
-
-
-
-    // Favorites Page
-    GoRoute(
-      path: '/favorites',
-      name: 'favorites',
-      builder: (context, state) => const FavoritesPage(),
-    ),
-      GoRoute(
-      path: '/help-center',
-      name: 'helpCenter',
-      builder: (context, state) => const HelpCenterPage(),
-    ),
-         GoRoute(
-      path: '/terms-policy',
-      name: 'termsAndPolicy',
-      builder: (context, state) {
-        final section = state.extra as String? ?? 'privacy';
-        return TermsAndPolicyPage(
-          sections: _getSectionContent(section),
-        );
-      },
-    ),
-
-    // Address Page
-    GoRoute(
-      path: '/addresses',
-      name: 'addresses',
-      builder: (context, state) => const AddressPage(),
-    ),
-
-    // Edit Profile Page
-    GoRoute(
-      path: rEditProfile,
-      name: 'editProfile',
-      builder: (context, state) {
-        final extras = state.extra as Map<String, dynamic>?;
-        return EditProfilePage(
-          initialName: extras?['name'] as String?,
-          initialEmail: extras?['email'] as String?,
-          initialPhone: extras?['phone'] as String?,
-          initialAddress: extras?['address'] as String?,
-        );
-      },
-    ),
-
-    // ------------------------------------------------------------------
-    // WRITING STRUCTURE ROUTES (no bottom nav)
-    //
-    // Ordered so the literal segments win over `:id` - `/projects/new` must be
-    // declared before `/projects/:id`, otherwise "new" is read as an id.
-    // ------------------------------------------------------------------
-
-    // Create / edit a project
-    GoRoute(
-      path: '/projects/new',
-      name: 'projectForm',
-      builder: (context, state) {
-        final extras = state.extra;
-        return ProjectFormPage(
-          initial: extras is Map ? extras['project'] as Project? : null,
-        );
-      },
-    ),
-
-    // Edit an existing project
-    GoRoute(
-      path: '/projects/:id/edit',
-      name: 'projectEdit',
-      builder: (context, state) {
-        final extras = state.extra;
-        return ProjectFormPage(
-          initial: extras is Map ? extras['project'] as Project? : null,
-        );
-      },
-    ),
-
-    // One project (its books)
-    GoRoute(
-      path: '/projects/:id',
-      name: 'projectDetail',
-      builder: (context, state) {
-        final extras = state.extra;
-        return ProjectDetailPage(
-          projectId: state.pathParameters['id'] ?? '',
-          initial: extras is Map ? extras['project'] as Project? : null,
-        );
-      },
-    ),
-
-    // Create a book inside a project
-    GoRoute(
-      path: '/projects/:projectId/books/new',
-      name: 'bookForm',
-      builder: (context, state) => BookFormPage(
-        projectId: state.pathParameters['projectId'] ?? '',
-      ),
-    ),
-
-    // One book (its chapters)
-    GoRoute(
-      path: '/books/:id',
-      name: 'bookDetail',
-      builder: (context, state) {
-        final extras = state.extra;
-        return BookDetailPage(
-          bookId: state.pathParameters['id'] ?? '',
-          initial: extras is Map ? extras['book'] as Book? : null,
-        );
-      },
-    ),
-
-    // Create a chapter inside a book
-    GoRoute(
-      path: '/books/:bookId/chapters/new',
-      name: 'chapterForm',
-      builder: (context, state) => ChapterFormPage(
-        bookId: state.pathParameters['bookId'] ?? '',
-        suggestedNumber:
-            int.tryParse(state.uri.queryParameters['number'] ?? '') ?? 1,
-      ),
-    ),
-
-    // One chapter (its source material)
-    GoRoute(
-      path: '/chapters/:id',
-      name: 'chapterDetail',
-      builder: (context, state) {
-        final extras = state.extra;
-        return ChapterDetailPage(
-          chapterId: state.pathParameters['id'] ?? '',
-          initial: extras is Map ? extras['chapter'] as Chapter? : null,
-        );
-      },
-    ),
-
-    // Sync centre
-    GoRoute(
-      path: '/sync',
-      name: 'syncCentre',
-      builder: (context, state) => const SyncCentrePage(),
-    ),
-  ];
-
-
-  // ============================================
-  // BOTTOM NAVIGATION SHELL
-  // ============================================
-  static StatefulShellRoute get _navigationShell =>
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {
-          return AppScaffoldWithNavbar(appNavigationShell: navigationShell);
-        },
-        branches: <StatefulShellBranch>[
-          // Home Tab
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(path: '/home', builder: (context, state) => HomeScreen()),
-            ],
-          ),
-
-          // Projects Tab
-          //
-          // This branch used to be an empty placeholder. The writing structure
-          // (project -> book -> chapter -> sources) lives here now; the other
-          // tabs are untouched, so the nav bar keeps its five items and the
-          // elevated centre button stays where it is.
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/projects',
-                name: 'projects',
-                builder: (context, state) => const ProjectsPage(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/ai-chat',
-                builder: (context, state) => Container(),
-                
-              ),
-            ],
-          ),
-
-          // Packages Tab
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/booking',
-                builder: (context, state) => Container(),
-              ),
-            ],
-          ),
-
-          // Profile Tab
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/profile',
-                builder: (context, state) => const ProfilePage(),
-              ),
-            ],
-          ),
-        ],
-      );
-
-  // ============================================
-  // POLICY SECTIONS
-  // ============================================
-  static List<PolicySection> _getSectionContent(String section) {
-    switch (section.toLowerCase()) {
-      case 'terms':
-        return _termsOfServiceSections;
-      case 'privacy':
-      default:
-        return _privacySections;
-    }
-  }
-
-  static List<PolicySection> get _privacySections => [
-    const PolicySection(
-      title: 'Information We Collect',
-      body: 'We collect information you provide directly, such as when you create an account, post content, or contact us. This may include your name, email address, phone number, profile information, and payment details.',
-    ),
-    const PolicySection(
-      title: 'How We Use Your Information',
-      body: 'We use the information we collect to provide, maintain, and improve our services, process transactions, send transactional communications, and personalize your experience on our platform.',
-    ),
-    const PolicySection(
-      title: 'Information Sharing',
-      body: 'We do not sell, trade, or share your personal information with third parties except as necessary to provide our services or as required by law. Service providers who assist us are bound by confidentiality agreements.',
-    ),
-    const PolicySection(
-      title: 'Data Security',
-      body: 'We implement appropriate technical and organizational measures to protect your personal information. However, no method of transmission over the internet is 100% secure.',
-    ),
-    const PolicySection(
-      title: 'Your Rights',
-      body: 'You have the right to access, correct, and delete your personal information. You can manage your account settings and communication preferences at any time.',
-    ),
-  ];
-
-  static List<PolicySection> get _termsOfServiceSections => [
-    const PolicySection(
-      title: 'Acceptance of Terms',
-      body: 'By accessing and using this platform, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.',
-    ),
-    const PolicySection(
-      title: 'Use License',
-      body: 'Permission is granted to temporarily download one copy of the materials (information or software) on the platform for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.',
-    ),
-    const PolicySection(
-      title: 'Disclaimer',
-      body: 'The materials on the platform are provided on an "as is" basis. We make no warranties, expressed or implied, and hereby disclaim and negate all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose.',
-    ),
-    const PolicySection(
-      title: 'Limitations',
-      body: 'In no event shall the platform or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials.',
-    ),
-    const PolicySection(
-      title: 'Accuracy of Materials',
-      body: 'The materials appearing on the platform could include technical, typographical, or photographic errors. We do not warrant that any of the materials on the platform are accurate, complete, or current.',
-    ),
   ];
 
   // ============================================
   // NAVIGATION HELPERS
   // ============================================
-  static void navigateToHome() {
+  
+  /// Navigate to projects list (home)
+  static void navigateToProjects() {
     try {
-      debugPrint('🏠 Navigating to home: /home');
-      router.go('/home');
+      debugPrint('📚 Navigating to projects');
+      router.go('/projects');
     } catch (e) {
-      debugPrint('❌ Error navigating to home: $e');
+      debugPrint('❌ Error navigating to projects: $e');
+    }
+  }
+
+  /// Navigate to book detail
+  static void navigateToBook(String bookId) {
+    try {
+      debugPrint('📖 Navigating to book: $bookId');
+      router.go('/books/$bookId');
+    } catch (e) {
+      debugPrint('❌ Error navigating to book: $e');
+    }
+  }
+
+  /// Navigate to chapter detail
+  static void navigateToChapter(String chapterId) {
+    try {
+      debugPrint('📄 Navigating to chapter: $chapterId');
+      router.go('/chapters/$chapterId');
+    } catch (e) {
+      debugPrint('❌ Error navigating to chapter: $e');
     }
   }
 
@@ -448,8 +286,10 @@ class RouterManager {
 
   static String get debugInfo =>
       '''
-RouterManager Debug Info:
+RouterManager Debug Info (Standalone App):
 - Router Initialized: $_isInitialized
 - Router Created: ${_router != null}
+- Navigation: Projects → Books → Chapters (Linear)
+- No bottom navbar - full screen content
 ''';
 }

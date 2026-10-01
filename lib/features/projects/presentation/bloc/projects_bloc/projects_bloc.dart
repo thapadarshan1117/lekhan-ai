@@ -5,6 +5,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
 import 'package:lekhan_ai/features/projects/domain/entities/project.dart';
 import 'package:lekhan_ai/features/projects/domain/usecases/get_projects_usecase.dart';
+import 'package:lekhan_ai/features/projects/domain/usecases/get_project_detail_usecase.dart';
 import 'package:lekhan_ai/features/projects/domain/usecases/save_project_usecase.dart';
 
 part 'projects_event.dart';
@@ -13,12 +14,13 @@ part 'projects_bloc.freezed.dart';
 
 /// Drives the projects list.
 ///
-/// Every read goes through the repository, which answers from the local store
-/// first. So this bloc works with the radio off, and "refresh" is the only
-/// action that may touch the network.
+/// Listens to the local store via a stream, so projects appear instantly when
+/// created and the UI updates automatically as sync changes them. The "refresh"
+/// action can still touch the network.
 class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ProjectsBloc({
     required this.getProjects,
+    required this.watchProjects,
     required this.saveProject,
   }) : super(const ProjectsState.initial()) {
     on<_Started>(_onStarted);
@@ -26,7 +28,10 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   }
 
   final GetProjectsUsecase getProjects;
+  final WatchProjectsUsecase watchProjects;
   final SaveProjectUsecase saveProject;
+
+  StreamSubscription<List<Project>>? _subscription;
 
   Future<void> _onStarted(
     _Started event,
@@ -34,27 +39,40 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   ) async {
     emit(const ProjectsState.loading());
 
-    // Local first: this returns instantly when the cache has something, and the
-    // force refresh below only happens if there is nothing to show.
-    final result = await getProjects(const GetProjectsParams());
-
-    final List<Project>? projects = result.valueOrNull;
-
-    if (projects == null) {
-      final String message =
-          result.errorOrNull?.message ?? 'Projects could not be loaded.';
-
-      // An empty cache is an empty state, not an error: the user may simply be
-      // starting out, or offline with nothing downloaded yet.
-      emit(ProjectsState.loaded(
-        projects: const <Project>[],
-        message: message,
-        isEmptyBecauseOfError: true,
-      ));
+    await _subscription?.cancel();
+    
+    // Emit initial projects before subscribing to changes
+    try {
+      final List<Project> initialItems = await watchProjects().first;
+      _publish(emit, initialItems);
+    } catch (error) {
+      if (!emit.isDone) {
+        emit(ProjectsState.loaded(
+          projects: const <Project>[],
+          message: 'Projects could not be loaded.',
+          isEmptyBecauseOfError: true,
+        ));
+      }
       return;
     }
 
-    emit(ProjectsState.loaded(projects: projects));
+    // Now subscribe to future changes
+    _subscription = watchProjects().listen(
+      (List<Project> items) {
+        if (!emit.isDone) {
+          _publish(emit, items);
+        }
+      },
+      onError: (Object error) {
+        if (!emit.isDone) {
+          emit(ProjectsState.loaded(
+            projects: const <Project>[],
+            message: 'Projects could not be loaded.',
+            isEmptyBecauseOfError: true,
+          ));
+        }
+      },
+    );
   }
 
   Future<void> _onRefreshed(
@@ -92,5 +110,24 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     }
 
     emit(ProjectsState.loaded(projects: projects));
+  }
+
+  /// Emits a new list while preserving the busy flag and any pending message.
+  void _publish(Emitter<ProjectsState> emit, List<Project> items) {
+    if (emit.isDone) return;
+    
+    final bool isRefreshing = state.maybeWhen(
+      loaded: (List<Project> _, bool isRefreshing, String? __, bool ___) => isRefreshing,
+      orElse: () => false,
+    );
+
+    emit(ProjectsState.loaded(projects: items, isRefreshing: isRefreshing));
+  }
+
+  @override
+  Future<void> close() async {
+    await _subscription?.cancel();
+    _subscription = null;
+    return super.close();
   }
 }

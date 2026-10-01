@@ -105,6 +105,10 @@
     audioplayers: ^6.1.0
     uuid: ^4.4.0
     workmanager: ^0.10.0
+    photo_view: ^0.15.0
+    just_audio: ^0.9.36
+    video_player: ^2.10.0
+    pdfx: ^2.7.2
 
   dependency_overrides:
     intl: 0.19.0

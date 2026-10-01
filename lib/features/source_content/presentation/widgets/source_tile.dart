@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lekhan_ai/core/enums/source_type.dart';
 import 'package:lekhan_ai/core/enums/upload_status.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
@@ -20,62 +21,98 @@ class SourceTile extends StatelessWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRetry;
 
+  void _openViewer(BuildContext context) {
+    // Allow opening if the file exists locally, even if still uploading to server.
+    // The file is stored on device, so there's no reason to block viewing it.
+    // Only block if it's truly unavailable (failed upload with file deleted, etc).
+    if (source.hasFailed && source.errorMessage?.contains('no longer on this device') == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(source.errorMessage ?? 'File is no longer available.')),
+      );
+      return;
+    }
+
+    switch (source.sourceType) {
+      case SourceType.image:
+        context.pushNamed('imageViewer', extra: source);
+        break;
+      case SourceType.audio:
+      case SourceType.recording:
+        context.pushNamed('audioPlayer', extra: source);
+        break;
+      case SourceType.video:
+        context.pushNamed('videoPlayer', extra: source);
+        break;
+      case SourceType.document:
+        // Try PDF first, fall back to document viewer
+        if (source.extension.toLowerCase() == 'pdf') {
+          context.pushNamed('pdfViewer', extra: source);
+        } else {
+          context.pushNamed('documentViewer', extra: source);
+        }
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              _TypeIcon(type: source.sourceType),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      source.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+    return GestureDetector(
+      onTap: () => _openViewer(context),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _TypeIcon(type: source.sourceType),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        source.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _subtitle(source),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
+                      const SizedBox(height: 4),
+                      Text(
+                        _subtitle(source),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              if (onDelete != null)
-                IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    size: 20,
-                    color: AppColors.textSecondary,
+                    ],
                   ),
-                  tooltip: 'Remove',
                 ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _UploadStateRow(source: source, onRetry: onRetry),
-        ],
+                if (onDelete != null)
+                  IconButton(
+                    onPressed: onDelete,
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
+                    tooltip: 'Remove',
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _UploadStateRow(source: source, onRetry: onRetry),
+          ],
+        ),
       ),
     );
   }

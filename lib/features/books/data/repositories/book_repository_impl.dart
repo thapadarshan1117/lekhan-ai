@@ -4,7 +4,6 @@ import 'package:lekhan_ai/core/error/failure_mapper.dart';
 import 'package:lekhan_ai/core/sync/conflict_resolver.dart';
 import 'package:lekhan_ai/core/sync/sync_queue.dart';
 import 'package:lekhan_ai/core/sync/sync_request_bus.dart';
-import 'package:lekhan_ai/core/sync/sync_task.dart';
 import 'package:lekhan_ai/core/sync/sync_task_builder.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
 import 'package:lekhan_ai/features/books/data/datasources/local/book_local_datasource.dart';
@@ -181,8 +180,7 @@ class BookRepositoryImpl implements BookRepository {
     }
 
     final Map<String, dynamic> data = stored.toRemoteJson();
-    // Parents are referenced by their *local* id here; the sync layer swaps in
-    // the remote id right before the record is pushed.
+    // The sync reference resolver translates the local parent id when online.
     data['project_id'] = stored.projectId;
 
     await queue.enqueue(
