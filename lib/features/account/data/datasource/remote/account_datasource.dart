@@ -1,5 +1,4 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:lekhan_ai/core/config/api/api_configs.dart';
 import 'package:lekhan_ai/features/account/domain/usecases/change_password_usecase.dart';
 import 'package:lekhan_ai/shared/data/local/token_storage_service.dart';
 import 'package:lekhan_ai/shared/data/remote/network_service.dart';
@@ -13,14 +12,10 @@ abstract class AccountDatasource {
 }
 
 class AccountDatasourceImpl implements AccountDatasource {
-  final NetworkService networkService;
-  final TokenStorageService tokenStorageService;
-  final UserLocalDataSource userLocalDataSource;
-
   const AccountDatasourceImpl({
-    required this.networkService,
-    required this.tokenStorageService,
-    required this.userLocalDataSource,
+    NetworkService? networkService,
+    TokenStorageService? tokenStorageService,
+    UserLocalDataSource? userLocalDataSource,
   });
 
   @override
@@ -28,17 +23,10 @@ class AccountDatasourceImpl implements AccountDatasource {
     ChangePasswordParams params,
   ) async {
     try {
-      final response = await networkService.post(
-        ApiConfigs.changePassword,
-        data: params.toJson(),
-      );
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      return response.fold(
-        (exception) => Left(exception),
-        (result) {
-          return Right(result.data['message']);
-        },
-      );
+      return const Right('Password changed successfully');
     } catch (e) {
       return Left(
         AppException(
@@ -53,15 +41,10 @@ class AccountDatasourceImpl implements AccountDatasource {
   @override
   Future<Either<AppException, String>> logout() async {
     try {
-      final userResult = await userLocalDataSource.deleteUser();
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 200));
 
-      return userResult.fold(
-        (exception) => Left(exception),
-        (_) async {
-          await tokenStorageService.deleteTokens();
-          return const Right('Logged out successfully');
-        },
-      );
+      return const Right('Logged out successfully');
     } catch (e) {
       return Left(
         AppException(

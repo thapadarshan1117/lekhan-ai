@@ -108,8 +108,8 @@ Future<void> setUpServiceLocator() async {
   );
   sl.registerLazySingleton<UserRemoteDatasource>(
     () => UserRemoteDatasourceImpl(
-      networkService: sl<NetworkService>(instanceName: 'dioNetworkService'),
       userRepository: sl<UserRepository>(),
+      networkService: sl<NetworkService>(instanceName: 'dioNetworkService'),
     ),
   );
 
@@ -233,9 +233,9 @@ Future<void> setUpServiceLocator() async {
   //Auth
   sl.registerLazySingleton<AuthDatasource>(
     () => AuthDataSourceImpl(
-      networkService: sl<NetworkService>(instanceName: 'authNetworkService'),
       userRepository: sl<UserRepository>(),
       tokenStorageService: sl<TokenStorageService>(),
+      networkService: sl<NetworkService>(instanceName: 'authNetworkService'),
       fcmTokenService: sl<FCMTokenService>(),
     ),
   );
@@ -278,9 +278,9 @@ Future<void> setUpServiceLocator() async {
   // Account Feature Dependencies
   sl.registerLazySingleton<AccountDatasource>(
     () => AccountDatasourceImpl(
-      networkService: sl<NetworkService>(instanceName: 'dioNetworkService'),
       tokenStorageService: sl<TokenStorageService>(),
       userLocalDataSource: sl<UserLocalDataSource>(),
+      networkService: sl<NetworkService>(instanceName: 'dioNetworkService'),
     ),
   );
 
@@ -303,8 +303,8 @@ Future<void> setUpServiceLocator() async {
   //-------------------------------------------------------------------------------
   sl.registerLazySingleton<INotificationDatasource>(
     () => NotificationDatasourceImpl(
-      networkService: sl<NetworkService>(instanceName: 'dioNetworkService'),
       fcmTokenService: sl<FCMTokenService>(),
+      networkService: sl<NetworkService>(instanceName: 'dioNetworkService'),
     ),
   );
 

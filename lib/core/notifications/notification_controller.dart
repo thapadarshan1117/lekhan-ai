@@ -71,10 +71,7 @@ class NotificationController {
         path = '/audio_player_page';
         extra = contentId != null ? {'id': contentId} : null;
         break;
-      case 'video':
-        path = '/video_player_page';
-        extra = contentId != null ? {'id': contentId} : null;
-        break;
+
       default:
         // Unknown type - do nothing
         return;

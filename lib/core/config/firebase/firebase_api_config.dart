@@ -262,8 +262,8 @@ String _buildPendingRouteFromData(Map<String, dynamic> data) {
         extra = contentId != null ? {'id': contentId} : null;
         break;
       case 'video':
-        path = '/video_player_page';
-        extra = contentId != null ? {'id': contentId} : null;
+        // Video playback feature not available in current version
+        path = getRoute(null);
         break;
       default:
         path = getRoute(null);

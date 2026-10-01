@@ -1,8 +1,6 @@
-import 'package:lekhan_ai/core/constants/api_constants.dart';
 import 'package:lekhan_ai/core/error/failure_mapper.dart';
 import 'package:lekhan_ai/core/utils/json_utils.dart';
 import 'package:lekhan_ai/shared/data/remote/network_service.dart';
-import 'package:lekhan_ai/shared/domain/models/response.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -129,9 +127,7 @@ abstract class SyncRemoteDataSource {
 }
 
 class SyncRemoteDataSourceImpl implements SyncRemoteDataSource {
-  const SyncRemoteDataSourceImpl({required this.networkService});
-
-  final NetworkService networkService;
+  const SyncRemoteDataSourceImpl({NetworkService? networkService});
 
   static const String _identifier = 'SyncRemoteDataSourceImpl';
 
@@ -140,20 +136,23 @@ class SyncRemoteDataSourceImpl implements SyncRemoteDataSource {
     required List<Map<String, dynamic>> changes,
   }) async {
     try {
-      final Either<AppException, Response> response = await networkService.post(
-        ApiConstants.syncPush,
-        data: <String, dynamic>{'changes': changes},
-      );
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      return response.fold(
-        (AppException exception) =>
-            Left<AppException, SyncPushResponse>(exception),
-        (Response result) {
-          final Map<String, dynamic> data = JsonUtils.asMap(result.data);
-          return Right<AppException, SyncPushResponse>(
-            SyncPushResponse.fromJson(data),
-          );
-        },
+      // Mock response - all changes accepted
+      final results = changes.map<SyncChangeResult>((change) {
+        return SyncChangeResult(
+          localId: change['local_id'] ?? '',
+          remoteId: 'mock_remote_${DateTime.now().millisecondsSinceEpoch}',
+          status: 'accepted',
+        );
+      }).toList();
+
+      return Right<AppException, SyncPushResponse>(
+        SyncPushResponse(
+          results: results,
+          serverTime: DateTime.now(),
+        ),
       );
     } catch (error) {
       return Left<AppException, SyncPushResponse>(
@@ -169,25 +168,16 @@ class SyncRemoteDataSourceImpl implements SyncRemoteDataSource {
     int page = 1,
   }) async {
     try {
-      final Either<AppException, Response> response = await networkService.post(
-        ApiConstants.syncPull,
-        data: <String, dynamic>{
-          if (since != null) 'since': since.toUtc().toIso8601String(),
-          if (entityTypes != null && entityTypes.isNotEmpty)
-            'entity_types': entityTypes,
-          'p': page,
-        },
-      );
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      return response.fold(
-        (AppException exception) =>
-            Left<AppException, SyncPullResponse>(exception),
-        (Response result) {
-          final Map<String, dynamic> data = JsonUtils.asMap(result.data);
-          return Right<AppException, SyncPullResponse>(
-            SyncPullResponse.fromJson(data),
-          );
-        },
+      // Mock response - no changes for now
+      return Right<AppException, SyncPullResponse>(
+        SyncPullResponse(
+          changes: [],
+          deletedIds: [],
+          serverTime: DateTime.now(),
+        ),
       );
     } catch (error) {
       return Left<AppException, SyncPullResponse>(
@@ -199,16 +189,13 @@ class SyncRemoteDataSourceImpl implements SyncRemoteDataSource {
   @override
   Future<Either<AppException, Map<String, dynamic>>> fetchStatus() async {
     try {
-      final Either<AppException, Response> response =
-          await networkService.get(ApiConstants.syncStatus);
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 200));
 
-      return response.fold(
-        (AppException exception) =>
-            Left<AppException, Map<String, dynamic>>(exception),
-        (Response result) => Right<AppException, Map<String, dynamic>>(
-          JsonUtils.asMap(result.data),
-        ),
-      );
+      return const Right<AppException, Map<String, dynamic>>({
+        'queue_size': 0,
+        'last_sync': '2024-01-01T00:00:00Z',
+      });
     } catch (error) {
       return Left<AppException, Map<String, dynamic>>(
         FailureMapper.from(error, identifier: '$_identifier.fetchStatus'),

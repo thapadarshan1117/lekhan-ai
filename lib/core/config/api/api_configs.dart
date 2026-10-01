@@ -3,10 +3,10 @@ class ApiConfigs {
   // 'https://ztzqs5b1-8001.inc1.devtunnels.ms/api/v1/';
 
   // static const String baseUrl = 'https://api.yatrifly.com/api/v1';
-  static const String baseUrl = 'https://ai.mylekhan_ai.com/api/v1';
+  static const String baseUrl = 'https://ai.mybanao.com/api/v1';
   // Server host root (no /api/v1) — used by endpoints that live outside the
   // versioned API, e.g. the LiveKit token endpoint.
-  static const String serverRoot = 'https://ai.mylekhan_ai.com';
+  static const String serverRoot = 'https://ai.mybanao.com';
   static const String getAccessToken = '/auth/token/refresh/';
   static const String loginOtpVerify = '/user/otp-login/';
   static const String register = '/auth/register';

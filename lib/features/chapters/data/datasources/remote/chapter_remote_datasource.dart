@@ -1,11 +1,39 @@
-import 'package:lekhan_ai/core/constants/api_constants.dart';
 import 'package:lekhan_ai/core/error/failure_mapper.dart';
-import 'package:lekhan_ai/core/utils/json_utils.dart';
 import 'package:lekhan_ai/features/chapters/data/models/chapter_model.dart';
 import 'package:lekhan_ai/shared/data/remote/network_service.dart';
-import 'package:lekhan_ai/shared/domain/models/response.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
+
+// Mock data
+const List<Map<String, dynamic>> _mockChaptersData = [
+  {
+    'id': 'chapter_001',
+    'book_id': 'book_001',
+    'title': 'Chapter 1: Introduction',
+    'description': 'The beginning of the story',
+    'order': 1,
+    'status': 'published',
+    'created_at': '2024-01-01T00:00:00Z',
+  },
+  {
+    'id': 'chapter_002',
+    'book_id': 'book_001',
+    'title': 'Chapter 2: Rising Action',
+    'description': 'The plot thickens',
+    'order': 2,
+    'status': 'published',
+    'created_at': '2024-01-02T00:00:00Z',
+  },
+  {
+    'id': 'chapter_003',
+    'book_id': 'book_002',
+    'title': 'Chapter 1: The Party',
+    'description': 'Where it all begins',
+    'order': 1,
+    'status': 'published',
+    'created_at': '2024-01-03T00:00:00Z',
+  },
+];
 
 abstract class ChapterRemoteDataSource {
   /// All chapters of the account, or only those of one project/book when
@@ -20,9 +48,7 @@ abstract class ChapterRemoteDataSource {
 }
 
 class ChapterRemoteDataSourceImpl implements ChapterRemoteDataSource {
-  const ChapterRemoteDataSourceImpl({required this.networkService});
-
-  final NetworkService networkService;
+  const ChapterRemoteDataSourceImpl({NetworkService? networkService});
 
   static const String _identifier = 'ChapterRemoteDataSourceImpl';
 
@@ -33,30 +59,21 @@ class ChapterRemoteDataSourceImpl implements ChapterRemoteDataSource {
     int pageSize = 50,
   }) async {
     try {
-      final String endpoint = parentRemoteId == null || parentRemoteId.isEmpty
-          ? ApiConstants.chapters
-          : ApiConstants.bookChapters(parentRemoteId);
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      final Either<AppException, Response> response = await networkService.get(
-        endpoint,
-        queryParameters: <String, dynamic>{
-          'p': page,
-          'page_size': pageSize,
-        },
-      );
+      // Filter by parent if provided
+      final chapters = parentRemoteId == null || parentRemoteId.isEmpty
+          ? _mockChaptersData
+          : _mockChaptersData
+              .where((ch) => ch['book_id'] == parentRemoteId)
+              .toList();
 
-      return response.fold(
-        (AppException exception) => Left<AppException, List<ChapterModel>>(exception),
-        (Response result) {
-          final List<Map<String, dynamic>> records =
-              JsonUtils.asMapList(result.data);
-          return Right<AppException, List<ChapterModel>>(
-            records
-                .map<ChapterModel>(ChapterModel.fromJson)
-                .where((ChapterModel item) => item.id.isNotEmpty)
-                .toList(),
-          );
-        },
+      return Right<AppException, List<ChapterModel>>(
+        chapters
+            .map<ChapterModel>(ChapterModel.fromJson)
+            .where((ChapterModel item) => item.id.isNotEmpty)
+            .toList(),
       );
     } catch (error) {
       return Left<AppException, List<ChapterModel>>(
@@ -68,25 +85,25 @@ class ChapterRemoteDataSourceImpl implements ChapterRemoteDataSource {
   @override
   Future<Either<AppException, ChapterModel>> fetchChapter(String remoteId) async {
     try {
-      final Either<AppException, Response> response =
-          await networkService.get(ApiConstants.chapterDetail(remoteId));
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 200));
 
-      return response.fold(
-        (AppException exception) => Left<AppException, ChapterModel>(exception),
-        (Response result) {
-          final Map<String, dynamic> data = JsonUtils.unwrap(result.data);
-          if (data.isEmpty) {
-            return Left<AppException, ChapterModel>(
-              AppException(
-                message: 'The chapter could not be found.',
-                statusCode: 404,
-                identifier: '$_identifier.fetchChapter.empty',
-              ),
-            );
-          }
-          return Right<AppException, ChapterModel>(ChapterModel.fromJson(data));
-        },
+      final chapterData = _mockChaptersData.firstWhere(
+        (ch) => ch['id'] == remoteId,
+        orElse: () => {},
       );
+
+      if (chapterData.isEmpty) {
+        return Left<AppException, ChapterModel>(
+          AppException(
+            message: 'The chapter could not be found.',
+            statusCode: 404,
+            identifier: '$_identifier.fetchChapter.empty',
+          ),
+        );
+      }
+
+      return Right<AppException, ChapterModel>(ChapterModel.fromJson(chapterData));
     } catch (error) {
       return Left<AppException, ChapterModel>(
         FailureMapper.from(error, identifier: '$_identifier.fetchChapter'),

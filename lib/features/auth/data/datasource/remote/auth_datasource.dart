@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:fpdart/fpdart.dart';
-import 'package:lekhan_ai/core/config/api/api_configs.dart';
 import 'package:lekhan_ai/features/auth/domain/usecases/otp_resend_usecase.dart';
 import 'package:lekhan_ai/shared/data/local/fcm_token_service.dart';
 import 'package:lekhan_ai/shared/data/local/token_storage_service.dart';
@@ -46,18 +46,20 @@ abstract class AuthDatasource {
   });
 }
 
+/// Mock implementation for testing without backend
 class AuthDataSourceImpl implements AuthDatasource {
-  final NetworkService networkService;
   final TokenStorageService tokenStorageService;
   final UserRepository userRepository;
-  final FCMTokenService fcmTokenService;
 
   AuthDataSourceImpl({
-    required this.networkService,
-    required this.userRepository,
     required this.tokenStorageService,
-    required this.fcmTokenService,
+    required this.userRepository,
+    NetworkService? networkService, // Ignored - using mock implementation
+    FCMTokenService? fcmTokenService, // Ignored - using mock implementation
   });
+
+  static const String _mockAccessToken = 'mock_access_token_12345';
+  static const String _mockRefreshToken = 'mock_refresh_token_67890';
 
   @override
   Future<Either<AppException, String>> register({
@@ -68,132 +70,71 @@ class AuthDataSourceImpl implements AuthDatasource {
     required String password,
   }) async {
     try {
-      
-      final requestData = {
-        'fullName': fullName,
-        'email': email,
-        'phone': phone,
-        'password': password,
-      };
-      
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      final response = await networkService.post(
-        ApiConfigs.register,
-        data: requestData,
-      );
-      return response.fold(
-        (exception) => Left(exception),
-      (result) async {
-          log("Register result: ${result.data}");
-          final otpHash = result.data["data"]?["otpHash"] as String? ?? '';
-          return Right('${result.data["message"]}|$otpHash');
-        },
-      );
+      log("Mock Register: $email");
+      const String mockOtpHash = 'mock_otp_hash_abc123';
+      return const Right('Registration successful|$mockOtpHash');
     } catch (e) {
       return Left(
         AppException(
-          message: "Something went wrong",
+          message: "Mock registration failed",
           statusCode: 1,
           identifier: '${e.toString()}\nAuthDataSource.register',
         ),
       );
     }
   }
-  
 
-@override
-Future<Either<AppException, String>> login({
-  required String email,
-  required String password,
-}) async {
-  try {
-    final requestData = <String, dynamic>{
-      'email': email,
-      'password': password,
-    };
+  @override
+  Future<Either<AppException, String>> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 500));
 
-    final response = await networkService.post(
-      ApiConfigs.login,
-      data: requestData,
-    );
+      log("Mock Login: $email");
 
-    return response.fold(
-      (exception) {
-        return Left(exception);
-      },
-      (result) async {
-        try {
-          // Handle both wrapped and unwrapped response formats
-          final responseData = result.data is Map ? result.data : {};
-          final data = responseData["data"] is Map ? responseData["data"] : responseData;
+      // Save mock tokens
+      tokenStorageService.saveAccessToken(_mockAccessToken);
+      tokenStorageService.saveRefreshToken(_mockRefreshToken);
 
-          // Extract tokens from response
-          final accessToken = data["access_token"] ?? data["accessToken"];
-          final refreshToken = data["refresh_token"] ?? data["refreshToken"];
-          final userId = data["user_id"] as String? ?? '';
+      // Create and save mock user
+      final mockUser = User(
+        userId: 'mock_user_123',
+        name: email.split('@').first,
+        email: email,
+        phone: null,
+        profileImage: null,
+        isActive: true,
+        whatsapp: null,
+        role: 'user',
+        branch: null,
+        country: null,
+        timezone: null,
+        isTeamMember: null,
+      );
 
-          if (accessToken != null) {
-            tokenStorageService.saveAccessToken(accessToken as String);
-          }
-          if (refreshToken != null) {
-            tokenStorageService.saveRefreshToken(refreshToken as String);
-          }
+      await userRepository.saveUser(user: mockUser);
 
-          // Temporarily handle null user data - save if available
-          final userJson = data["user"];
-          if (userJson != null) {
-            userRepository.saveUser(
-              user: User.fromJson(
-                Map<String, dynamic>.from(userJson as Map),
-              ),
-            );
-          } else if (userId.isNotEmpty) {
-            // TODO: Remove this temporary workaround once API returns user data
-            // For now, create a minimal user with just the user_id from response
-            userRepository.saveUser(
-              user: User(
-                userId: userId,
-                name: email,
-                email: email,
-                phone: null,
-                profileImage: null,
-                isActive: true,
-                whatsapp: null,
-                role: null,
-                branch: null,
-                country: null,
-                timezone: null,
-                isTeamMember: null,
-              ),
-            );
-          }
-
-          return Right(data["message"] as String? ?? "Login successful");
-        } catch (e) {
-          return Left(
-            AppException(
-              message: "Error processing login response: ${e.toString()}",
-              statusCode: 1,
-              identifier: 'AuthDataSource.login',
-            ),
-          );
-        }
-      },
-    );
-  } catch (e) {
-    return Left(
-      AppException(
-        message: "Something went wrong",
-        statusCode: 1,
-        identifier: '${e.toString()}\nAuthDataSource.loginUser',
-      ),
-    );
+      return const Right("Mock login successful");
+    } catch (e) {
+      return Left(
+        AppException(
+          message: "Something went wrong",
+          statusCode: 1,
+          identifier: '${e.toString()}\nAuthDataSource.login',
+        ),
+      );
+    }
   }
-}
+
   @override
   Future<Either<AppException, String>> logout() async {
     try {
-  
       await tokenStorageService.deleteAccessToken();
       await tokenStorageService.deleteTokens();
       await userRepository.deleteUser();
@@ -214,15 +155,8 @@ Future<Either<AppException, String>> login({
     required OTPResendParams resendParams,
   }) async {
     try {
-      final response = await networkService.post(
-        resendParams.isForgot
-            ? ApiConfigs.forgotPasswordResend
-            : ApiConfigs.resendOtp,
-        data: {'email': resendParams.email},
-      );
-      return response.fold((exception) => Left(exception), (result) async {
-        return Right(result.data["message"]);
-      });
+      await Future.delayed(const Duration(milliseconds: 300));
+      return const Right("Mock OTP resent successfully");
     } catch (e) {
       return Left(
         AppException(
@@ -243,44 +177,35 @@ Future<Either<AppException, String>> login({
     String hash = '',
   }) async {
     try {
-   
-      
-      final requestData = {
-        'otp': otp,
-        'email': email,
-        'hash': hash,
-      };
-      
+      await Future.delayed(const Duration(milliseconds: 400));
 
-      
-      final response = await networkService.post(
-        isForgot
-            ? ApiConfigs.verifyForgotPasswordOtp
-            : ApiConfigs.verifyOtp,
-        data: requestData,
-      );
-      return response.fold((exception) => Left(exception), (result) async {
-        // For signup OTP: tokens are returned
-        if (!isForgot) {
-          final tokens = result.data["data"]?["tokens"];
-          if (tokens != null) {
-            tokenStorageService.saveAccessToken(tokens["access"]);
-            tokenStorageService.saveRefreshToken(tokens["refresh"]);
-          }
+      if (!isForgot) {
+        // For signup OTP: save tokens and user
+        tokenStorageService.saveAccessToken(_mockAccessToken);
+        tokenStorageService.saveRefreshToken(_mockRefreshToken);
 
-          final userJson = result.data["data"]?["user"];
-          if (userJson != null) {
-            userRepository.saveUser(user: User.fromJson(userJson));
-          }
-        }
+        final mockUser = User(
+          userId: 'mock_user_123',
+          name: email.split('@').first,
+          email: email,
+          phone: null,
+          profileImage: null,
+          isActive: true,
+          whatsapp: null,
+          role: 'user',
+          branch: null,
+          country: null,
+          timezone: null,
+          isTeamMember: null,
+        );
 
-        return Right({
-          "message": result.data["message"],
-          "isSetup": result.data["data"]?["user"]?["is_verified"] ?? true,
-          // For forgot-password OTP: resetToken is needed for the reset step
-          if (isForgot)
-            "resetToken": result.data["data"]?["resetToken"] ?? '',
-        });
+        await userRepository.saveUser(user: mockUser);
+      }
+
+      return Right({
+        "message": "Mock OTP verified successfully",
+        "isSetup": true,
+        if (isForgot) "resetToken": "mock_reset_token_xyz789",
       });
     } catch (e) {
       return Left(
@@ -294,21 +219,15 @@ Future<Either<AppException, String>> login({
   }
 
   @override
-  //IF FCM TOKEN IS NULL DONR USE ON MAP
   Future<Either<AppException, Map<String, dynamic>>> forgotPassword({
     required String email,
   }) async {
     try {
-      final response = await networkService.post(
-        ApiConfigs.forgotPassword,
-        data: {'email': email},
-      );
-      return response.fold((exception) => Left(exception), (result) async {
-        final otpHash = result.data["data"]?["otpHash"] as String? ?? '';
-        return Right({
-          "message": result.data["message"],
-          "otpHash": otpHash,
-        });
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      return const Right({
+        "message": "Mock forgot password OTP sent",
+        "otpHash": "mock_otp_hash_forgot_123",
       });
     } catch (e) {
       return Left(
@@ -327,17 +246,9 @@ Future<Either<AppException, String>> login({
     required String newPassword,
   }) async {
     try {
-      final response = await networkService.post(
-        ApiConfigs.resetPassword,
-        data: {
-          'resetToken': otpCode,
-          'newPassword': newPassword,
-          'confirmPassword': newPassword,
-        },
-      );
-      return response.fold((exception) => Left(exception), (result) async {
-        return Right(result.data["message"]);
-      });
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      return const Right("Mock password reset successfully");
     } catch (e) {
       return Left(
         AppException(

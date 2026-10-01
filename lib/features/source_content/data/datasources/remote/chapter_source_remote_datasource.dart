@@ -1,11 +1,30 @@
-import 'package:lekhan_ai/core/constants/api_constants.dart';
 import 'package:lekhan_ai/core/error/failure_mapper.dart';
-import 'package:lekhan_ai/core/utils/json_utils.dart';
 import 'package:lekhan_ai/features/source_content/data/models/chapter_source_model.dart';
 import 'package:lekhan_ai/shared/data/remote/network_service.dart';
-import 'package:lekhan_ai/shared/domain/models/response.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
+
+// Mock data
+const List<Map<String, dynamic>> _mockSourcesData = [
+  {
+    'id': 'source_001',
+    'chapter_id': 'chapter_001',
+    'title': 'Chapter 1 Audio',
+    'type': 'audio',
+    'url': 'https://via.placeholder.com/audio.mp3',
+    'duration': 3600,
+    'created_at': '2024-01-01T00:00:00Z',
+  },
+  {
+    'id': 'source_002',
+    'chapter_id': 'chapter_001',
+    'title': 'Chapter 1 Video',
+    'type': 'video',
+    'url': 'https://via.placeholder.com/video.mp4',
+    'duration': 7200,
+    'created_at': '2024-01-01T00:00:00Z',
+  },
+];
 
 /// Read/delete side of source content. Creating a source happens through the
 /// upload session endpoints (`/uploads/...`), because the backend must create
@@ -26,9 +45,7 @@ abstract class ChapterSourceRemoteDataSource {
 
 class ChapterSourceRemoteDataSourceImpl
     implements ChapterSourceRemoteDataSource {
-  const ChapterSourceRemoteDataSourceImpl({required this.networkService});
-
-  final NetworkService networkService;
+  const ChapterSourceRemoteDataSourceImpl({NetworkService? networkService});
 
   static const String _identifier = 'ChapterSourceRemoteDataSourceImpl';
 
@@ -39,24 +56,18 @@ class ChapterSourceRemoteDataSourceImpl
     int pageSize = 50,
   }) async {
     try {
-      final Either<AppException, Response> response = await networkService.get(
-        ApiConstants.chapterSources(chapterRemoteId),
-        queryParameters: <String, dynamic>{'p': page, 'page_size': pageSize},
-      );
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      return response.fold(
-        (AppException exception) =>
-            Left<AppException, List<ChapterSourceModel>>(exception),
-        (Response result) {
-          final List<Map<String, dynamic>> records =
-              JsonUtils.asMapList(result.data);
-          return Right<AppException, List<ChapterSourceModel>>(
-            records
-                .map<ChapterSourceModel>(ChapterSourceModel.fromJson)
-                .where((ChapterSourceModel source) => source.id.isNotEmpty)
-                .toList(),
-          );
-        },
+      final sources = _mockSourcesData
+          .where((source) => source['chapter_id'] == chapterRemoteId)
+          .toList();
+
+      return Right<AppException, List<ChapterSourceModel>>(
+        sources
+            .map<ChapterSourceModel>(ChapterSourceModel.fromJson)
+            .where((ChapterSourceModel source) => source.id.isNotEmpty)
+            .toList(),
       );
     } catch (error) {
       return Left<AppException, List<ChapterSourceModel>>(
@@ -70,27 +81,26 @@ class ChapterSourceRemoteDataSourceImpl
     String remoteId,
   ) async {
     try {
-      final Either<AppException, Response> response =
-          await networkService.get(ApiConstants.sourceDetail(remoteId));
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 200));
 
-      return response.fold(
-        (AppException exception) =>
-            Left<AppException, ChapterSourceModel>(exception),
-        (Response result) {
-          final Map<String, dynamic> data = JsonUtils.unwrap(result.data);
-          if (data.isEmpty) {
-            return Left<AppException, ChapterSourceModel>(
-              AppException(
-                message: 'The source could not be found.',
-                statusCode: 404,
-                identifier: '$_identifier.fetchSource.empty',
-              ),
-            );
-          }
-          return Right<AppException, ChapterSourceModel>(
-            ChapterSourceModel.fromJson(data),
-          );
-        },
+      final sourceData = _mockSourcesData.firstWhere(
+        (source) => source['id'] == remoteId,
+        orElse: () => {},
+      );
+
+      if (sourceData.isEmpty) {
+        return Left<AppException, ChapterSourceModel>(
+          AppException(
+            message: 'The source could not be found.',
+            statusCode: 404,
+            identifier: '$_identifier.fetchSource.empty',
+          ),
+        );
+      }
+
+      return Right<AppException, ChapterSourceModel>(
+        ChapterSourceModel.fromJson(sourceData),
       );
     } catch (error) {
       return Left<AppException, ChapterSourceModel>(
@@ -102,13 +112,10 @@ class ChapterSourceRemoteDataSourceImpl
   @override
   Future<Either<AppException, bool>> deleteSource(String remoteId) async {
     try {
-      final Either<AppException, Response> response =
-          await networkService.delete(ApiConstants.sourceDetail(remoteId));
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 200));
 
-      return response.fold(
-        (AppException exception) => Left<AppException, bool>(exception),
-        (Response result) => const Right<AppException, bool>(true),
-      );
+      return const Right<AppException, bool>(true);
     } catch (error) {
       return Left<AppException, bool>(
         FailureMapper.from(error, identifier: '$_identifier.deleteSource'),

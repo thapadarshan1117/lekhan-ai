@@ -129,11 +129,8 @@ class NotificationsList extends StatelessWidget {
         }
         break;
       case 'video':
-        // Navigate to video player page and load video by ID
-        if (contentId != null && contentId.isNotEmpty) {
-          context.push('/video_player_page', extra: {'id': contentId});
-        }
-        break;
+        // Video playback feature not available in current version
+        return;
       default:
         break;
     }
