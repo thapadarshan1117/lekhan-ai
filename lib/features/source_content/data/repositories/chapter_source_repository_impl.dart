@@ -200,36 +200,69 @@ class ChapterSourceRepositoryImpl implements ChapterSourceRepository {
 
     if (source == null) return const Right<AppException, bool>(true);
 
-    // 1. Drop queued work first, so nothing can upload a file that is going
-    //    away in the next statement.
-    final SyncTask? uploadTask = await queue.findPending(
-      entityType: SyncEntityType.chapterSource,
-      entityId: id,
-    );
-    if (uploadTask != null) {
-      await queue.remove(uploadTask.id);
-    }
+    try {
+      // Drop queued metadata and byte work before removing the local file. If
+      // the record has reached the server, queue a single tombstone below.
+      for (final SyncTask task in await queue.all()) {
+        if (task.entityType == SyncEntityType.chapterSource &&
+            task.entityId == id &&
+            task.operation != SyncOperation.delete) {
+          await queue.remove(task.id);
+        }
+      }
 
-    // 2. Remove the bytes.
-    await storageManager.deleteFile(source.localPath);
+      await storageManager.deleteFile(source.localPath);
 
-    // 3. Remove the record (or queue its removal when the server knows it).
-    if (source.remoteId == null) {
-      await local.delete(id);
+      if (source.remoteId == null) {
+        final Either<AppException, bool> deleted = await local.delete(id);
+        if (deleted.valueOrNull != true) {
+          return Left<AppException, bool>(
+            deleted.errorOrNull ??
+                FailureMapper.local(
+                  StateError('Source could not be removed'),
+                  identifier: '$_identifier.deleteSource',
+                  statusCode: LocalErrorCodes.databaseFailure,
+                ),
+          );
+        }
+        return const Right<AppException, bool>(true);
+      }
+
+      final Either<AppException, ChapterSourceModel> saved = await local.save(
+        source.copyWith(isDeleted: true),
+      );
+      if (saved.valueOrNull == null) {
+        return Left<AppException, bool>(
+          saved.errorOrNull ??
+              FailureMapper.local(
+                StateError('Source deletion could not be saved'),
+                identifier: '$_identifier.deleteSource',
+                statusCode: LocalErrorCodes.databaseFailure,
+              ),
+        );
+      }
+
+      await queue.enqueue(
+        SyncTaskBuilder.metadata(
+          entityType: SyncEntityType.chapterSource,
+          entityId: source.id,
+          operation: SyncOperation.delete,
+          remoteId: source.remoteId,
+        ),
+      );
+      requestBus.request();
       return const Right<AppException, bool>(true);
+    } on AppException catch (error) {
+      return Left<AppException, bool>(error);
+    } catch (error) {
+      return Left<AppException, bool>(
+        FailureMapper.local(
+          error,
+          identifier: '$_identifier.deleteSource',
+          message: 'The source file could not be deleted on this device.',
+        ),
+      );
     }
-
-    await local.save(source.copyWith(isDeleted: true));
-    await queue.enqueue(
-      SyncTaskBuilder.metadata(
-        entityType: SyncEntityType.chapterSource,
-        entityId: source.id,
-        operation: SyncOperation.delete,
-        remoteId: source.remoteId,
-      ),
-    );
-    requestBus.request();
-    return const Right<AppException, bool>(true);
   }
 
   @override
@@ -408,6 +441,7 @@ class ChapterSourceRepositoryImpl implements ChapterSourceRepository {
         operation: SyncOperation.create,
         payload: <String, dynamic>{
           'entity': SyncEntityType.chapterSource.value,
+          'local_updated_at': persisted.updatedAt.toIso8601String(),
           'data': persisted.toMetadataJson(),
         },
       ),
@@ -459,6 +493,10 @@ class ChapterSourceRepositoryImpl implements ChapterSourceRepository {
         // local path, the checksum and the resume offset.
         toStore.add(
           remoteItem.markSynced().copyWith(
+                id: existing.id,
+                chapterId: existing.chapterId,
+                bookId: existing.bookId,
+                projectId: existing.projectId,
                 localPath: existing.localPath,
                 checksum: existing.checksum,
                 uploadProgress: existing.uploadProgress,

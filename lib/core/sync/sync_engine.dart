@@ -13,6 +13,7 @@ import 'package:lekhan_ai/core/enums/sync_status.dart';
 /// - Polls the sync queue for due tasks
 /// - Executes handlers (upload, metadata, download)
 /// - Retries failed tasks with exponential backoff
+@Deprecated('Use SyncManager with registered SyncTaskHandlers instead.')
 class SyncEngine {
   SyncEngine({
     required this.queue,
@@ -126,14 +127,12 @@ class SyncEngine {
 
   /// Execute the appropriate handler based on task operation.
   Future<bool> _executeHandler(SyncTask task) async {
-    // This would be implemented with actual handlers:
-    // - Upload handler: uploads files to backend
-    // - Metadata handler: syncs metadata (create/update/delete)
-    // - Download handler: fetches sources from server
-
-    // For now, simulate success
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    return true;
+    // This legacy class was replaced by SyncManager + SyncWorker. Never report
+    // success here: doing so would permanently drop the durable queue item.
+    throw StateError(
+      'SyncEngine is deprecated and has no task handlers. '
+      'Use SyncManager with SyncWorker instead.',
+    );
   }
 
   /// Handle task failure: retry with exponential backoff.

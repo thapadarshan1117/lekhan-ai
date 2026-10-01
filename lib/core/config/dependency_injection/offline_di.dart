@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:lekhan_ai/core/config/dependency_injection/di_config.dart';
+import 'package:lekhan_ai/core/config/backend_mode.dart';
+import 'package:lekhan_ai/core/mock/mock_lekhan_backend.dart';
 import 'package:lekhan_ai/core/database/app_database.dart';
 import 'package:lekhan_ai/core/network/network_info.dart';
 import 'package:lekhan_ai/core/permissions/permission_service.dart';
@@ -8,6 +10,8 @@ import 'package:lekhan_ai/core/storage/local_file_storage.dart';
 import 'package:lekhan_ai/core/storage/storage_manager.dart';
 import 'package:lekhan_ai/core/sync/background_sync_scheduler.dart';
 import 'package:lekhan_ai/core/sync/sync_manager.dart';
+import 'package:lekhan_ai/core/sync/offline_session_guard.dart';
+import 'package:lekhan_ai/core/sync/conflict_resolver.dart';
 import 'package:lekhan_ai/core/sync/sync_queue.dart';
 import 'package:lekhan_ai/core/sync/sync_request_bus.dart';
 import 'package:lekhan_ai/core/sync/sync_state.dart';
@@ -15,31 +19,38 @@ import 'package:lekhan_ai/core/sync/sync_worker.dart';
 import 'package:lekhan_ai/core/sync/sync_bootstrap.dart';
 import 'package:lekhan_ai/features/books/data/datasources/local/book_local_datasource.dart';
 import 'package:lekhan_ai/features/books/data/datasources/remote/book_remote_datasource.dart';
+import 'package:lekhan_ai/features/books/data/datasources/remote/mock_book_remote_datasource.dart';
 import 'package:lekhan_ai/features/books/data/repositories/book_repository_impl.dart';
 import 'package:lekhan_ai/features/books/domain/repositories/book_repository.dart';
 import 'package:lekhan_ai/features/books/domain/usecases/get_book_detail_usecase.dart';
 import 'package:lekhan_ai/features/books/domain/usecases/get_books_usecase.dart';
+import 'package:lekhan_ai/features/books/domain/usecases/delete_book_usecase.dart';
 import 'package:lekhan_ai/features/books/domain/usecases/save_book_usecase.dart';
 import 'package:lekhan_ai/features/books/presentation/bloc/books_bloc/books_bloc.dart';
 import 'package:lekhan_ai/features/chapters/data/datasources/local/chapter_local_datasource.dart';
 import 'package:lekhan_ai/features/chapters/data/datasources/remote/chapter_remote_datasource.dart';
+import 'package:lekhan_ai/features/chapters/data/datasources/remote/mock_chapter_remote_datasource.dart';
 import 'package:lekhan_ai/features/chapters/data/repositories/chapter_repository_impl.dart';
 import 'package:lekhan_ai/features/chapters/domain/repositories/chapter_repository.dart';
 import 'package:lekhan_ai/features/chapters/domain/usecases/get_chapter_detail_usecase.dart';
 import 'package:lekhan_ai/features/chapters/domain/usecases/get_chapters_usecase.dart';
+import 'package:lekhan_ai/features/chapters/domain/usecases/delete_chapter_usecase.dart';
 import 'package:lekhan_ai/features/chapters/domain/usecases/save_chapter_usecase.dart';
 import 'package:lekhan_ai/features/chapters/domain/usecases/update_chapter_progress_usecase.dart';
 import 'package:lekhan_ai/features/chapters/presentation/bloc/chapters_bloc/chapters_bloc.dart';
 import 'package:lekhan_ai/features/projects/data/datasources/local/project_local_datasource.dart';
 import 'package:lekhan_ai/features/projects/data/datasources/remote/project_remote_datasource.dart';
+import 'package:lekhan_ai/features/projects/data/datasources/remote/mock_project_remote_datasource.dart';
 import 'package:lekhan_ai/features/projects/data/repositories/project_repository_impl.dart';
 import 'package:lekhan_ai/features/projects/domain/repositories/project_repository.dart';
 import 'package:lekhan_ai/features/projects/domain/usecases/get_project_detail_usecase.dart';
 import 'package:lekhan_ai/features/projects/domain/usecases/get_projects_usecase.dart';
+import 'package:lekhan_ai/features/projects/domain/usecases/delete_project_usecase.dart';
 import 'package:lekhan_ai/features/projects/domain/usecases/save_project_usecase.dart';
 import 'package:lekhan_ai/features/projects/presentation/bloc/projects_bloc/projects_bloc.dart';
 import 'package:lekhan_ai/features/source_content/data/datasources/local/chapter_source_local_datasource.dart';
 import 'package:lekhan_ai/features/source_content/data/datasources/remote/chapter_source_remote_datasource.dart';
+import 'package:lekhan_ai/features/source_content/data/datasources/remote/mock_chapter_source_remote_datasource.dart';
 import 'package:lekhan_ai/features/source_content/data/repositories/chapter_source_repository_impl.dart';
 import 'package:lekhan_ai/features/source_content/domain/repositories/chapter_source_repository.dart';
 import 'package:lekhan_ai/features/source_content/data/services/recording_service.dart';
@@ -48,11 +59,14 @@ import 'package:lekhan_ai/features/source_content/domain/usecases/add_source_use
 import 'package:lekhan_ai/features/source_content/domain/usecases/delete_source_usecase.dart';
 import 'package:lekhan_ai/features/source_content/domain/usecases/get_chapter_sources_usecase.dart';
 import 'package:lekhan_ai/features/sync/data/datasources/sync_remote_datasource.dart';
+import 'package:lekhan_ai/features/sync/data/datasources/mock_sync_remote_datasource.dart';
 import 'package:lekhan_ai/features/sync/data/handlers/metadata_push_handler.dart';
 import 'package:lekhan_ai/features/sync/data/handlers/source_upload_handler.dart';
 import 'package:lekhan_ai/features/sync/data/repositories/sync_repository_impl.dart';
 import 'package:lekhan_ai/features/sync/data/services/sync_entity_applier.dart';
 import 'package:lekhan_ai/features/sync/data/services/sync_reference_resolver.dart';
+import 'package:lekhan_ai/features/sync/data/services/sync_pull_applier.dart';
+import 'package:lekhan_ai/features/sync/data/services/sync_pull_service.dart';
 import 'package:lekhan_ai/features/sync/domain/repositories/sync_repository.dart';
 import 'package:lekhan_ai/features/sync/domain/usecases/get_sync_status_usecase.dart';
 import 'package:lekhan_ai/features/sync/domain/usecases/retry_sync_usecase.dart';
@@ -60,6 +74,7 @@ import 'package:lekhan_ai/features/sync/domain/usecases/sync_now_usecase.dart';
 import 'package:lekhan_ai/features/sync/presentation/bloc/sync_status_cubit.dart';
 import 'package:lekhan_ai/features/upload/data/datasources/local/upload_session_local_datasource.dart';
 import 'package:lekhan_ai/features/upload/data/datasources/remote/upload_remote_datasource.dart';
+import 'package:lekhan_ai/features/upload/data/datasources/remote/mock_upload_remote_datasource.dart';
 import 'package:lekhan_ai/features/upload/data/repositories/upload_repository_impl.dart';
 import 'package:lekhan_ai/features/upload/data/services/resumable_uploader.dart';
 import 'package:lekhan_ai/features/upload/domain/repositories/upload_repository.dart';
@@ -67,6 +82,8 @@ import 'package:lekhan_ai/features/upload/domain/usecases/upload_source_usecase.
 import 'package:lekhan_ai/features/upload/domain/usecases/watch_upload_sessions_usecase.dart';
 import 'package:lekhan_ai/shared/data/local/storage_service.dart';
 import 'package:lekhan_ai/shared/data/remote/network_service.dart';
+import 'package:lekhan_ai/shared/data/local/token_storage_service.dart';
+import 'package:lekhan_ai/shared/user/domain/repository/user_repository.dart';
 
 /// Registers everything belonging to the offline-first layer.
 ///
@@ -91,7 +108,9 @@ Future<void> registerOfflineFirstDependencies() async {
   // ---------------------------------------------------------------------------
   // Step 2 - platform helpers
   // ---------------------------------------------------------------------------
-  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfo());
+  sl.registerLazySingleton<NetworkInfo>(
+    () => NetworkInfo(alwaysOnline: BackendMode.useMockBackend),
+  );
   sl.registerLazySingleton<PermissionService>(() => const PermissionService());
 
   // ---------------------------------------------------------------------------
@@ -114,32 +133,48 @@ Future<void> registerOfflineFirstDependencies() async {
   );
 
   // ---------------------------------------------------------------------------
-  // Step 4 - remote datasources (reuse the existing authenticated NetworkService)
+  // Step 4 - remote boundaries. The API implementations remain registered as
+  // future integration seams, but this stage defaults to an in-memory backend
+  // and never resolves or calls the authenticated HTTP client.
   // ---------------------------------------------------------------------------
-  final NetworkService api = sl<NetworkService>(instanceName: 'dioNetworkService');
+  sl.registerLazySingleton<MockLekhanBackend>(() => MockLekhanBackend());
+  final NetworkService? api = BackendMode.useMockBackend
+      ? null
+      : sl<NetworkService>(instanceName: 'dioNetworkService');
 
   sl.registerLazySingleton<ProjectRemoteDataSource>(
-    () => ProjectRemoteDataSourceImpl(networkService: api),
+    () => BackendMode.useMockBackend
+        ? MockProjectRemoteDataSource(backend: sl<MockLekhanBackend>())
+        : ProjectRemoteDataSourceImpl(networkService: api!),
   );
   sl.registerLazySingleton<BookRemoteDataSource>(
-    () => BookRemoteDataSourceImpl(networkService: api),
+    () => BackendMode.useMockBackend
+        ? MockBookRemoteDataSource(backend: sl<MockLekhanBackend>())
+        : BookRemoteDataSourceImpl(networkService: api!),
   );
   sl.registerLazySingleton<ChapterRemoteDataSource>(
-    () => ChapterRemoteDataSourceImpl(networkService: api),
+    () => BackendMode.useMockBackend
+        ? MockChapterRemoteDataSource(backend: sl<MockLekhanBackend>())
+        : ChapterRemoteDataSourceImpl(networkService: api!),
   );
   sl.registerLazySingleton<ChapterSourceRemoteDataSource>(
-    () => ChapterSourceRemoteDataSourceImpl(networkService: api),
+    () => BackendMode.useMockBackend
+        ? MockChapterSourceRemoteDataSource(backend: sl<MockLekhanBackend>())
+        : ChapterSourceRemoteDataSourceImpl(networkService: api!),
   );
   sl.registerLazySingleton<SyncRemoteDataSource>(
-    () => SyncRemoteDataSourceImpl(networkService: api),
+    () => BackendMode.useMockBackend
+        ? MockSyncRemoteDataSource(backend: sl<MockLekhanBackend>())
+        : SyncRemoteDataSourceImpl(networkService: api!),
   );
   sl.registerLazySingleton<UploadRemoteDataSource>(
-    () => UploadRemoteDataSourceImpl(
-      networkService: api,
-      // The same Dio instance the app already authenticates with; chunk
-      // requests need their own (longer) timeouts.
-      dio: sl<Dio>(instanceName: 'jwtDioInstance'),
-    ),
+    () => BackendMode.useMockBackend
+        ? MockUploadRemoteDataSource(backend: sl<MockLekhanBackend>())
+        : UploadRemoteDataSourceImpl(
+            networkService: api!,
+            // Chunk transfers use a longer timeout when the API is enabled.
+            dio: sl<Dio>(instanceName: 'jwtDioInstance'),
+          ),
   );
 
   // ---------------------------------------------------------------------------
@@ -246,6 +281,37 @@ Future<void> registerOfflineFirstDependencies() async {
     ),
   );
 
+  sl.registerLazySingleton<SyncPullApplier>(
+    () => SyncPullApplier(
+      projectLocal: sl<ProjectLocalDataSource>(),
+      bookLocal: sl<BookLocalDataSource>(),
+      chapterLocal: sl<ChapterLocalDataSource>(),
+      sourceLocal: sl<ChapterSourceLocalDataSource>(),
+      entityApplier: sl<SyncEntityApplier>(),
+      conflicts: const ConflictResolver(),
+    ),
+  );
+
+  sl.registerLazySingleton<SyncPullService>(
+    () => SyncPullService(
+      remote: sl<SyncRemoteDataSource>(),
+      applier: sl<SyncPullApplier>(),
+      checkpointStore: sl<SyncCheckpointStore>(),
+    ),
+  );
+
+  sl.registerLazySingleton<OfflineSessionGuard>(
+    () => OfflineSessionGuard(
+      tokenStorage: sl<TokenStorageService>(),
+      userRepository: sl<UserRepository>(),
+      storageService: sl<StorageService>(),
+      database: sl<AppDatabase>(),
+      storageManager: sl<StorageManager>(),
+      checkpointStore: sl<SyncCheckpointStore>(),
+      backgroundScheduler: sl<BackgroundSyncScheduler>(),
+    ),
+  );
+
   sl.registerLazySingleton<MetadataPushService>(
     () => MetadataPushService(
       remote: sl<SyncRemoteDataSource>(),
@@ -304,6 +370,8 @@ Future<void> registerOfflineFirstDependencies() async {
       networkInfo: sl<NetworkInfo>(),
       preferences: sl<SyncPreferences>(),
       checkpointStore: sl<SyncCheckpointStore>(),
+      pullRunner: sl<SyncPullService>(),
+      isAuthorized: () => sl<OfflineSessionGuard>().canSync(),
     ),
   );
 
@@ -319,6 +387,7 @@ Future<void> registerOfflineFirstDependencies() async {
       backgroundScheduler: sl<BackgroundSyncScheduler>(),
       storageManager: sl<StorageManager>(),
       requestBus: sl<SyncRequestBus>(),
+      sessionGuard: sl<OfflineSessionGuard>(),
     ),
   );
 
@@ -392,6 +461,27 @@ Future<void> registerOfflineFirstDependencies() async {
     () => DeleteSourceUsecase(
       repository: sl<ChapterSourceRepository>(),
       chapterRepository: sl<ChapterRepository>(),
+    ),
+  );
+  sl.registerLazySingleton(
+    () => DeleteChapterUsecase(
+      chapters: sl<ChapterRepository>(),
+      sources: sl<ChapterSourceRepository>(),
+      deleteSource: sl<DeleteSourceUsecase>(),
+    ),
+  );
+  sl.registerLazySingleton(
+    () => DeleteBookUsecase(
+      books: sl<BookRepository>(),
+      chapters: sl<ChapterRepository>(),
+      deleteChapter: sl<DeleteChapterUsecase>(),
+    ),
+  );
+  sl.registerLazySingleton(
+    () => DeleteProjectUsecase(
+      projects: sl<ProjectRepository>(),
+      books: sl<BookRepository>(),
+      deleteBook: sl<DeleteBookUsecase>(),
     ),
   );
 

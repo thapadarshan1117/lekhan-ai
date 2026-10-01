@@ -149,6 +149,7 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
       create: (BuildContext context) => SourcesBloc(
         chapter: chapter,
         watchSources: sl<WatchChapterSourcesUsecase>(),
+        getSources: sl<GetChapterSourcesUsecase>(),
         addSource: sl<AddSourceUsecase>(),
         addExistingFile: sl<AddExistingFileUsecase>(),
         deleteSource: sl<DeleteSourceUsecase>(),

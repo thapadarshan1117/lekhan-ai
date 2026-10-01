@@ -8,10 +8,18 @@ import 'package:lekhan_ai/features/projects/presentation/widgets/project_status_
 /// Shows the offline story explicitly: a card that has never reached the server
 /// says so, instead of pretending it is saved everywhere.
 class ProjectCard extends StatelessWidget {
-  const ProjectCard({super.key, required this.project, required this.onTap});
+  const ProjectCard({
+    super.key,
+    required this.project,
+    required this.onTap,
+    this.onEdit,
+    this.onDelete,
+  });
 
   final Project project;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +49,37 @@ class ProjectCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  if (onEdit != null) ...<Widget>[
+                    IconButton(
+                      tooltip: 'Edit project',
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      color: AppColors.textSecondary,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 32,
+                        height: 32,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    const SizedBox(width: 2),
+                  ] else
+                    const SizedBox(width: 8),
+                  if (onDelete != null) ...<Widget>[
+                    IconButton(
+                      tooltip: 'Delete project',
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      color: Theme.of(context).colorScheme.error,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 32,
+                        height: 32,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                   ProjectStatusChip(status: project.status),
                 ],
               ),

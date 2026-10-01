@@ -75,6 +75,20 @@ class ChapterRepositoryImpl implements ChapterRepository {
   }
 
   @override
+  Future<Either<AppException, List<Chapter>>> getCachedChapters({
+    String? bookId,
+  }) async {
+    final Either<AppException, List<ChapterModel>> cached = await _readCache(
+      bookId,
+    );
+    return cached.fold(
+      (AppException error) => Left<AppException, List<Chapter>>(error),
+      (List<ChapterModel> items) =>
+          Right<AppException, List<Chapter>>(_asEntities(items)),
+    );
+  }
+
+  @override
   Future<Either<AppException, Chapter>> getChapter(String id) async {
     final Either<AppException, ChapterModel?> cached = await local.getChapter(
       id,
@@ -112,7 +126,11 @@ class ChapterRepositoryImpl implements ChapterRepository {
       }
     }
 
-    final ChapterModel stored = remoteItem.markSynced();
+    final ChapterModel stored = remoteItem.markSynced().copyWith(
+      id: item?.id ?? remoteItem.id,
+      bookId: item?.bookId ?? remoteItem.bookId,
+      projectId: item?.projectId ?? remoteItem.projectId,
+    );
     await local.save(stored);
     return Right<AppException, Chapter>(stored);
   }
@@ -163,7 +181,11 @@ class ChapterRepositoryImpl implements ChapterRepository {
       }
     }
 
-    final ChapterModel stored = remoteItem.markSynced();
+    final ChapterModel stored = remoteItem.markSynced().copyWith(
+      id: item?.id ?? remoteItem.id,
+      bookId: item?.bookId ?? remoteItem.bookId,
+      projectId: item?.projectId ?? remoteItem.projectId,
+    );
     await local.save(stored);
     return Right<AppException, Chapter>(stored);
   }
@@ -200,6 +222,7 @@ class ChapterRepositoryImpl implements ChapterRepository {
         remoteId: stored.remoteId,
         payload: <String, dynamic>{
           'entity': SyncEntityType.chapter.value,
+          'local_updated_at': stored.updatedAt.toIso8601String(),
           'data': data,
         },
       ),
@@ -207,6 +230,47 @@ class ChapterRepositoryImpl implements ChapterRepository {
 
     requestBus.request();
     return Right<AppException, Chapter>(stored);
+  }
+
+  @override
+  Future<Either<AppException, bool>> deleteLocal(String id) async {
+    final Either<AppException, ChapterModel?> found = await local.getChapter(id);
+    final AppException? readError = found.errorOrNull;
+    if (readError != null) return Left<AppException, bool>(readError);
+
+    final ChapterModel? chapter = found.valueOrNull;
+    if (chapter == null) return const Right<AppException, bool>(true);
+
+    final Either<AppException, bool> deleted = await local.delete(id);
+    if (deleted.valueOrNull != true) {
+      return Left<AppException, bool>(
+        deleted.errorOrNull ??
+            FailureMapper.local(
+              StateError('Chapter could not be removed'),
+              identifier: '$_identifier.deleteLocal',
+              statusCode: LocalErrorCodes.databaseFailure,
+            ),
+      );
+    }
+
+    await queue.enqueue(
+      SyncTaskBuilder.metadata(
+        entityType: SyncEntityType.chapter,
+        entityId: id,
+        operation: SyncOperation.delete,
+        remoteId: chapter.remoteId,
+      ),
+    );
+    for (final task in await queue.all()) {
+      if ((task.entityType == SyncEntityType.chapter ||
+              task.entityType == SyncEntityType.progress) &&
+          task.entityId == id &&
+          task.operation != SyncOperation.delete) {
+        await queue.remove(task.id);
+      }
+    }
+    requestBus.request();
+    return const Right<AppException, bool>(true);
   }
 
   @override
@@ -283,6 +347,7 @@ class ChapterRepositoryImpl implements ChapterRepository {
         chapterId: updated.id,
         currentWords: currentWords,
         remoteId: updated.remoteId,
+        localUpdatedAt: updated.updatedAt,
       ),
     );
 
@@ -315,7 +380,6 @@ class ChapterRepositoryImpl implements ChapterRepository {
     final ChapterModel updated = chapter.withCounts(
       sourceCount: sourceCount,
       pendingSourceCount: pendingSourceCount,
-      at: DateTime.now(),
     );
 
     final Either<AppException, ChapterModel> saved = await local.save(updated);
@@ -401,7 +465,13 @@ class ChapterRepositoryImpl implements ChapterRepository {
       );
 
       if (resolution.shouldApplyRemote) {
-        toStore.add(remoteItem.markSynced());
+        toStore.add(
+          remoteItem.markSynced().copyWith(
+            id: existing.id,
+            bookId: existing.bookId,
+            projectId: existing.projectId,
+          ),
+        );
       } else if (resolution.shouldDeleteLocal) {
         await local.delete(existing.id);
       }

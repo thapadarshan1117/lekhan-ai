@@ -6,10 +6,18 @@ import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
 /// One chapter in the list, including how much source material is still
 /// waiting to upload - the number the writer actually cares about.
 class ChapterCard extends StatelessWidget {
-  const ChapterCard({super.key, required this.chapter, required this.onTap});
+  const ChapterCard({
+    super.key,
+    required this.chapter,
+    required this.onTap,
+    this.onEdit,
+    this.onDelete,
+  });
 
   final Chapter chapter;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +71,37 @@ class ChapterCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  if (onEdit != null) ...<Widget>[
+                    IconButton(
+                      tooltip: 'Edit chapter',
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined, size: 17),
+                      color: AppColors.textSecondary,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 30,
+                        height: 30,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    const SizedBox(width: 4),
+                  ] else
+                    const SizedBox(width: 8),
+                  if (onDelete != null) ...<Widget>[
+                    IconButton(
+                      tooltip: 'Delete chapter',
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline, size: 17),
+                      color: Theme.of(context).colorScheme.error,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 30,
+                        height: 30,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                   _ChapterStatusChip(status: chapter.status),
                 ],
               ),

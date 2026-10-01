@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lekhan_ai/core/enums/processing_status.dart';
 import 'package:lekhan_ai/core/enums/source_type.dart';
 import 'package:lekhan_ai/core/enums/upload_status.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
@@ -111,6 +112,11 @@ class SourceTile extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             _UploadStateRow(source: source, onRetry: onRetry),
+            if (source.uploadStatus == UploadStatus.uploaded &&
+                source.processingStatus != ProcessingStatus.notStarted) ...<Widget>[
+              const SizedBox(height: 6),
+              _ProcessingStateRow(status: source.processingStatus),
+            ],
           ],
         ),
       ),
@@ -131,6 +137,38 @@ class SourceTile extends StatelessWidget {
       case SourceType.document:
         return 'Document · $size';
     }
+  }
+}
+
+/// Processing is an independent backend state: uploaded bytes do not mean the
+/// document/audio has finished transcription or ingestion.
+class _ProcessingStateRow extends StatelessWidget {
+  const _ProcessingStateRow({required this.status});
+
+  final ProcessingStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color = status == ProcessingStatus.completed
+        ? const Color(0xFF1B7F4B)
+        : status == ProcessingStatus.failed
+            ? AppColors.error
+            : AppColors.secondary;
+    final IconData icon = status == ProcessingStatus.completed
+        ? Icons.check_circle_outline
+        : status == ProcessingStatus.failed
+            ? Icons.error_outline
+            : Icons.sync;
+    return Row(
+      children: <Widget>[
+        Icon(icon, size: 15, color: color),
+        const SizedBox(width: 6),
+        Text(
+          'Processing · ${status.label}',
+          style: TextStyle(fontSize: 12, color: color),
+        ),
+      ],
+    );
   }
 }
 

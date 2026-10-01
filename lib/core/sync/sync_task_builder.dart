@@ -71,6 +71,7 @@ class SyncTaskBuilder {
     required String chapterId,
     required int currentWords,
     String? remoteId,
+    DateTime? localUpdatedAt,
     DateTime? now,
   }) {
     final DateTime stamp = now ?? DateTime.now();
@@ -81,7 +82,11 @@ class SyncTaskBuilder {
       operation: SyncOperation.update,
       remoteId: remoteId,
       priority: SyncPriority.p0,
-      payload: <String, dynamic>{'current_words': currentWords},
+      payload: <String, dynamic>{
+        'current_words': currentWords,
+        if (localUpdatedAt != null)
+          'local_updated_at': localUpdatedAt.toIso8601String(),
+      },
       createdAt: stamp,
       updatedAt: stamp,
     );

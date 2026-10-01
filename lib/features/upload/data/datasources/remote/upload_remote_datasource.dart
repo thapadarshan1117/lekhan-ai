@@ -81,7 +81,7 @@ abstract class UploadRemoteDataSource {
     required int sizeBytes,
     required String checksum,
     required String sourceType,
-    int chunkSize,
+    int chunkSize = 4 * 1024 * 1024,
   });
 
   /// Sends one chunk. [onProgress] reports bytes sent *within this chunk*.
@@ -106,17 +106,21 @@ abstract class UploadRemoteDataSource {
 }
 
 class UploadRemoteDataSourceImpl implements UploadRemoteDataSource {
-  const UploadRemoteDataSourceImpl({
+  UploadRemoteDataSourceImpl({
     required this.networkService,
     required this.dio,
-  });
+    Dio? externalUploadDio,
+  }) : _externalUploadDio = externalUploadDio ?? Dio();
 
   final NetworkService networkService;
 
-  /// The same authenticated Dio the app uses for everything else. Chunk
-  /// requests need per-request timeouts, which `NetworkService` deliberately
-  /// does not expose.
+  /// Authenticated client for same-origin backend chunk endpoints.
   final Dio dio;
+
+  /// Bare client for short-lived URLs on a storage origin. The backend issues
+  /// the URL/session and retains Drive credentials; never forward the app's
+  /// bearer token to a storage host.
+  final Dio _externalUploadDio;
 
   static const String _identifier = 'UploadRemoteDataSourceImpl';
 
@@ -204,10 +208,16 @@ class UploadRemoteDataSourceImpl implements UploadRemoteDataSource {
       final List<int> bytes = await reader.read(length);
       final int end = offset + bytes.length - 1;
 
+      final Uri baseUri = Uri.parse(networkService.baseUrl);
+      final Uri targetUri = baseUri.resolve(uploadUrl);
+      final bool sameOrigin = targetUri.origin == baseUri.origin;
+      final Dio chunkClient = sameOrigin ? dio : _externalUploadDio;
+
       // No explicit annotation: the type is dio's Response, which is hidden
-      // above to keep the app's Response unambiguous.
-      final response = await dio.request<dynamic>(
-        uploadUrl,
+      // above to keep the app's Response unambiguous. External presigned
+      // storage URLs use the bare client so the API bearer token is not leaked.
+      final response = await chunkClient.request<dynamic>(
+        targetUri.toString(),
         data: bytes,
         options: Options(
           method: method,
@@ -242,11 +252,44 @@ class UploadRemoteDataSourceImpl implements UploadRemoteDataSource {
         );
       }
 
+      if ((status < 200 || status >= 300) && status != 308) {
+        final Map<String, dynamic> errorBody = JsonUtils.unwrap(response.data);
+        return Left<AppException, UploadChunkResult>(
+          AppException(
+            message: JsonUtils.asString(
+              errorBody['message'] ?? errorBody['detail'],
+              fallback: 'The server rejected an upload chunk.',
+            ),
+            statusCode: status,
+            identifier: '$_identifier.pushChunk.rejected',
+          ),
+        );
+      }
+
       final Map<String, dynamic> data = JsonUtils.unwrap(response.data);
-      final int serverOffset =
-          JsonUtils.asInt(data['offset'], fallback: offset + bytes.length);
+      final String? acknowledgedRange = response.headers.value('Range');
+      final RegExpMatch? rangeMatch = acknowledgedRange == null
+          ? null
+          : RegExp(r'(\d+)-(\d+)').firstMatch(acknowledgedRange);
+      final int rangeOffset = rangeMatch == null
+          ? offset + bytes.length
+          : (int.tryParse(rangeMatch.group(2) ?? '') ?? -1) + 1;
+      final int serverOffset = JsonUtils.asInt(
+        data['offset'],
+        fallback: rangeOffset,
+      );
+      if (serverOffset < 0 || serverOffset > totalBytes) {
+        return Left<AppException, UploadChunkResult>(
+          AppException(
+            message: 'The server returned an invalid upload offset.',
+            statusCode: 502,
+            identifier: '$_identifier.pushChunk.invalidOffset',
+          ),
+        );
+      }
       final bool completed =
-          status == 200 || status == 201 || JsonUtils.asBool(data['completed']);
+          status == 200 || status == 201 || status == 204 ||
+              JsonUtils.asBool(data['completed']);
 
       return Right<AppException, UploadChunkResult>(
         UploadChunkResult(

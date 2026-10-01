@@ -7,6 +7,7 @@ import 'package:lekhan_ai/core/utils/either_utils.dart';
 import 'package:lekhan_ai/features/books/domain/entities/book.dart';
 import 'package:lekhan_ai/features/books/domain/usecases/get_book_detail_usecase.dart';
 import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
+import 'package:lekhan_ai/features/chapters/domain/usecases/delete_chapter_usecase.dart';
 import 'package:lekhan_ai/features/chapters/domain/usecases/get_chapters_usecase.dart';
 import 'package:lekhan_ai/features/chapters/presentation/bloc/chapters_bloc/chapters_bloc.dart';
 import 'package:lekhan_ai/features/chapters/presentation/widgets/chapter_card.dart';
@@ -153,11 +154,21 @@ class _BookDetailView extends StatelessWidget {
                           final Chapter chapter = chapters[index];
                           return ChapterCard(
                             chapter: chapter,
+                            onEdit: () => context.pushNamed(
+                              'chapterForm',
+                              queryParameters: <String, String>{
+                                'bookId': bookId,
+                                'number': '${chapter.number}',
+                              },
+                              extra: chapter,
+                            ),
+                            onDelete: () => _deleteChapter(context, chapter),
                             onTap: () => context.pushNamed(
                               'chapterDetail',
                               pathParameters: <String, String>{
                                 'id': chapter.id,
                               },
+                              extra: chapter,
                             ),
                           );
                         },
@@ -169,6 +180,52 @@ class _BookDetailView extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _deleteChapter(BuildContext context, Chapter chapter) async {
+    final String title = chapter.title.isEmpty
+        ? 'Chapter ${chapter.number}'
+        : chapter.title;
+    final bool confirmed = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext dialogContext) => AlertDialog(
+            title: const Text('Delete chapter?'),
+            content: Text(
+              '“$title” and its source files will be removed from this device. '
+              'The server deletion will sync when available.',
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(dialogContext).colorScheme.error,
+                ),
+                child: const Text('Delete chapter'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed || !context.mounted) return;
+
+    final result = await sl<DeleteChapterUsecase>()(chapter.id);
+    if (!context.mounted) return;
+    result.fold(
+      (failure) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not delete chapter: ${failure.message}')),
+      ),
+      (deleted) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            deleted ? 'Chapter deleted.' : 'Chapter could not be deleted.',
+          ),
+        ),
       ),
     );
   }

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
@@ -28,43 +26,43 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
   final GetBooksUsecase getBooks;
   final WatchBooksUsecase watchBooks;
 
-  StreamSubscription<List<Book>>? _subscription;
-
   Future<void> _onStarted(_Started event, Emitter<BooksState> emit) async {
     emit(const BooksState.loading());
 
-    await _subscription?.cancel();
+    final result = await getBooks(GetBooksParams(projectId: projectId));
+    final List<Book>? initialBooks = result.valueOrNull;
+    if (initialBooks != null) {
+      emit(BooksState.loaded(books: initialBooks));
+    } else {
+      emit(BooksState.loaded(
+        books: const <Book>[],
+        message: result.errorOrNull?.message ?? 'Books could not be loaded.',
+        isEmptyBecauseOfError: true,
+      ));
+    }
 
-    // Emit initial books before subscribing to changes
-    try {
-      final List<Book> initialItems = await watchBooks(projectId: projectId).first;
-      _publish(emit, initialItems);
-    } catch (error) {
-      if (!emit.isDone) {
-        emit(BooksState.loaded(
+    await emit.forEach<List<Book>>(
+      watchBooks(projectId: projectId),
+      onData: (List<Book> items) => BooksState.loaded(
+        books: items,
+        isRefreshing: state.maybeWhen(
+          loaded: (_, bool refreshing, __, ___) => refreshing,
+          orElse: () => false,
+        ),
+      ),
+      onError: (Object error, StackTrace stackTrace) {
+        final BooksState current = state;
+        if (current is _Loaded) {
+          return current.copyWith(
+            isRefreshing: false,
+            message: 'Books could not be loaded.',
+          );
+        }
+        return BooksState.loaded(
           books: const <Book>[],
           message: 'Books could not be loaded.',
           isEmptyBecauseOfError: true,
-        ));
-      }
-      return;
-    }
-
-    // Now subscribe to future changes
-    _subscription = watchBooks(projectId: projectId).listen(
-      (List<Book> items) {
-        if (!emit.isDone) {
-          _publish(emit, items);
-        }
-      },
-      onError: (Object error) {
-        if (!emit.isDone) {
-          emit(BooksState.loaded(
-            books: const <Book>[],
-            message: 'Books could not be loaded.',
-            isEmptyBecauseOfError: true,
-          ));
-        }
+        );
       },
     );
   }
@@ -102,22 +100,4 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
     emit(BooksState.loaded(books: books));
   }
 
-  /// Emits a new list while preserving the busy flag and any pending message.
-  void _publish(Emitter<BooksState> emit, List<Book> items) {
-    if (emit.isDone) return;
-
-    final bool isRefreshing = state.maybeWhen(
-      loaded: (List<Book> _, bool isRefreshing, String? __, bool ___) => isRefreshing,
-      orElse: () => false,
-    );
-
-    emit(BooksState.loaded(books: items, isRefreshing: isRefreshing));
-  }
-
-  @override
-  Future<void> close() async {
-    await _subscription?.cancel();
-    _subscription = null;
-    return super.close();
-  }
 }

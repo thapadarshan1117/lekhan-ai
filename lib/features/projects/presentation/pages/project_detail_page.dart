@@ -5,6 +5,7 @@ import 'package:lekhan_ai/core/config/dependency_injection/di_config.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
 import 'package:lekhan_ai/features/books/domain/entities/book.dart';
+import 'package:lekhan_ai/features/books/domain/usecases/delete_book_usecase.dart';
 import 'package:lekhan_ai/features/books/domain/usecases/get_books_usecase.dart';
 import 'package:lekhan_ai/features/books/presentation/bloc/books_bloc/books_bloc.dart';
 import 'package:lekhan_ai/features/books/presentation/widgets/book_card.dart';
@@ -158,9 +159,18 @@ class _ProjectDetailView extends StatelessWidget {
                           final Book book = books[index];
                           return BookCard(
                             book: book,
+                            onEdit: () => context.pushNamed(
+                              'bookForm',
+                              queryParameters: <String, String>{
+                                'projectId': projectId,
+                              },
+                              extra: book,
+                            ),
+                            onDelete: () => _deleteBook(context, book),
                             onTap: () => context.pushNamed(
                               'bookDetail',
                               pathParameters: <String, String>{'id': book.id},
+                              extra: book,
                             ),
                           );
                         },
@@ -172,6 +182,45 @@ class _ProjectDetailView extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _deleteBook(BuildContext context, Book book) async {
+    final bool confirmed = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext dialogContext) => AlertDialog(
+            title: const Text('Delete book?'),
+            content: Text(
+              '“${book.title}” and all of its chapters and source files will be '
+              'removed from this device. The server deletion will sync when available.',
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(dialogContext).colorScheme.error,
+                ),
+                child: const Text('Delete book'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed || !context.mounted) return;
+
+    final result = await sl<DeleteBookUsecase>()(book.id);
+    if (!context.mounted) return;
+    result.fold(
+      (failure) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not delete book: ${failure.message}')),
+      ),
+      (deleted) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(deleted ? 'Book deleted.' : 'Book could not be deleted.')),
       ),
     );
   }

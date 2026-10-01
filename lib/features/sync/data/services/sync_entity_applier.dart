@@ -33,20 +33,30 @@ class SyncEntityApplier {
     required SyncEntityType entityType,
     required String entityId,
     String? remoteId,
+    DateTime? expectedUpdatedAt,
   }) async {
+    bool changedAfterPush(DateTime updatedAt) => expectedUpdatedAt != null &&
+        updatedAt.isAfter(expectedUpdatedAt);
+
     switch (entityType) {
       case SyncEntityType.project:
         final ProjectModel? project =
             (await projectLocal.getProject(entityId)).valueOrNull;
         if (project != null) {
-          await projectLocal.save(project.markSynced(remoteId: remoteId));
+          final ProjectModel synced = project
+              .markSynced(remoteId: remoteId)
+              .copyWith(isDirty: changedAfterPush(project.updatedAt));
+          await projectLocal.save(synced);
         }
         return;
 
       case SyncEntityType.book:
         final BookModel? book = (await bookLocal.getBook(entityId)).valueOrNull;
         if (book != null) {
-          await bookLocal.save(book.markSynced(remoteId: remoteId));
+          final BookModel synced = book
+              .markSynced(remoteId: remoteId)
+              .copyWith(isDirty: changedAfterPush(book.updatedAt));
+          await bookLocal.save(synced);
         }
         return;
 
@@ -55,7 +65,10 @@ class SyncEntityApplier {
         final ChapterModel? chapter =
             (await chapterLocal.getChapter(entityId)).valueOrNull;
         if (chapter != null) {
-          await chapterLocal.save(chapter.markSynced(remoteId: remoteId));
+          final ChapterModel synced = chapter
+              .markSynced(remoteId: remoteId)
+              .copyWith(isDirty: changedAfterPush(chapter.updatedAt));
+          await chapterLocal.save(synced);
         }
         return;
 
@@ -64,6 +77,8 @@ class SyncEntityApplier {
         final ChapterSourceModel? source =
             (await sourceLocal.getSource(entityId)).valueOrNull;
         if (source != null) {
+          // Upload progress and server processing metadata update the record's
+          // timestamp, but are not edits to its user-owned metadata.
           await sourceLocal.save(
             source.markSynced(remoteId: remoteId).copyWith(isDirty: false),
           );
@@ -105,24 +120,30 @@ class SyncEntityApplier {
         case SyncEntityType.project:
           final ProjectModel? project =
               (await projectLocal.getProjectByRemoteId(remoteId)).valueOrNull;
-          if (project != null) await projectLocal.delete(project.id);
+          if (project != null && !project.isDirty) {
+            await projectLocal.delete(project.id);
+          }
           return;
         case SyncEntityType.book:
           final BookModel? book =
               (await bookLocal.getBookByRemoteId(remoteId)).valueOrNull;
-          if (book != null) await bookLocal.delete(book.id);
+          if (book != null && !book.isDirty) await bookLocal.delete(book.id);
           return;
         case SyncEntityType.chapter:
         case SyncEntityType.progress:
           final ChapterModel? chapter =
               (await chapterLocal.getChapterByRemoteId(remoteId)).valueOrNull;
-          if (chapter != null) await chapterLocal.delete(chapter.id);
+          if (chapter != null && !chapter.isDirty) {
+            await chapterLocal.delete(chapter.id);
+          }
           return;
         case SyncEntityType.chapterSource:
         case SyncEntityType.uploadSession:
           final ChapterSourceModel? source =
               (await sourceLocal.getSourceByRemoteId(remoteId)).valueOrNull;
-          if (source != null) await sourceLocal.delete(source.id);
+          if (source != null && !source.isDirty) {
+            await sourceLocal.delete(source.id);
+          }
           return;
       }
     } catch (error) {

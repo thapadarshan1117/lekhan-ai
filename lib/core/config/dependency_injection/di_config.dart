@@ -71,6 +71,8 @@ import 'package:lekhan_ai/features/notifications/presentation/bloc/notification_
 
 
 import 'package:lekhan_ai/core/config/dependency_injection/offline_di.dart';
+import 'package:lekhan_ai/core/sync/sync_manager.dart';
+import 'package:lekhan_ai/core/sync/offline_session_guard.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -255,7 +257,11 @@ Future<void> setUpServiceLocator() async {
   );
 
   sl.registerLazySingleton(
-    () => LogoutUsecase(authRepository: sl<AuthRepository>()),
+    () => LogoutUsecase(
+      authRepository: sl<AuthRepository>(),
+      syncManager: sl<SyncManager>(),
+      sessionGuard: sl<OfflineSessionGuard>(),
+    ),
   );
   sl.registerLazySingleton(() => OtpResendUsecase(sl<AuthRepository>()));
   sl.registerLazySingleton(() => VerifyOtpUsecase(sl<AuthRepository>()));

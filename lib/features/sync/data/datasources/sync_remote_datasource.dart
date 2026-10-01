@@ -1,6 +1,9 @@
+import 'package:lekhan_ai/core/constants/api_constants.dart';
 import 'package:lekhan_ai/core/error/failure_mapper.dart';
 import 'package:lekhan_ai/core/utils/json_utils.dart';
+import 'package:lekhan_ai/core/utils/remote_json_utils.dart';
 import 'package:lekhan_ai/shared/data/remote/network_service.dart';
+import 'package:lekhan_ai/shared/domain/models/response.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -14,39 +17,34 @@ class SyncChangeResult {
   });
 
   final String localId;
-
-  /// Server id of the record, once it exists remotely.
   final String? remoteId;
-
-  /// `accepted`, `rejected`, `conflict`, ...
   final String? status;
   final String? error;
 
-  /// Anything that is not explicitly a rejection counts as accepted, so an
-  /// older backend that answers `200 null` still works.
+  /// Never assume an empty/malformed response means success. Missing
+  /// confirmation must keep the local outbox task retryable.
   bool get isAccepted {
-    final String? value = status?.toLowerCase();
-    if (value == null || value.isEmpty) return true;
-    return value == 'accepted' ||
-        value == 'ok' ||
-        value == 'success' ||
-        value == 'created' ||
-        value == 'updated';
+    final String? value = status?.trim().toLowerCase();
+    if (value == null || value.isEmpty) return remoteId?.isNotEmpty == true;
+    return const <String>{'accepted', 'ok', 'success', 'created', 'updated'}
+        .contains(value);
   }
 
-  bool get isConflict => status?.toLowerCase() == 'conflict';
+  bool get isConflict => status?.trim().toLowerCase() == 'conflict';
 
   factory SyncChangeResult.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> data = RemoteJsonUtils.record(json);
     return SyncChangeResult(
       localId: JsonUtils.asString(
-        json['local_id'],
-        fallback: JsonUtils.asString(json['localId']),
+        data['local_id'] ?? data['localId'] ?? data['client_id'],
       ),
       remoteId: JsonUtils.asStringOrNull(
-        json['remote_id'] ?? json['remoteId'],
+        data['remote_id'] ?? data['remoteId'] ?? data['server_id'] ?? data['id'],
       ),
-      status: JsonUtils.asStringOrNull(json['status']),
-      error: JsonUtils.asStringOrNull(json['error'] ?? json['message']),
+      status: JsonUtils.asStringOrNull(data['status']),
+      error: JsonUtils.asStringOrNull(
+        data['error'] ?? data['message'] ?? data['detail'],
+      ),
     );
   }
 }
@@ -65,12 +63,16 @@ class SyncPushResponse {
   }
 
   factory SyncPushResponse.fromJson(Map<String, dynamic> json) {
-    final List<Map<String, dynamic>> raw = JsonUtils.asMapList(
-      json['results'] ?? json['changes'] ?? json['data'],
-    );
+    final Map<String, dynamic> data = RemoteJsonUtils.record(json);
+    final dynamic raw =
+        data['results'] ?? data['changes'] ?? data['items'] ?? data['data'];
     return SyncPushResponse(
-      results: raw.map<SyncChangeResult>(SyncChangeResult.fromJson).toList(),
-      serverTime: JsonUtils.asDateTime(json['server_time']),
+      results: RemoteJsonUtils.records(raw ?? data)
+          .map<SyncChangeResult>(SyncChangeResult.fromJson)
+          .toList(growable: false),
+      serverTime: JsonUtils.asDateTime(
+        data['server_time'] ?? data['serverTime'],
+      ),
     );
   }
 }
@@ -80,54 +82,124 @@ class SyncPullResponse {
     required this.changes,
     this.deletedIds = const <String>[],
     this.serverTime,
+    this.nextCursor,
+    this.nextPage,
+    this.hasMore = false,
   });
 
   final List<Map<String, dynamic>> changes;
   final List<String> deletedIds;
   final DateTime? serverTime;
+  final String? nextCursor;
+  final int? nextPage;
+  final bool hasMore;
 
   factory SyncPullResponse.fromJson(Map<String, dynamic> json) {
-    final List<Map<String, dynamic>> raw = JsonUtils.asMapList(
-      json['changes'] ?? json['results'] ?? json['data'],
-    );
+    final Map<String, dynamic> data = RemoteJsonUtils.record(json);
+    final dynamic raw =
+        data['changes'] ?? data['results'] ?? data['items'] ?? data['data'];
+    final List<Map<String, dynamic>> changes = <Map<String, dynamic>>[];
+
+    if (raw != null) {
+      changes.addAll(RemoteJsonUtils.records(raw));
+    } else {
+      // Also accept a resource-grouped pull envelope while the backend and
+      // mobile sync endpoints converge on the canonical `changes` format.
+      for (final MapEntry<String, String> entry in <MapEntry<String, String>>[
+        const MapEntry<String, String>('projects', 'project'),
+        const MapEntry<String, String>('books', 'book'),
+        const MapEntry<String, String>('chapters', 'chapter'),
+        const MapEntry<String, String>('sources', 'chapter_source'),
+        const MapEntry<String, String>('chapter_sources', 'chapter_source'),
+        const MapEntry<String, String>('deleted', ''),
+      ]) {
+        for (final Map<String, dynamic> record
+            in RemoteJsonUtils.records(data[entry.key])) {
+          changes.add(<String, dynamic>{
+            if (entry.value.isNotEmpty) 'entity_type': entry.value,
+            'operation': entry.key == 'deleted' ? 'delete' : 'update',
+            'payload': record,
+            if (entry.key == 'deleted') ...record,
+          });
+        }
+      }
+      if (changes.isEmpty &&
+          (data.containsKey('entity_type') ||
+              data.containsKey('entityType') ||
+              data.containsKey('entity') ||
+              data.containsKey('type')) &&
+          RemoteJsonUtils.remoteId(data).isNotEmpty) {
+        changes.add(data);
+      }
+    }
 
     final List<String> deleted = <String>[];
-    for (final Map<String, dynamic> change in raw) {
-      if (JsonUtils.asBool(change['is_deleted']) ||
-          JsonUtils.asBool(change['deleted'])) {
-        final String id = JsonUtils.asString(change['id']);
+    deleted.addAll(
+      JsonUtils.asStringList(data['deleted_ids'] ?? data['deletedIds'])
+          .where((String id) => id.isNotEmpty),
+    );
+    for (final Map<String, dynamic> change in changes) {
+      if (JsonUtils.asBool(change['is_deleted'] ?? change['deleted']) ||
+          JsonUtils.asString(change['operation']).toLowerCase() == 'delete') {
+        final String id = RemoteJsonUtils.remoteId(<String, dynamic>{
+          ...change,
+          ...RemoteJsonUtils.record(
+            change['payload'] ?? change['data'] ?? change,
+          ),
+        });
         if (id.isNotEmpty) deleted.add(id);
       }
     }
 
+    final String? cursor = JsonUtils.asStringOrNull(
+      data['next_cursor'] ?? data['nextCursor'],
+    );
+    final int? page = JsonUtils.asIntOrNull(
+      data['next_page'] ?? data['nextPage'],
+    );
+    final Map<String, dynamic> pagination =
+        JsonUtils.asMap(data['pagination']);
     return SyncPullResponse(
-      changes: raw,
-      deletedIds: deleted,
-      serverTime: JsonUtils.asDateTime(json['server_time']),
+      changes: changes,
+      deletedIds: deleted.toSet().toList(growable: false),
+      serverTime: JsonUtils.asDateTime(
+        data['server_time'] ?? data['serverTime'],
+      ),
+      nextCursor: cursor,
+      nextPage: page,
+      hasMore: JsonUtils.asBool(
+        data['has_more'] ??
+            data['hasMore'] ??
+            pagination['has_more'] ??
+            pagination['hasMore'],
+        fallback: cursor != null || page != null,
+      ),
     );
   }
 }
 
 abstract class SyncRemoteDataSource {
-  /// Pushes a batch of local changes.
   Future<Either<AppException, SyncPushResponse>> pushChanges({
     required List<Map<String, dynamic>> changes,
   });
 
-  /// Pulls everything that changed on the server since [since].
   Future<Either<AppException, SyncPullResponse>> pullChanges({
     DateTime? since,
     List<String>? entityTypes,
-    int page,
+    required int page,
+    int pageSize = 100,
+    String? cursor,
   });
 
-  /// Backend view of the queue: useful before a pull to know whether it is
-  /// worth doing at all.
   Future<Either<AppException, Map<String, dynamic>>> fetchStatus();
 }
 
+/// Real API implementation. The sync queue remains local and durable; only the
+/// changes selected by its worker are sent to the authenticated backend.
 class SyncRemoteDataSourceImpl implements SyncRemoteDataSource {
-  const SyncRemoteDataSourceImpl({NetworkService? networkService});
+  const SyncRemoteDataSourceImpl({required this.networkService});
+
+  final NetworkService networkService;
 
   static const String _identifier = 'SyncRemoteDataSourceImpl';
 
@@ -135,23 +207,23 @@ class SyncRemoteDataSourceImpl implements SyncRemoteDataSource {
   Future<Either<AppException, SyncPushResponse>> pushChanges({
     required List<Map<String, dynamic>> changes,
   }) async {
+    if (changes.isEmpty) {
+      return const Right<AppException, SyncPushResponse>(
+        SyncPushResponse(results: <SyncChangeResult>[]),
+      );
+    }
+
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      // Mock response - all changes accepted
-      final results = changes.map<SyncChangeResult>((change) {
-        return SyncChangeResult(
-          localId: change['local_id'] ?? '',
-          remoteId: 'mock_remote_${DateTime.now().millisecondsSinceEpoch}',
-          status: 'accepted',
-        );
-      }).toList();
-
-      return Right<AppException, SyncPushResponse>(
-        SyncPushResponse(
-          results: results,
-          serverTime: DateTime.now(),
+      final Either<AppException, Response> result = await networkService.post(
+        ApiConstants.syncPush,
+        data: <String, dynamic>{'changes': changes},
+      );
+      return result.fold(
+        (AppException error) => Left<AppException, SyncPushResponse>(error),
+        (Response response) => Right<AppException, SyncPushResponse>(
+          SyncPushResponse.fromJson(
+            RemoteJsonUtils.record(response.data),
+          ),
         ),
       );
     } catch (error) {
@@ -166,17 +238,26 @@ class SyncRemoteDataSourceImpl implements SyncRemoteDataSource {
     DateTime? since,
     List<String>? entityTypes,
     int page = 1,
+    int pageSize = 100,
+    String? cursor,
   }) async {
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      // Mock response - no changes for now
-      return Right<AppException, SyncPullResponse>(
-        SyncPullResponse(
-          changes: [],
-          deletedIds: [],
-          serverTime: DateTime.now(),
+      final Either<AppException, Response> result = await networkService.post(
+        ApiConstants.syncPull,
+        data: <String, dynamic>{
+          if (since != null) 'since': since.toUtc().toIso8601String(),
+          if (entityTypes != null) 'entity_types': entityTypes,
+          'page': page,
+          'page_size': pageSize,
+          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        },
+      );
+      return result.fold(
+        (AppException error) => Left<AppException, SyncPullResponse>(error),
+        (Response response) => Right<AppException, SyncPullResponse>(
+          SyncPullResponse.fromJson(
+            RemoteJsonUtils.record(response.data),
+          ),
         ),
       );
     } catch (error) {
@@ -189,13 +270,14 @@ class SyncRemoteDataSourceImpl implements SyncRemoteDataSource {
   @override
   Future<Either<AppException, Map<String, dynamic>>> fetchStatus() async {
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      return const Right<AppException, Map<String, dynamic>>({
-        'queue_size': 0,
-        'last_sync': '2024-01-01T00:00:00Z',
-      });
+      final Either<AppException, Response> result =
+          await networkService.get(ApiConstants.syncStatus);
+      return result.fold(
+        (AppException error) => Left<AppException, Map<String, dynamic>>(error),
+        (Response response) => Right<AppException, Map<String, dynamic>>(
+          RemoteJsonUtils.record(response.data),
+        ),
+      );
     } catch (error) {
       return Left<AppException, Map<String, dynamic>>(
         FailureMapper.from(error, identifier: '$_identifier.fetchStatus'),

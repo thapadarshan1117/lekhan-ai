@@ -8,6 +8,7 @@ import 'package:lekhan_ai/core/sync/sync_queue.dart';
 import 'package:lekhan_ai/core/sync/sync_state.dart';
 import 'package:lekhan_ai/core/sync/sync_task.dart';
 import 'package:lekhan_ai/core/sync/sync_worker.dart';
+import 'package:lekhan_ai/core/sync/sync_pull_runner.dart';
 
 /// Orchestrates everything that leaves the device.
 ///
@@ -26,6 +27,8 @@ class SyncManager {
     required this.networkInfo,
     required this.preferences,
     required this.checkpointStore,
+    this.pullRunner,
+    this.isAuthorized,
     int maxTasksPerRun = 50,
     int maxConsecutiveFailures = 3,
   })  : _maxTasksPerRun = maxTasksPerRun,
@@ -36,6 +39,8 @@ class SyncManager {
   final NetworkInfo networkInfo;
   final SyncPreferences preferences;
   final SyncCheckpointStore checkpointStore;
+  final SyncPullRunner? pullRunner;
+  final Future<bool> Function()? isAuthorized;
 
   final int _maxTasksPerRun;
   final int _maxConsecutiveFailures;
@@ -50,6 +55,9 @@ class SyncManager {
   bool _isRunning = false;
   int _consecutiveFailures = 0;
   String? _activeTaskId;
+  SyncTrigger? _queuedTrigger;
+  Completer<void>? _activeRunCompletion;
+  bool _paused = false;
 
   // ---------------------------------------------------------------------------
   // Observable state
@@ -86,12 +94,22 @@ class SyncManager {
   /// One full pass over the queue. Safe to call from anywhere; concurrent calls
   /// collapse into the running pass.
   Future<void> sync({SyncTrigger trigger = SyncTrigger.manual}) async {
+    if (_paused) return;
+    if (!await _authorizationAvailable()) {
+      await _refresh(trigger: trigger);
+      return;
+    }
     if (_isRunning) {
-      log('SyncManager: sync already running, ignoring ${trigger.value}');
+      // Writes/network events that arrive during a pass must not be lost: run
+      // one more pass after the active one has checkpointed.
+      _queuedTrigger = trigger;
+      log('SyncManager: queued ${trigger.value} behind the active pass');
       return;
     }
 
     _isRunning = true;
+    final Completer<void> completion = Completer<void>();
+    _activeRunCompletion = completion;
     _consecutiveFailures = 0;
 
     await _emit(
@@ -108,6 +126,22 @@ class SyncManager {
     try {
       await queue.resetStuck();
       await _drain();
+
+      // Local writes are push-only; startup, manual refresh, network restore,
+      // and background opportunities also fetch server-owned changes.
+      if (trigger != SyncTrigger.push &&
+          pullRunner != null &&
+          await _authorizationAvailable()) {
+        final NetworkQuality quality = await networkInfo.currentQuality();
+        if (quality.isOnline) {
+          final String? pullError = await pullRunner!.pull();
+          if (pullError != null) {
+            await checkpointStore.setLastError(pullError);
+          } else if (await queue.countByStatus(SyncStatus.failed) == 0) {
+            await checkpointStore.setLastError(null);
+          }
+        }
+      }
     } catch (error) {
       log('SyncManager: run failed ($error)');
       await checkpointStore.setLastError(error.toString());
@@ -115,9 +149,34 @@ class SyncManager {
       _progressTicker?.cancel();
       _progressTicker = null;
       _activeTaskId = null;
-      _isRunning = false;
-      await _refresh(trigger: trigger);
+      try {
+        await _refresh(trigger: trigger);
+      } finally {
+        _isRunning = false;
+        if (identical(_activeRunCompletion, completion)) {
+          _activeRunCompletion = null;
+        }
+        if (!completion.isCompleted) completion.complete();
+
+        final SyncTrigger? queued = _queuedTrigger;
+        _queuedTrigger = null;
+        if (queued != null && !_paused) unawaited(sync(trigger: queued));
+      }
     }
+  }
+
+  /// Stops scheduling new queue work and waits for the active task to reach a
+  /// safe checkpoint. Logout uses this before clearing account-owned local data.
+  Future<void> pause() async {
+    _paused = true;
+    _queuedTrigger = null;
+    final Completer<void>? active = _activeRunCompletion;
+    if (active != null) await active.future;
+  }
+
+  /// Re-enables work after a failed logout or after a new account is prepared.
+  void resume() {
+    _paused = false;
   }
 
   /// Runs just the tasks belonging to one record - used right after a user
@@ -126,6 +185,7 @@ class SyncManager {
     required String entityId,
     SyncEntityType? entityType,
   }) async {
+    if (_paused || !await _authorizationAvailable()) return;
     final NetworkQuality quality = await networkInfo.currentQuality();
     if (!quality.isOnline) {
       await _refresh();
@@ -189,7 +249,8 @@ class SyncManager {
     _startProgressTicker();
 
     int processed = 0;
-    while (processed < _maxTasksPerRun) {
+    while (processed < _maxTasksPerRun && !_paused) {
+      if (!await _authorizationAvailable()) break;
       final SyncTask? task = await queue.nextDue();
       if (task == null) break;
 
@@ -250,7 +311,9 @@ class SyncManager {
     if (outcome.succeeded) {
       await queue.markCompleted(task.id, remoteId: outcome.remoteId);
       await checkpointStore.markSynced();
-      await checkpointStore.setLastError(null);
+      if (await queue.countByStatus(SyncStatus.failed) == 0) {
+        await checkpointStore.setLastError(null);
+      }
       _activeTaskId = null;
       return true;
     }
@@ -315,6 +378,17 @@ class SyncManager {
     );
   }
 
+  Future<bool> _authorizationAvailable() async {
+    final Future<bool> Function()? check = isAuthorized;
+    if (check == null) return true;
+    try {
+      return await check();
+    } catch (error) {
+      log('SyncManager: authorization check failed ($error)');
+      return false;
+    }
+  }
+
   Future<void> _refresh({SyncTrigger? trigger}) async {
     final Map<SyncStatus, int> counts = await queue.counts();
     final NetworkQuality quality = await networkInfo.currentQuality();
@@ -329,7 +403,7 @@ class SyncManager {
     SyncConnectionStatus status;
     String? message;
 
-    if (failed > 0) {
+    if (failed > 0 || (lastError != null && quality.isOnline)) {
       status = SyncConnectionStatus.attentionRequired;
       message = lastError;
     } else if (!quality.isOnline) {

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
@@ -31,46 +29,48 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   final WatchProjectsUsecase watchProjects;
   final SaveProjectUsecase saveProject;
 
-  StreamSubscription<List<Project>>? _subscription;
-
   Future<void> _onStarted(
     _Started event,
     Emitter<ProjectsState> emit,
   ) async {
     emit(const ProjectsState.loading());
 
-    await _subscription?.cancel();
-    
-    // Emit initial projects before subscribing to changes
-    try {
-      final List<Project> initialItems = await watchProjects().first;
-      _publish(emit, initialItems);
-    } catch (error) {
-      if (!emit.isDone) {
-        emit(ProjectsState.loaded(
+    // Seed an empty local store once on first open. The repository returns its
+    // durable cache on later launches, so the screen still opens offline.
+    final result = await getProjects(const GetProjectsParams());
+    final List<Project>? initialProjects = result.valueOrNull;
+    if (initialProjects != null) {
+      emit(ProjectsState.loaded(projects: initialProjects));
+    } else {
+      emit(ProjectsState.loaded(
+        projects: const <Project>[],
+        message: result.errorOrNull?.message ?? 'Projects could not be loaded.',
+        isEmptyBecauseOfError: true,
+      ));
+    }
+
+    await emit.forEach<List<Project>>(
+      watchProjects(),
+      onData: (List<Project> items) => ProjectsState.loaded(
+        projects: items,
+        isRefreshing: state.maybeWhen(
+          loaded: (_, bool refreshing, __, ___) => refreshing,
+          orElse: () => false,
+        ),
+      ),
+      onError: (Object error, StackTrace stackTrace) {
+        final ProjectsState current = state;
+        if (current is _Loaded) {
+          return current.copyWith(
+            isRefreshing: false,
+            message: 'Projects could not be loaded.',
+          );
+        }
+        return ProjectsState.loaded(
           projects: const <Project>[],
           message: 'Projects could not be loaded.',
           isEmptyBecauseOfError: true,
-        ));
-      }
-      return;
-    }
-
-    // Now subscribe to future changes
-    _subscription = watchProjects().listen(
-      (List<Project> items) {
-        if (!emit.isDone) {
-          _publish(emit, items);
-        }
-      },
-      onError: (Object error) {
-        if (!emit.isDone) {
-          emit(ProjectsState.loaded(
-            projects: const <Project>[],
-            message: 'Projects could not be loaded.',
-            isEmptyBecauseOfError: true,
-          ));
-        }
+        );
       },
     );
   }
@@ -112,22 +112,4 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     emit(ProjectsState.loaded(projects: projects));
   }
 
-  /// Emits a new list while preserving the busy flag and any pending message.
-  void _publish(Emitter<ProjectsState> emit, List<Project> items) {
-    if (emit.isDone) return;
-    
-    final bool isRefreshing = state.maybeWhen(
-      loaded: (List<Project> _, bool isRefreshing, String? __, bool ___) => isRefreshing,
-      orElse: () => false,
-    );
-
-    emit(ProjectsState.loaded(projects: items, isRefreshing: isRefreshing));
-  }
-
-  @override
-  Future<void> close() async {
-    await _subscription?.cancel();
-    _subscription = null;
-    return super.close();
-  }
 }

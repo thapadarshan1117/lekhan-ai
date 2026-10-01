@@ -10,6 +10,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:lekhan_ai/app/app.dart';
 import 'package:lekhan_ai/core/config/dependency_injection/di_config.dart';
+import 'package:lekhan_ai/core/config/backend_mode.dart';
+import 'package:lekhan_ai/core/sync/sync_bootstrap.dart';
 import 'package:lekhan_ai/core/config/firebase/firebase_api_config.dart';
 import 'package:lekhan_ai/core/notifications/notification_controller.dart';
 import 'package:lekhan_ai/core/services/app_timezone_service.dart';
@@ -28,15 +30,19 @@ Future<void> main() async {
     WidgetsFlutterBinding.ensureInitialized();
     await Hive.initFlutter();
     
-    // Initialize Firebase with try-catch to handle hot reload
-    try {
-      await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform);
-    } on FirebaseException catch (e) {
-      if (e.code == 'duplicate-app') {
-        debugPrint('ℹ️ Firebase already initialized (hot reload)');
-      } else {
-        rethrow;
+    // The current UI-only stage stays fully local. Firebase/FCM can be enabled
+    // with the live service integrations once mock mode is turned off.
+    if (!BackendMode.useMockBackend) {
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      } on FirebaseException catch (e) {
+        if (e.code == 'duplicate-app') {
+          debugPrint('ℹ️ Firebase already initialized (hot reload)');
+        } else {
+          rethrow;
+        }
       }
     }
     
@@ -81,9 +87,14 @@ Future<void> main() async {
     );
     debugPrint('✅ Awesome Notifications listeners set');
 
-    FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
+    if (!BackendMode.useMockBackend) {
+      FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
+    }
 
     await setUpServiceLocator();
+    // Start the durable sync engine only after Hive, file storage, remotes,
+    // local repositories, and the session guard are all ready.
+    await sl<SyncBootstrap>().start();
 
     AppThemeConfig? cachedTheme;
     final cachedThemeRes =
@@ -99,9 +110,11 @@ Future<void> main() async {
       Bloc.observer = AppBlocObserver();
     }
 
-    final firebaseApi = FirebaseApi();
-    // Request notifications permission early but don't await it
-    unawaited(firebaseApi.initNotifications());
+    if (!BackendMode.useMockBackend) {
+      final firebaseApi = FirebaseApi();
+      // Request notifications permission early but don't await it
+      unawaited(firebaseApi.initNotifications());
+    }
 
     runApp(
       MultiBlocProvider(
@@ -118,7 +131,7 @@ Future<void> main() async {
   }, (error, stackTrace) {
     debugPrint(
         'runZonedGuarded: Caught error in my root zone. $error $stackTrace');
-    if (!kDebugMode) {
+    if (!kDebugMode && !BackendMode.useMockBackend) {
       FirebaseCrashlytics.instance.recordError(error, stackTrace);
     }
   });

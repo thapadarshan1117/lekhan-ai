@@ -107,7 +107,9 @@ class ProjectRepositoryImpl implements ProjectRepository {
       }
     }
 
-    final ProjectModel stored = remoteProject.markSynced();
+    final ProjectModel stored = remoteProject
+        .markSynced()
+        .copyWith(id: project?.id ?? remoteProject.id);
     await local.save(stored);
     return Right<AppException, Project>(stored);
   }
@@ -151,6 +153,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
         remoteId: stored.remoteId,
         payload: <String, dynamic>{
           'entity': SyncEntityType.project.value,
+          'local_updated_at': stored.updatedAt.toIso8601String(),
           'data': stored.toRemoteJson(),
         },
       ),
@@ -158,6 +161,46 @@ class ProjectRepositoryImpl implements ProjectRepository {
 
     requestBus.request();
     return Right<AppException, Project>(stored);
+  }
+
+  @override
+  Future<Either<AppException, bool>> deleteLocal(String id) async {
+    final Either<AppException, ProjectModel?> found = await local.getProject(id);
+    final AppException? readError = found.errorOrNull;
+    if (readError != null) return Left<AppException, bool>(readError);
+
+    final ProjectModel? project = found.valueOrNull;
+    if (project == null) return const Right<AppException, bool>(true);
+
+    final Either<AppException, bool> deleted = await local.delete(id);
+    if (deleted.valueOrNull != true) {
+      return Left<AppException, bool>(
+        deleted.errorOrNull ??
+            FailureMapper.local(
+              StateError('Project could not be removed'),
+              identifier: '$_identifier.deleteLocal',
+              statusCode: LocalErrorCodes.databaseFailure,
+            ),
+      );
+    }
+
+    await queue.enqueue(
+      SyncTaskBuilder.metadata(
+        entityType: SyncEntityType.project,
+        entityId: id,
+        operation: SyncOperation.delete,
+        remoteId: project.remoteId,
+      ),
+    );
+    for (final task in await queue.all()) {
+      if (task.entityType == SyncEntityType.project &&
+          task.entityId == id &&
+          task.operation != SyncOperation.delete) {
+        await queue.remove(task.id);
+      }
+    }
+    requestBus.request();
+    return const Right<AppException, bool>(true);
   }
 
   @override
@@ -226,7 +269,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
       );
 
       if (resolution.shouldApplyRemote) {
-        toStore.add(remoteProject.markSynced());
+        toStore.add(remoteProject.markSynced().copyWith(id: existing.id));
       } else if (resolution.shouldDeleteLocal) {
         await local.delete(existing.id);
       }
