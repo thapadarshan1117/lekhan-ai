@@ -11,7 +11,7 @@ import 'package:lekhan_ai/features/projects/presentation/widgets/projects_empty_
 import 'package:lekhan_ai/features/sync/presentation/widgets/sync_status_chip.dart';
 
 /// The projects list - the root of the writing structure
-/// (project → book → chapter → sources).
+/// (project → chapters → sources: a project is the book the writer works in).
 class ProjectsPage extends StatelessWidget {
   const ProjectsPage({super.key});
 
