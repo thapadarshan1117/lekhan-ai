@@ -41,7 +41,8 @@ class RouterManager {
   }
 
   /// Standalone Application Router
-  /// No bottom navbar - linear navigation flow through projects → books → chapters
+  /// No bottom navbar - linear navigation flow through projects → chapters
+  /// → sources (a project is the book the writer works in).
   static GoRouter _createRouter() {
     debugPrint('🏗️ Creating standalone app router');
 
@@ -62,8 +63,8 @@ class RouterManager {
         ..._authRoutes,
 
         // Main Application Routes (No Shell/Bottom Nav)
-        // Linear navigation: Projects → Books → Chapters
-        
+        // Linear navigation: Projects → Chapters → Sources
+
         // Projects List (Main)
         GoRoute(
           path: '/projects',
@@ -92,6 +93,21 @@ class RouterManager {
           },
         ),
 
+        // Book Form (Create/Edit)
+        //
+        // Declared before '/books/:id' on purpose: go_router takes the first
+        // route whose path matches, so a parameterised path listed above this
+        // one would swallow '/books/new' as an id.
+        GoRoute(
+          path: '/books/new',
+          name: 'bookForm',
+          builder: (context, state) {
+            final projectId = state.uri.queryParameters['projectId'] ?? '';
+            final initial = state.extra as Book?;
+            return BookFormPage(projectId: projectId, initial: initial);
+          },
+        ),
+
         // Book Detail
         GoRoute(
           path: '/books/:id',
@@ -103,14 +119,28 @@ class RouterManager {
           },
         ),
 
-        // Book Form (Create/Edit)
+        // Chapter Form (Create/Edit)
+        //
+        // Same ordering rule as the book form above: '/chapters/new' must be
+        // matched before '/chapters/:id', otherwise "New chapter" would open a
+        // chapter detail page for an id of "new".
         GoRoute(
-          path: '/books/new',
-          name: 'bookForm',
+          path: '/chapters/new',
+          name: 'chapterForm',
           builder: (context, state) {
-            final projectId = state.uri.queryParameters['projectId'] ?? '';
-            final initial = state.extra as Book?;
-            return BookFormPage(projectId: projectId, initial: initial);
+            final initial = state.extra as Chapter?;
+            final bookId =
+                state.uri.queryParameters['bookId'] ?? initial?.bookId ?? '';
+            final projectId = state.uri.queryParameters['projectId'];
+            final number = int.tryParse(state.uri.queryParameters['number'] ?? '') ??
+                initial?.number ??
+                1;
+            return ChapterFormPage(
+              bookId: bookId,
+              projectId: projectId,
+              suggestedNumber: number,
+              initial: initial,
+            );
           },
         ),
 
@@ -122,25 +152,6 @@ class RouterManager {
             final chapterId = state.pathParameters['id']!;
             final initial = state.extra as Chapter?;
             return ChapterDetailPage(chapterId: chapterId, initial: initial);
-          },
-        ),
-
-        // Chapter Form (Create/Edit)
-        GoRoute(
-          path: '/chapters/new',
-          name: 'chapterForm',
-          builder: (context, state) {
-            final initial = state.extra as Chapter?;
-            final bookId =
-                state.uri.queryParameters['bookId'] ?? initial?.bookId ?? '';
-            final number = int.tryParse(state.uri.queryParameters['number'] ?? '') ??
-                initial?.number ??
-                1;
-            return ChapterFormPage(
-              bookId: bookId,
-              suggestedNumber: number,
-              initial: initial,
-            );
           },
         ),
 
@@ -302,7 +313,7 @@ class RouterManager {
 RouterManager Debug Info (Standalone App):
 - Router Initialized: $_isInitialized
 - Router Created: ${_router != null}
-- Navigation: Projects → Books → Chapters (Linear)
+- Navigation: Projects → Chapters → Sources (Linear)
 - No bottom navbar - full screen content
 ''';
 }

@@ -154,7 +154,7 @@ class _BookDetailView extends StatelessWidget {
                           final Chapter chapter = chapters[index];
                           return ChapterCard(
                             chapter: chapter,
-                            onEdit: () => context.pushNamed(
+                            onEditDraft: () => context.pushNamed(
                               'chapterForm',
                               queryParameters: <String, String>{
                                 'bookId': bookId,
