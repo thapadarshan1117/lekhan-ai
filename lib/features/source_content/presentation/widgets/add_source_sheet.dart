@@ -8,6 +8,10 @@ import 'package:lekhan_ai/core/config/dependency_injection/di_config.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
 import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
 import 'package:lekhan_ai/features/source_content/data/services/recording_service.dart';
+import 'package:lekhan_ai/features/source_content/domain/usecases/add_existing_file_usecase.dart';
+import 'package:lekhan_ai/features/source_content/domain/usecases/add_source_usecase.dart';
+import 'package:lekhan_ai/features/source_content/domain/usecases/delete_source_usecase.dart';
+import 'package:lekhan_ai/features/source_content/domain/usecases/get_chapter_sources_usecase.dart';
 import 'package:lekhan_ai/features/source_content/presentation/bloc/sources_bloc/sources_bloc.dart';
 
 /// "Add source material": pick a file, or record the author's voice.
@@ -17,10 +21,42 @@ import 'package:lekhan_ai/features/source_content/presentation/bloc/sources_bloc
 class AddSourceSheet {
   const AddSourceSheet._();
 
+  /// For a screen that already hosts a [SourcesBloc] for this chapter.
   static Future<void> show(BuildContext context, Chapter chapter) {
     // Get the bloc reference before showing modal to ensure proper scope
     final SourcesBloc sourcesBloc = context.read<SourcesBloc>();
-    
+
+    return _open(
+      context,
+      _AddSourceSheetBody(chapter: chapter, sourcesBloc: sourcesBloc),
+    );
+  }
+
+  /// For callers that do not host one - e.g. the project's chapter list, where
+  /// every row can take an upload. The bloc is built here, scoped to this one
+  /// chapter, and closed together with the sheet.
+  static Future<void> showWithChapter(
+    BuildContext context,
+    Chapter chapter,
+  ) {
+    return _open(
+      context,
+      BlocProvider<SourcesBloc>(
+        create: (BuildContext _) => SourcesBloc(
+          chapter: chapter,
+          watchSources: sl<WatchChapterSourcesUsecase>(),
+          getSources: sl<GetChapterSourcesUsecase>(),
+          addSource: sl<AddSourceUsecase>(),
+          addExistingFile: sl<AddExistingFileUsecase>(),
+          deleteSource: sl<DeleteSourceUsecase>(),
+          retryUpload: sl<RetryUploadUsecase>(),
+        )..add(const SourcesEvent.started()),
+        child: _AddSourceSheetBody(chapter: chapter),
+      ),
+    );
+  }
+
+  static Future<void> _open(BuildContext context, Widget child) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -28,22 +64,19 @@ class AddSourceSheet {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => _AddSourceSheetBody(
-        chapter: chapter,
-        sourcesBloc: sourcesBloc,
-      ),
+      builder: (_) => child,
     );
   }
 }
 
 class _AddSourceSheetBody extends StatefulWidget {
-  const _AddSourceSheetBody({
-    required this.chapter,
-    required this.sourcesBloc,
-  });
+  const _AddSourceSheetBody({required this.chapter, this.sourcesBloc});
 
   final Chapter chapter;
-  final SourcesBloc sourcesBloc;
+
+  /// Null when the sheet built its own bloc; it is then read from the provider
+  /// placed above it.
+  final SourcesBloc? sourcesBloc;
 
   @override
   State<_AddSourceSheetBody> createState() => _AddSourceSheetBodyState();
@@ -55,6 +88,11 @@ class _AddSourceSheetBodyState extends State<_AddSourceSheetBody> {
   Duration _elapsed = Duration.zero;
   StreamSubscription<Duration>? _elapsedSubscription;
   String? _error;
+
+  /// The bloc the sheet writes into: the one the host screen owns, or the one
+  /// this sheet created for itself.
+  SourcesBloc get _sourcesBloc =>
+      widget.sourcesBloc ?? context.read<SourcesBloc>();
 
   @override
   void dispose() {
@@ -151,7 +189,7 @@ class _AddSourceSheetBodyState extends State<_AddSourceSheetBody> {
 
     // The file is already inside the chapter folder; the bloc registers it and
     // queues the upload.
-    widget.sourcesBloc.add(
+    _sourcesBloc.add(
       SourcesEvent.recordingAdded(localPath: path),
     );
     Navigator.of(context).pop();

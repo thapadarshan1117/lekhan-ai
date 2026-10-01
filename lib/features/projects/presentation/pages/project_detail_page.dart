@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lekhan_ai/core/config/dependency_injection/di_config.dart';
-import 'package:lekhan_ai/core/enums/entity_status.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
 import 'package:lekhan_ai/core/utils/id_generator.dart';
@@ -16,7 +15,8 @@ import 'package:lekhan_ai/features/chapters/presentation/bloc/chapters_bloc/chap
 import 'package:lekhan_ai/features/chapters/presentation/widgets/chapter_card.dart';
 import 'package:lekhan_ai/features/projects/domain/entities/project.dart';
 import 'package:lekhan_ai/features/projects/domain/usecases/get_project_detail_usecase.dart';
-import 'package:lekhan_ai/features/projects/presentation/widgets/project_status_chip.dart';
+import 'package:lekhan_ai/features/projects/presentation/widgets/project_overview_card.dart';
+import 'package:lekhan_ai/features/source_content/presentation/widgets/add_source_sheet.dart';
 import 'package:lekhan_ai/features/sync/presentation/widgets/sync_status_chip.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
@@ -37,8 +37,8 @@ class ProjectDetailPage extends StatefulWidget {
 
   final String projectId;
 
-  /// Passed through `extra` when arriving from the list, so the header is
-  /// on screen instantly. Null on a cold start / deep link.
+  /// Passed through `extra` when arriving from the list, so the header is on
+  /// screen instantly. Null on a cold start / deep link.
   final Project? initial;
 
   @override
@@ -46,14 +46,24 @@ class ProjectDetailPage extends StatefulWidget {
 }
 
 class _ProjectDetailPageState extends State<ProjectDetailPage> {
-  String? _bookId;
+  Project? _project;
+  Book? _book;
   bool _resolvingBook = true;
   String? _resolveError;
+
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
 
   @override
   void initState() {
     super.initState();
     _openProjectBook();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   /// Finds the book that belongs to this project and opens the chapter list
@@ -68,23 +78,28 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
       });
     }
 
-    final String? bookId = await _resolveProjectBookId(
+    final Project? project =
+        widget.initial ??
+        (await sl<GetProjectDetailUsecase>()(widget.projectId)).valueOrNull;
+
+    final Book? book = await _resolveProjectBook(
       projectId: widget.projectId,
-      fallbackTitle: widget.initial?.name ?? '',
+      fallbackTitle: project?.name ?? '',
     );
 
     if (!mounted) return;
 
     setState(() {
+      _project = project;
+      _book = book;
       _resolvingBook = false;
-      _bookId = bookId;
-      _resolveError = bookId == null ? _kCouldNotOpen : null;
+      _resolveError = book == null ? _kCouldNotOpen : null;
     });
   }
 
-  /// Local id of the project's own book: the oldest one already on this device,
-  /// or a freshly created row when the project does not have one yet.
-  Future<String?> _resolveProjectBookId({
+  /// The project's own book: the oldest one already on this device, or a freshly
+  /// created row when the project does not have one yet.
+  Future<Book?> _resolveProjectBook({
     required String projectId,
     required String fallbackTitle,
   }) async {
@@ -96,7 +111,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     if (books != null && books.isNotEmpty) {
       final List<Book> ordered = List<Book>.of(books)
         ..sort((Book a, Book b) => a.createdAt.compareTo(b.createdAt));
-      return ordered.first.id;
+      return ordered.first;
     }
 
     String title = fallbackTitle.trim();
@@ -116,22 +131,25 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     );
 
     final Either<AppException, Book> saved = await sl<SaveBookUsecase>()(book);
-    return saved.valueOrNull?.id;
+    return saved.valueOrNull;
   }
 
   @override
   Widget build(BuildContext context) {
-    final String? bookId = _bookId;
+    final Book? book = _book;
+    final Project? project = _project;
 
     final Widget page = Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
-          'Project',
-          style: TextStyle(
-            fontSize: 18,
+        title: Text(
+          project?.name ?? book?.title ?? 'Project',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 17,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
@@ -140,21 +158,18 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
           Padding(padding: EdgeInsets.only(right: 12), child: SyncStatusChip()),
         ],
       ),
-      floatingActionButton: bookId == null
-          ? null
-          : _NewChapterButton(bookId: bookId, projectId: widget.projectId),
-      body: _buildBody(bookId),
+      body: _buildBody(project, book),
     );
 
     // The bloc only exists once the project's book is known, and it has to sit
-    // above the scaffold so the action button can read it as well.
-    if (bookId == null) return page;
+    // above the scaffold so the header and the action button can read it too.
+    if (book == null) return page;
 
     return BlocProvider<ChaptersBloc>(
       // Created here rather than in DI: the bloc is scoped to this project's
       // book, and that id is only known once the book has been resolved.
       create: (BuildContext context) => ChaptersBloc(
-        bookId: bookId,
+        bookId: book.id,
         getChapters: sl<GetChaptersUsecase>(),
         watchChapters: sl<WatchChaptersUsecase>(),
       )..add(const ChaptersEvent.started()),
@@ -162,14 +177,14 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     );
   }
 
-  Widget _buildBody(String? bookId) {
+  Widget _buildBody(Project? project, Book? book) {
     if (_resolvingBook) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
-    if (bookId == null) {
+    if (project == null || book == null) {
       return _CouldNotOpenProject(
         message: _resolveError ?? _kCouldNotOpen,
         onRetry: _openProjectBook,
@@ -179,86 +194,147 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        _ProjectHeader(project: widget.initial, projectId: widget.projectId),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
-          child: Text(
-            'Chapters',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
+        ProjectOverviewCard(project: project, book: book),
+        _ChapterToolbar(
+          book: book,
+          controller: _searchController,
+          onQuery: (String value) => setState(() => _query = value),
         ),
+        const SizedBox(height: 10),
         Expanded(
-          child: _ChaptersSection(bookId: bookId, projectId: widget.projectId),
+          child: _ChaptersSection(
+            bookId: book.id,
+            projectId: project.id,
+            query: _query,
+          ),
         ),
       ],
     );
   }
+
 }
 
-/// "New chapter" for the project's book, numbered after the highest chapter
-/// already loaded.
-class _NewChapterButton extends StatelessWidget {
-  const _NewChapterButton({required this.bookId, required this.projectId});
+/// Which book the chapter list belongs to, plus the search that narrows it.
+class _ChapterToolbar extends StatelessWidget {
+  const _ChapterToolbar({
+    required this.book,
+    required this.controller,
+    required this.onQuery,
+  });
 
-  final String bookId;
-  final String projectId;
+  final Book book;
+  final TextEditingController controller;
+  final ValueChanged<String> onQuery;
 
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton.extended(
-      onPressed: () => _openForm(context),
-      backgroundColor: AppColors.primary,
-      foregroundColor: Colors.white,
-      icon: const Icon(Icons.add),
-      label: const Text('New chapter'),
-    );
-  }
+    final String genre = book.genre.trim();
 
-  Future<void> _openForm(BuildContext context) async {
-    final ChaptersState state = context.read<ChaptersBloc>().state;
-    final int next = state.maybeWhen(
-      loaded:
-          (
-            List<Chapter> chapters,
-            bool isRefreshing,
-            String? message,
-            bool isEmptyBecauseOfError,
-          ) => chapters.isEmpty
-              ? 1
-              : chapters
-                    .map((Chapter chapter) => chapter.number)
-                    .reduce((int a, int b) => a > b ? a : b) +
-                  1,
-      orElse: () => 1,
-    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.lekhan_aiBorder),
+        ),
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final Widget label = Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Icon(
+                  Icons.menu_book_outlined,
+                  size: 15,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'Book: ${book.title}'
+                    '${genre.isNotEmpty ? ' ($genre)' : ''}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            );
 
-    final bool? saved = await context.pushNamed<bool>(
-      'chapterForm',
-      queryParameters: <String, String>{
-        'bookId': bookId,
-        'projectId': projectId,
-        'number': '$next',
-      },
-    );
+            final Widget search = SizedBox(
+              height: 36,
+              width: constraints.maxWidth < 460 ? double.infinity : 220,
+              child: TextField(
+                controller: controller,
+                onChanged: onQuery,
+                style: const TextStyle(fontSize: 12.5),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: 'Search chapters...',
+                  hintStyle: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textDisabled,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    size: 17,
+                    color: AppColors.textSecondary,
+                  ),
+                  filled: true,
+                  fillColor: AppColors.lekhan_aiSurfaceMuted,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            );
 
-    // The local watcher normally reports a saved chapter on its own; this
-    // covers the case where the form returned before the stream caught up.
-    if (saved == true && context.mounted) {
-      context.read<ChaptersBloc>().add(const ChaptersEvent.refreshed());
-    }
+            if (constraints.maxWidth < 520) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  label,
+                  const SizedBox(height: 8),
+                  search,
+                ],
+              );
+            }
+
+            return Row(
+              children: <Widget>[
+                label,
+                const Spacer(),
+                search,
+              ],
+            );
+          },
+        ),
+      ),
+    );
   }
 }
 
 /// The chapter list of the project's book.
 class _ChaptersSection extends StatelessWidget {
-  const _ChaptersSection({required this.bookId, required this.projectId});
+  const _ChaptersSection({
+    required this.bookId,
+    required this.projectId,
+    required this.query,
+  });
 
   final String bookId;
   final String projectId;
+  final String query;
 
   @override
   Widget build(BuildContext context) {
@@ -300,6 +376,17 @@ class _ChaptersSection extends StatelessWidget {
                 String? message,
                 bool isEmptyBecauseOfError,
               ) {
+                final String needle = query.trim().toLowerCase();
+                final List<Chapter> visible = needle.isEmpty
+                    ? chapters
+                    : chapters
+                          .where(
+                            (Chapter chapter) =>
+                                chapter.title.toLowerCase().contains(needle) ||
+                                chapter.summary.toLowerCase().contains(needle),
+                          )
+                          .toList();
+
                 if (chapters.isEmpty) {
                   return RefreshIndicator(
                     color: AppColors.primary,
@@ -309,11 +396,15 @@ class _ChaptersSection extends StatelessWidget {
                     child: ListView(
                       physics: const AlwaysScrollablePhysics(),
                       children: const <Widget>[
-                        SizedBox(height: 60),
+                        SizedBox(height: 48),
                         _NoChaptersYet(),
                       ],
                     ),
                   );
+                }
+
+                if (visible.isEmpty) {
+                  return const _NoChapterMatches();
                 }
 
                 return RefreshIndicator(
@@ -323,14 +414,21 @@ class _ChaptersSection extends StatelessWidget {
                       .add(const ChaptersEvent.refreshed()),
                   child: ListView.separated(
                     physics: const AlwaysScrollablePhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                    itemCount: chapters.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+                    itemCount: visible.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (BuildContext context, int index) {
-                      final Chapter chapter = chapters[index];
+                      final Chapter chapter = visible[index];
                       return ChapterCard(
                         chapter: chapter,
-                        onEdit: () => context.pushNamed(
+                        onTap: () => context.pushNamed(
+                          'chapterDetail',
+                          pathParameters: <String, String>{
+                            'id': chapter.id,
+                          },
+                          extra: chapter,
+                        ),
+                        onEditDraft: () => context.pushNamed(
                           'chapterForm',
                           queryParameters: <String, String>{
                             'bookId': bookId,
@@ -339,14 +437,9 @@ class _ChaptersSection extends StatelessWidget {
                           },
                           extra: chapter,
                         ),
+                        onUpload: () =>
+                            AddSourceSheet.showWithChapter(context, chapter),
                         onDelete: () => _deleteChapter(context, chapter),
-                        onTap: () => context.pushNamed(
-                          'chapterDetail',
-                          pathParameters: <String, String>{
-                            'id': chapter.id,
-                          },
-                          extra: chapter,
-                        ),
                       );
                     },
                   ),
@@ -404,142 +497,6 @@ class _ChaptersSection extends StatelessWidget {
   }
 }
 
-class _ProjectHeader extends StatelessWidget {
-  const _ProjectHeader({required this.project, required this.projectId});
-
-  final Project? project;
-  final String projectId;
-
-  @override
-  Widget build(BuildContext context) {
-    final Project? value = project;
-
-    if (value != null) return _buildHeader(context, value);
-
-    // No `extra` (deep link): read it from the local store via the repository.
-    return FutureBuilder<Either<AppException, Project>>(
-      future: sl<GetProjectDetailUsecase>()(projectId),
-      builder:
-          (
-            BuildContext context,
-            AsyncSnapshot<Either<AppException, Project>> snapshot,
-          ) {
-            final Project? loaded = snapshot.data?.valueOrNull;
-            if (loaded == null) {
-              return const SizedBox(
-                height: 90,
-                child: Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
-              );
-            }
-            return _buildHeader(context, loaded);
-          },
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, Project project) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  project.name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              ProjectStatusChip(status: project.status),
-            ],
-          ),
-          if (project.description.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 8),
-            Text(
-              project.description,
-              style: const TextStyle(
-                fontSize: 13,
-                height: 1.4,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          Row(
-            children: <Widget>[
-              const Icon(
-                Icons.menu_book_outlined,
-                size: 16,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              Expanded(child: _ChapterCounts(project: project)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Chapter totals straight from the loaded list, so the header never disagrees
-/// with what is on screen. Falls back to the stored project figures until the
-/// local store has answered.
-class _ChapterCounts extends StatelessWidget {
-  const _ChapterCounts({required this.project});
-
-  final Project project;
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<ChaptersBloc, ChaptersState>(
-      builder: (BuildContext context, ChaptersState state) {
-        return state.maybeWhen(
-          loaded:
-              (
-                List<Chapter> chapters,
-                bool isRefreshing,
-                String? message,
-                bool isEmptyBecauseOfError,
-              ) {
-                final int done = chapters
-                    .where(
-                      (Chapter chapter) =>
-                          chapter.status == ChapterStatus.completed,
-                    )
-                    .length;
-                return _counts(chapters.length, done);
-              },
-          orElse: () =>
-              _counts(project.totalChapters, project.completedChapters),
-        );
-      },
-    );
-  }
-
-  Widget _counts(int total, int done) {
-    return Text(
-      '$total chapters · $done completed',
-      style: const TextStyle(
-        fontSize: 12,
-        color: AppColors.textSecondary,
-      ),
-    );
-  }
-}
-
 class _NoChaptersYet extends StatelessWidget {
   const _NoChaptersYet();
 
@@ -552,7 +509,7 @@ class _NoChaptersYet extends StatelessWidget {
           children: <Widget>[
             Icon(
               Icons.list_alt_outlined,
-              size: 40,
+              size: 38,
               color: AppColors.textDisabled,
             ),
             SizedBox(height: 12),
@@ -564,10 +521,39 @@ class _NoChaptersYet extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            SizedBox(height: 6),
+            SizedBox(height: 4),
             Text(
-              'Add the first one with the button below.',
+              'Add the first one with “Add Chapter” above.',
               style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NoChapterMatches extends StatelessWidget {
+  const _NoChapterMatches();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.search_off_outlined, size: 30, color: AppColors.textDisabled),
+            SizedBox(height: 10),
+            Text(
+              'No chapter matches that search',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
           ],
         ),
@@ -593,9 +579,10 @@ class _CouldNotOpenProject extends StatelessWidget {
           const SizedBox(height: 120),
           const Icon(
             Icons.error_outline,
-            size: 40,
+            size: 38,
             color: AppColors.textDisabled,
-          ),          const SizedBox(height: 12),
+          ),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
