@@ -11,6 +11,7 @@ import 'package:lekhan_ai/features/chapters/domain/usecases/delete_chapter_useca
 import 'package:lekhan_ai/features/chapters/domain/usecases/get_chapters_usecase.dart';
 import 'package:lekhan_ai/features/chapters/presentation/bloc/chapters_bloc/chapters_bloc.dart';
 import 'package:lekhan_ai/features/chapters/presentation/widgets/chapter_card.dart';
+import 'package:lekhan_ai/features/source_content/presentation/widgets/add_source_sheet.dart';
 import 'package:lekhan_ai/features/sync/presentation/widgets/sync_status_chip.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
@@ -154,6 +155,10 @@ class _BookDetailView extends StatelessWidget {
                           final Chapter chapter = chapters[index];
                           return ChapterCard(
                             chapter: chapter,
+                            onUpload: () => AddSourceSheet.showWithChapter(
+                              context,
+                              chapter,
+                            ),
                             onEditDraft: () => context.pushNamed(
                               'chapterForm',
                               queryParameters: <String, String>{

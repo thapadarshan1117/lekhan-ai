@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-ElevatedButtonThemeData elevatedButtonTheme(
-    BuildContext context, ColorScheme colorScheme) {
+ElevatedButtonThemeData elevatedButtonTheme(ColorScheme colorScheme) {
   return ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      disabledBackgroundColor: colorScheme.secondary.withValues(alpha: 0.5),
-      disabledForegroundColor: colorScheme.onSecondary,
-      minimumSize: const Size(double.infinity, 50),
-      textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontFamily: GoogleFonts.outfit().fontFamily,
-          ),
-   
-
-      backgroundColor: colorScheme.secondary,
-      foregroundColor: colorScheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      disabledBackgroundColor: colorScheme.primary.withValues(alpha: 0.35),
+      disabledForegroundColor: colorScheme.onPrimary,
+      minimumSize: const Size(64, 56),
+      textStyle: const TextStyle(
+        fontWeight: FontWeight.w700,
+        fontSize: 17,
+      ),
+      backgroundColor: colorScheme.primary,
+      foregroundColor: colorScheme.onPrimary,
       elevation: 0,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     ),
   );
 }

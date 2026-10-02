@@ -18,11 +18,9 @@ import 'package:lekhan_ai/features/projects/domain/usecases/get_project_detail_u
 import 'package:lekhan_ai/features/projects/presentation/widgets/project_overview_card.dart';
 import 'package:lekhan_ai/features/source_content/presentation/widgets/add_source_sheet.dart';
 import 'package:lekhan_ai/features/sync/presentation/widgets/sync_status_chip.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart';
-
-const String _kCouldNotOpen =
-    'This project could not be opened on this device.';
 
 /// A project and the chapters inside it.
 ///
@@ -93,7 +91,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
       _project = project;
       _book = book;
       _resolvingBook = false;
-      _resolveError = book == null ? _kCouldNotOpen : null;
+      _resolveError = book == null ? '' : null;
     });
   }
 
@@ -145,12 +143,12 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
         backgroundColor: AppColors.background,
         elevation: 0,
         title: Text(
-          project?.name ?? book?.title ?? 'Project',
+          project?.name ?? book?.title ?? context.l10n.bookFallback,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
           ),
         ),
@@ -186,32 +184,98 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
 
     if (project == null || book == null) {
       return _CouldNotOpenProject(
-        message: _resolveError ?? _kCouldNotOpen,
+        message: (_resolveError?.isNotEmpty ?? false)
+            ? _resolveError!
+            : context.l10n.couldNotOpenBook,
         onRetry: _openProjectBook,
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        ProjectOverviewCard(project: project, book: book),
-        _ChapterToolbar(
-          book: book,
-          controller: _searchController,
-          onQuery: (String value) => setState(() => _query = value),
+    return NestedScrollView(
+      headerSliverBuilder: (_, __) => <Widget>[
+        SliverToBoxAdapter(
+          child: ProjectOverviewCard(project: project, book: book),
         ),
-        const SizedBox(height: 10),
-        Expanded(
-          child: _ChaptersSection(
-            bookId: book.id,
-            projectId: project.id,
-            query: _query,
+        const SliverToBoxAdapter(child: _VoiceRecordingGuide()),
+        SliverToBoxAdapter(
+          child: _ChapterToolbar(
+            book: book,
+            controller: _searchController,
+            onQuery: (String value) => setState(() => _query = value),
           ),
         ),
+        const SliverToBoxAdapter(child: SizedBox(height: 10)),
       ],
+      body: _ChaptersSection(
+        bookId: book.id,
+        projectId: project.id,
+        query: _query,
+      ),
     );
   }
 
+}
+
+/// Keeps the primary collection method visible before the chapter list.
+class _VoiceRecordingGuide extends StatelessWidget {
+  const _VoiceRecordingGuide();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primaryContainer,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.35),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            child: SizedBox(
+              width: 56,
+              height: 56,
+              child: Icon(Icons.mic_rounded, color: Colors.white, size: 30),
+            ),
+          ),
+          SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  context.l10n.readyShareMemory,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.onPrimaryContainer,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  context.l10n.chapterRecordingGuide,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.45,
+                    color: AppColors.onPrimaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Which book the chapter list belongs to, plus the search that narrows it.
@@ -228,83 +292,79 @@ class _ChapterToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String genre = book.genre.trim();
-
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.lekhan_aiBorder),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.lekhan_aiBorder, width: 1.2),
         ),
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
-            final Widget label = Row(
-              mainAxisSize: MainAxisSize.min,
+            final Widget heading = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Icon(
-                  Icons.menu_book_outlined,
-                  size: 15,
-                  color: AppColors.primary,
+                Text(
+                  context.l10n.yourChapters,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    'Book: ${book.title}'
-                    '${genre.isNotEmpty ? ' ($genre)' : ''}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  context.l10n.chooseMemoryForBook(book.title),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    height: 1.4,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
             );
 
             final Widget search = SizedBox(
-              height: 36,
-              width: constraints.maxWidth < 460 ? double.infinity : 220,
+              width: constraints.maxWidth < 620 ? double.infinity : 300,
               child: TextField(
                 controller: controller,
                 onChanged: onQuery,
-                style: const TextStyle(fontSize: 12.5),
+                style: const TextStyle(fontSize: 16),
                 decoration: InputDecoration(
-                  isDense: true,
-                  hintText: 'Search chapters...',
-                  hintStyle: const TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textDisabled,
-                  ),
+                  hintText: context.l10n.searchChapters,
                   prefixIcon: const Icon(
-                    Icons.search,
-                    size: 17,
-                    color: AppColors.textSecondary,
+                    Icons.search_rounded,
+                    size: 24,
+                    color: AppColors.primary,
                   ),
                   filled: true,
                   fillColor: AppColors.lekhan_aiSurfaceMuted,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
+                    horizontal: 14,
+                    vertical: 16,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(9),
+                    borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColors.lekhan_aiBorder,
+                    ),
                   ),
                 ),
               ),
             );
 
-            if (constraints.maxWidth < 520) {
+            if (constraints.maxWidth < 620) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  label,
-                  const SizedBox(height: 8),
+                  heading,
+                  const SizedBox(height: 14),
                   search,
                 ],
               );
@@ -312,8 +372,8 @@ class _ChapterToolbar extends StatelessWidget {
 
             return Row(
               children: <Widget>[
-                label,
-                const Spacer(),
+                Expanded(child: heading),
+                const SizedBox(width: 18),
                 search,
               ],
             );
@@ -452,27 +512,24 @@ class _ChaptersSection extends StatelessWidget {
 
   Future<void> _deleteChapter(BuildContext context, Chapter chapter) async {
     final String title = chapter.title.isEmpty
-        ? 'Chapter ${chapter.number}'
+        ? context.l10n.chapterTitle(chapter.number)
         : chapter.title;
     final bool confirmed = await showDialog<bool>(
           context: context,
           builder: (BuildContext dialogContext) => AlertDialog(
-            title: const Text('Delete chapter?'),
-            content: Text(
-              '“$title” and its source files will be removed from this device. '
-              'The server deletion will sync when available.',
-            ),
+            title: Text(dialogContext.l10n.deleteChapterQuestion),
+            content: Text(dialogContext.l10n.deleteChapterBody(title)),
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancel'),
+                child: Text(dialogContext.l10n.cancel),
               ),
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(true),
                 style: TextButton.styleFrom(
                   foregroundColor: Theme.of(dialogContext).colorScheme.error,
                 ),
-                child: const Text('Delete chapter'),
+                child: Text(dialogContext.l10n.deleteChapter),
               ),
             ],
           ),
@@ -484,12 +541,16 @@ class _ChaptersSection extends StatelessWidget {
     if (!context.mounted) return;
     result.fold(
       (failure) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete chapter: ${failure.message}')),
+        SnackBar(
+          content: Text(context.l10n.couldNotDeleteChapter(failure.message)),
+        ),
       ),
       (deleted) => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            deleted ? 'Chapter deleted.' : 'Chapter could not be deleted.',
+            deleted
+                ? context.l10n.chapterDeleted
+                : context.l10n.chapterCouldNotBeDeleted,
           ),
         ),
       ),
@@ -502,29 +563,34 @@ class _NoChaptersYet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: <Widget>[
-            Icon(
-              Icons.list_alt_outlined,
-              size: 38,
-              color: AppColors.textDisabled,
+            const Icon(
+              Icons.menu_book_outlined,
+              size: 52,
+              color: AppColors.primary,
             ),
-            SizedBox(height: 12),
+            SizedBox(height: 16),
             Text(
-              'No chapters yet',
+              context.l10n.noChaptersYet,
               style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
               ),
             ),
-            SizedBox(height: 4),
+            SizedBox(height: 8),
             Text(
-              'Add the first one with “Add Chapter” above.',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              context.l10n.noChaptersHelp,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.45,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -538,20 +604,24 @@ class _NoChapterMatches extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(Icons.search_off_outlined, size: 30, color: AppColors.textDisabled),
+            const Icon(
+              Icons.search_off_outlined,
+              size: 30,
+              color: AppColors.textDisabled,
+            ),
             SizedBox(height: 10),
             Text(
-              'No chapter matches that search',
+              context.l10n.noChapterMatches,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -589,13 +659,17 @@ class _CouldNotOpenProject extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 16,
+                height: 1.4,
                 color: AppColors.textSecondary,
               ),
             ),
           ),
           const SizedBox(height: 16),
-          TextButton(onPressed: onRetry, child: const Text('Try again')),
+          TextButton(
+            onPressed: onRetry,
+            child: Text(context.l10n.tryAgain),
+          ),
         ],
       ),
     );

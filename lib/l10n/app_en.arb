@@ -1,197 +1,593 @@
 {
-    "@@locale": "en",
-    "appTitle": "Sahara App",
-    "@appTitle": {
-        "description": "The title of the application"
-    },
-    "searchHint": "Search Patients, doctors",
-    "@searchHint": {
-        "description": "Hint text for search field"
-    },
-    "loginTitle": "Login",
-    "@loginTitle": {
-        "description": "Title for login page"
-    },
-    "welcomeMessage": "Welcome back",
-    "@welcomeMessage": {
-        "description": "Welcome message on login screen"
-    },
-    "createProfile": "Create Profile",
-    "@createProfile": {
-        "description": "Title for create profile page"
-    },
-    "fullName": "Full Name",
-    "@fullName": {
-        "description": "Label for full name field"
-    },
-    "fullNameHint": "Enter your full name",
-    "@fullNameHint": {
-        "description": "Hint text for full name field"
-    },
-    "specification": "Specification",
-    "@specification": {
-        "description": "Label for specification field"
-    },
-    "specificationHint": "Select your specification",
-    "@specificationHint": {
-        "description": "Hint text for specification field"
-    },
-    "dateOfBirth": "Date of Birth",
-    "@dateOfBirth": {
-        "description": "Label for date of birth field"
-    },
-    "dateOfBirthHint": "MM/DD/YYYY",
-    "@dateOfBirthHint": {
-        "description": "Hint text for date of birth field"
-    },
-    "licenceNumber": "Licence Number",
-    "@licenceNumber": {
-        "description": "Label for licence number field"
-    },
-    "licenceNumberHint": "Enter your licence number",
-    "@licenceNumberHint": {
-        "description": "Hint text for licence number field"
-    },
-    "next": "Next",
-    "@next": {
-        "description": "Text for next button"
-    },
-    "alreadyHaveAccount": "Already have an account? ",
-    "@alreadyHaveAccount": {
-        "description": "Text for login redirect prompt"
-    },
-    "login": "Login",
-    "@login": {
-        "description": "Text for login button"
-    },
-
-    "loginWithPassword":"Login With Password",
-    "loginWithOTP":"Login With OTP",
-    "letsGetStarted": "Let's Get Started",
-    "createProfileSubtitle": "Create your profile and start connecting with patients today",
-    "mobileNumber": "Mobile Number",
-    "mobileNumberHint": "Enter your mobile number",
-    "sendOtp": "Send OTP",
-    "or": "Or",
-    "dontHaveAccount": "Don't have an account? ",
-    "verifyCode": "Verify Code",
-    "verifyCodeMessage": "Enter the verification code sent to your registered mobile number or email address",
-    "didNotReceiveCode": "Did not receive the code?",
-    "resend": "Resend Code",
-    "password": "Password",
-    "confirmPassword": "Confirm Password",
-    "signInWithGoogle": "Sign In with Google",
-    "signInWithApple": "Sign In with Apple",
-    "joinOurMedicalNetwork": "Join Our Medical Network",
-    "createProfileSubtitle": "Let’s Get You Started on Your Medical Mission",
-    "joinOurMedicalNetworkSubtitle": "Join Our Platform & Grow Your Medical Reach",
-    "onboardingTitle1": "Consult a Doctor Anytime, Anywhere",
-    "onboardingDescription1": "Get expert medical advice through video calls or online chat with certified doctors.",
-    "onboardingTitle2": "Nurse & Therapist at Your Doorstep",
-    "onboardingDescription2": "Look professional nurses and therapists for home visits, ensuring quality care at your convenience.",
-    "onboardingTitle3": "Track Your Health & Medications",
-    "onboardingDescription3": "Manage prescriptions, set medication reminders, and monitor your health metrics all in one secure place.",
-    "welcomeBack": "Welcome Back",
-    "welcomeMessagePatient":"Create your profile and start connecting with patients today",
-    "phoneNumber": "Phone Number",
-    "password": "Password",
-    "register": "Register",
-    "enterYourPhoneNumber": "Enter your phone number",
-    "enterYourPassword": "Enter your password",
-    "confirmation": "Confirmation",
-    "confirmationText": "Enter the verification code sent to your registered mobile number or email address",
-    "sendAgain": "Send Again",
-    "patientPersonalInfo": "Personal Information",
-    "patientPersonalInfoSubtitle": "Let’s Get You Started on Your Medical Mission",
-    "firstName": "First Name",
-    "lastName": "Last Name",
-    "gender": "Gender",
-    "selectGender": "Select Gender",
-    "enterYourLastName": "Enter your last name",
-    "enterYourFirstName": "Enter your first name",
-    "dob": "Date of Birth",
-    "iAgree": "I agree to the",
-    "terms": "terms",
-    "and": "and",
-    "conditions": "conditions",
-    "setPassword": "Set Password",
-    "setPasswordSubtitle": "Try changing your password once in a while to keep your security stronger.",
-    "submit": "Submit",
-    "findADoctor": "Find a Doctor",
-    "videoConsult": "Video Consult",
-    "labReports": "Lab Reports",
-    "medicalRecord": "Medical Record",
-    "healthPlan": "Health Plan",
-    "emergencyHelp": "Emergency Help",
-    "keyFeatures": "Key Features",
-    "specialistCare": "Specialist Care",
-    "topDoctors": "Top Doctors",
-    "paymentAndBillings": "Payment and Billings",
-    "settings": "Settings",
-    "home": "Home",
-    "appointment": "Appointment",
-    "message": "Message",
-    "profile": "Profile",
-    "search": "Search",
-    "applyAsDoctor": "Apply as Doctor",
-    "helpAndSupport": "Help & Support",
-    "healthCareServices": "Health Care Services",
-    "healthAndWellness": "Health and Wellness",
-    "accountAndSupport": "Account and Support",
-    "becomeADoctor": "Become a Doctor",
-    "appointment": "Appointment",
-    "past" : "Past",
-    "upcoming" : "Upcoming",
-    "cancelled" : "Cancelled",
-    "ongoing" : "Ongoing",
-    "scheduled" : "Scheduled",
-    "rescheduled" : "Rescheduled",
-    "completed" : "Completed",
-    "message" : "Messages",
-    "calls" : "Calls",
-    "profile" : "Profile",
-    "email" : "Email",
-    "contactNo" : "Contact No.",
-    "alternateEmail" : "Alternate Email",
-    "bloodGroup" : "Blood Group",
-    "address" : "Address",
-    "editProfile" : "Edit Profile",
-    "bookAnAppointment" : "Book an Appointment",
-    "chooseAPatient" : "Choose a Patient",
-    "doctorBio" : "Doctor Biography",
-    "schedule": "Schedule",
-    "quickSelectionOfTimes": "Quick Selection of Times",
-    "morning": "Morning",
-    "afternoon": "Afternoon",
-    "evening": "Evening",
-    "selectPatient": "Select Patient",
-    "ownSelf": "Own Self",
-    "doctorDetails": "Doctor Details",
-    "appointmentDetails": "Appointment Details",
-    "patientDetails": "Patient Details",
-    "paymentAmount": "Payment Amount",
-    "confirmAppointment": "Confirm Appointment",
-    "paymentDetails": "Payment Details",
-    "payNow": "Pay Now",
-    "addNewDependent": "Add New Dependent",
-    "dependentText":"You can book this appointment for yourself or someone else (family or friend). Select an option to continue.",
-    "otherDependent" :"Other Dependents",
-    "continuee" : "Continue",
-    "paymentMethod" : "Payment Method",
-    "addDependent" : "Add Dependent",
-    "addFamilyMember" : "Add Family Member,Friends and Relatives",
-    "uploadPhoto" : "Upload Photo",
-    "personalInformation" : "Personal Information",
-    "relationshipWithPatient" : "Relationship With Patient",
-    "relationship" : "Relationship",
-    "selectRelation" : "Select Relation",
-    "contactInformation" : "Contact Information",
-    "reasonForVisit" : "Reason For Visit",
-    "selectReason" : "Select Reason",
-    "save" : "Save",
-    "enterEmail" : "Enter Email",
-    "speciality" : "Speciality"
-
-   
-
+  "@@locale": "en",
+  "appTitle": "Lekhan AI",
+  "next": "Next",
+  "language": "Language",
+  "changeLanguage": "Change language",
+  "english": "English",
+  "nepali": "नेपाली",
+  "cancel": "Cancel",
+  "save": "Save",
+  "tryAgain": "Try again",
+  "edit": "Edit",
+  "close": "Close",
+  "offline": "Offline",
+  "allSaved": "All saved",
+  "upToDate": "Up to date",
+  "saving": "Saving",
+  "backupIssue": "Backup issue",
+  "yourBooks": "Your Books",
+  "booksIntroduction": "Turn your memories, experiences, and ideas into a book — one comfortable step at a time.",
+  "startNewBook": "Start a New Book",
+  "voiceComesFirst": "Your voice comes first",
+  "voiceGuideDetail": "Open a book, choose a chapter, and tap Record voice. Speak naturally — your recording is saved on this device.",
+  "openBook": "Open a book",
+  "chooseChapter": "Choose a chapter",
+  "recordVoice": "Record voice",
+  "deleteBookQuestion": "Delete this book?",
+  "deleteBook": "Delete book",
+  "bookDeleted": "Book deleted.",
+  "bookCouldNotBeDeleted": "Book could not be deleted.",
+  "searchYourBooks": "Search your books",
+  "noBooksFound": "No books found",
+  "changeBookSearch": "Try another category or change your search.",
+  "booksUnavailable": "Your books are not available yet",
+  "noBooksYet": "No books yet",
+  "checkConnection": "Check your connection and pull down to try again.",
+  "emptyBooksHelp": "Tap “Start a New Book” above. We will guide you through the rest, one step at a time.",
+  "allCategories": "All",
+  "readyFirstChapter": "Ready for your first chapter",
+  "bookActions": "Book actions",
+  "editBook": "Edit book",
+  "today": "today",
+  "yesterday": "yesterday",
+  "categoryBook": "Book",
+  "categoryMemoir": "Memoir / Autobiography",
+  "categoryTravel": "Tourism & Exploration",
+  "categoryMilitary": "Military & Geopolitics",
+  "categoryHeritage": "Non-Fiction / Cultural Heritage",
+  "categoryPhilosophy": "Philosophy & Mindfulness",
+  "categoryBusiness": "Business & Leadership",
+  "categoryFiction": "Fiction & Stories",
+  "projectStatusDraft": "Draft",
+  "projectStatusAssigned": "Assigned",
+  "projectStatusInProgress": "In progress",
+  "projectStatusOnHold": "On hold",
+  "projectStatusCompleted": "Completed",
+  "projectStatusArchived": "Archived",
+  "editBookPage": "Edit Book",
+  "bookFormIntro": "Begin with a title. You can change these details later.",
+  "bookTitle": "Book title",
+  "bookTitleHint": "For example: My Life Story",
+  "bookTitleRequired": "Please give your book a title.",
+  "bookAbout": "What is this book about?",
+  "bookAboutHint": "A short description (optional)",
+  "bookKind": "Kind of book",
+  "writingProgress": "Writing progress",
+  "saveChanges": "Save Changes",
+  "createMyBook": "Create My Book",
+  "bookBackupHelp": "Saved on this device first. An online copy is made automatically when an internet connection is available.",
+  "bookTypeBiography": "Biography",
+  "bookTypeMemoir": "Memoir",
+  "bookTypeSelfHelp": "Self-help",
+  "bookTypeFiction": "Fiction",
+  "bookTypeBusiness": "Business",
+  "bookTypeAcademic": "Academic",
+  "couldNotOpenBook": "This book could not be opened on this device.",
+  "untitled": "Untitled",
+  "bookFallback": "Book",
+  "readyShareMemory": "Ready to share a memory?",
+  "chapterRecordingGuide": "Choose a chapter below and tap the large green “Record voice” button.",
+  "yourChapters": "Your Chapters",
+  "searchChapters": "Search chapters",
+  "deleteChapterQuestion": "Delete chapter?",
+  "deleteChapter": "Delete chapter",
+  "chapterDeleted": "Chapter deleted.",
+  "chapterCouldNotBeDeleted": "Chapter could not be deleted.",
+  "noChaptersYet": "No chapters yet",
+  "noChaptersHelp": "Tap “Add Chapter” above to make a place for your first recording.",
+  "noChapterMatches": "No chapter matches that search",
+  "addChapter": "Add Chapter",
+  "planned": "Planned",
+  "collecting": "Collecting",
+  "drafting": "Drafting",
+  "inReview": "In review",
+  "completed": "Completed",
+  "waitingForBackup": "Waiting for online copy",
+  "noChaptersInBook": "No chapters in this book yet.",
+  "overall": "Overall",
+  "wordCount": "Word count",
+  "wordsWrittenSoFar": "Words written so far",
+  "chapterNotFound": "This chapter could not be found on this device.",
+  "yourChapter": "Your Chapter",
+  "recordVoiceChapterSemantics": "Record your voice for this chapter",
+  "recordVoiceTitle": "Record Voice",
+  "yourRecordingsAndFiles": "Your recordings and files",
+  "removeSourceQuestion": "Remove this item?",
+  "onlineCopyAlsoRemoved": " Its online copy will also be removed when you are connected.",
+  "keep": "Keep",
+  "remove": "Remove",
+  "updateProgress": "Update progress",
+  "noRecordingsYet": "No recordings yet",
+  "noRecordingsHelp": "Tap the green “Record Voice” button below. Speak naturally and take your time — recording works without internet.",
+  "editChapter": "Edit Chapter",
+  "addAChapter": "Add a Chapter",
+  "chapterFormIntro": "Give this part of your story a simple name. You can change it later.",
+  "chapterNumber": "Chapter number",
+  "chapterNumberError": "Please enter 1 or more.",
+  "chapterTitleLabel": "Chapter title",
+  "chapterTitleHint": "For example: My Childhood",
+  "chapterPrompt": "What would you like to talk about?",
+  "chapterPromptHint": "A short note to help you remember (optional)",
+  "wordGoal": "Word goal (optional)",
+  "addThisChapter": "Add This Chapter",
+  "parentBookLoading": "The book is still loading.",
+  "openChapter": "Open chapter",
+  "voiceOrFilesAdded": "Voice or files added",
+  "readyToBegin": "Ready to begin",
+  "collectingStories": "Collecting stories",
+  "writingInProgress": "Writing in progress",
+  "readyToReview": "Ready to review",
+  "noVoiceRecording": "No voice recording yet",
+  "fileOpenError": "We could not open that file. Please choose another one.",
+  "allowMicrophoneSuffix": "Please allow microphone access and try again.",
+  "pleaseTryAgainSuffix": "Please try again.",
+  "couldNotSaveRecording": "We could not save that recording.",
+  "discardRecordingQuestion": "Discard this recording?",
+  "unsavedRecordingWarning": "Your current recording has not been saved yet.",
+  "keepRecording": "Keep recording",
+  "discard": "Discard",
+  "recordingYourVoice": "Recording your voice",
+  "tellYourStory": "Tell your story",
+  "speakNaturally": "Speak naturally and take your time.",
+  "voiceIsEasiest": "The easiest way to add memories and ideas is to speak.",
+  "startRecordingSemantics": "Start voice recording. Recommended.",
+  "startRecordingHint": "Tap once, then begin speaking.",
+  "recommended": "RECOMMENDED",
+  "openingMicrophone": "Opening microphone…",
+  "startVoiceRecording": "Start voice recording",
+  "tapThenSpeak": "Tap once, then speak. We will save your recording when you stop.",
+  "otherWaysToAdd": "Other ways to add information",
+  "chooseFile": "Choose a photo, audio, or document",
+  "recordingNow": "RECORDING NOW",
+  "speakAtOwnPace": "Speak at your own pace. There is no need to hurry.",
+  "savingRecording": "Saving your recording…",
+  "stopAndSave": "Stop and save",
+  "discardAndRestart": "Discard and start again",
+  "openPhoneSettings": "Open phone settings",
+  "offlineRecordingSafe": "Saved safely on this device first. You can record without internet.",
+  "fileUnavailable": "File is no longer available.",
+  "voiceRecording": "Voice recording",
+  "savedFile": "Saved file",
+  "doubleTapListen": "Double tap to listen.",
+  "doubleTapOpen": "Double tap to open.",
+  "tapToListen": "Tap to listen",
+  "removeThisItem": "Remove this item",
+  "video": "Video",
+  "image": "Image",
+  "document": "Document",
+  "processingNotStarted": "Not processed yet",
+  "processingQueued": "Waiting",
+  "processingTranscribing": "Turning speech into text",
+  "processingDiarizing": "Identifying speakers",
+  "processingIngesting": "Reading content",
+  "processingReady": "Ready",
+  "processingFailed": "Processing failed",
+  "backedUp": "Backed up",
+  "savedOnDevice": "Saved on device",
+  "gettingReadyBackup": "Getting ready to back up",
+  "pausedForConnection": "Paused — waiting for a better connection",
+  "backupFailed": "Backup failed",
+  "retry": "Retry",
+  "audioNotFound": "Audio file not found",
+  "listenToRecording": "Listen to Recording",
+  "recordingPosition": "Recording position",
+  "backTenSeconds": "Go back 10 seconds",
+  "pauseRecording": "Pause recording",
+  "playRecording": "Play recording",
+  "forwardTenSeconds": "Go forward 10 seconds",
+  "playing": "Playing",
+  "paused": "Paused",
+  "backupStatus": "Backup Status",
+  "needsAttention": "Needs attention",
+  "tryAllAgain": "Try all again",
+  "nothingWaiting": "Nothing is waiting. Everything on this device has an online copy.",
+  "everythingSaved": "Everything is saved",
+  "noOnlineCopyYet": "No online copy yet.",
+  "backupNow": "Back up now",
+  "retryFailed": "Try failed items again",
+  "taskNeedsHelp": "Needs help",
+  "taskWaiting": "Waiting",
+  "taskProject": "Book details",
+  "taskBook": "Book",
+  "taskChapter": "Chapter",
+  "taskSource": "Recording or file",
+  "taskBackup": "Online copy",
+  "taskProgress": "Writing progress",
+  "taskCreate": "save",
+  "taskUpdate": "update",
+  "taskDelete": "remove",
+  "taskUpload": "back up",
+  "taskDownload": "check for updates",
+  "noInternet": "No internet connection. Your work is still safe on this device.",
+  "microphonePermissionNeeded": "Microphone access is needed to record. Please allow it and try again.",
+  "recordingStartFailed": "Recording could not be started on this device. Please try again.",
+  "nothingRecording": "Nothing is being recorded.",
+  "emptyRecording": "That recording was empty. Please try again and speak after tapping record.",
+  "sourcesReadError": "Recordings and files could not be read from this device.",
+  "savedAndBackedUpLater": "Saved on this device. An online copy will be made automatically.",
+  "recordingSavedOnDevice": "Recording saved on this device.",
+  "sourceRemoved": "Item removed.",
+  "backupWillRetry": "We will try the online copy again.",
+  "countWaiting": "{count} waiting",
+  "@countWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteBookBody": "“{name}” and all of its chapters, recordings, and files will be removed from this device. This cannot be undone here.",
+  "@deleteBookBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDeleteBook": "Could not delete book: {error}",
+  "@couldNotDeleteBook": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "bookSemantics": "Book: {title}",
+  "@bookSemantics": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "byAuthor": "By {author}",
+  "@byAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "chaptersComplete": "{completed} of {total} chapters complete",
+  "@chaptersComplete": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "wordsOfGoal": "{written} of {target} words",
+  "@wordsOfGoal": {
+    "placeholders": {
+      "written": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "updatedWhen": "Updated {when}",
+  "@updatedWhen": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "daysAgo": "{count} days ago",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthsAgo": "{count} months ago",
+  "@monthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "yearsAgo": "{count} years ago",
+  "@yearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chooseMemoryForBook": "Choose where your next memory belongs in “{title}”.",
+  "@chooseMemoryForBook": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "chapterTitle": "Chapter {number}",
+  "@chapterTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteChapterBody": "“{title}” and its recordings and files will be removed from this device and its online copy when connected.",
+  "@deleteChapterBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDeleteChapter": "Could not delete chapter: {error}",
+  "@couldNotDeleteChapter": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "lastActive": "Last active: {when}",
+  "@lastActive": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "percentDone": "{percent}% Done",
+  "@percentDone": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "wordsCount": "{count} words",
+  "@wordsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "overallPercent": "Overall: {percent}%",
+  "@overallPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterSemantics": "Chapter {number}, {title}",
+  "@chapterSemantics": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "draftVersion": "Draft {version}",
+  "@draftVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceRecordingCount": "{count, plural, =1{1 voice recording} other{{count} voice recordings}}",
+  "@voiceRecordingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedItemCount": "{count, plural, =1{1 saved item} other{{count} saved items}}",
+  "@savedItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wordsWritten": "{count} words written",
+  "@wordsWritten": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingBackupCount": "{count} waiting for online copy",
+  "@waitingBackupCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "goalWords": "Goal: {count} words",
+  "@goalWords": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "chapterWordsProgress": "{current} of {target} words",
+  "@chapterWordsProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "removeSourceBody": "“{name}” will be deleted from this device.",
+  "@removeSourceBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "failureWithSuffix": "{failure} {suffix}",
+  "@failureWithSuffix": {
+    "placeholders": {
+      "failure": {
+        "type": "String"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "recordingElapsed": "Recording. {minutes} minutes and {seconds} seconds elapsed.",
+  "@recordingElapsed": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceSemantics": "{type}: {name}",
+  "@sourceSemantics": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceDetails": "Voice recording · {size}{duration}",
+  "@voiceDetails": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "videoDetails": "Video · {size}",
+  "@videoDetails": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "imageDetails": "Image · {size}",
+  "@imageDetails": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "documentDetails": "Document · {size}",
+  "@documentDetails": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "processingStatus": "Processing · {status}",
+  "@processingStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "backingUpPercent": "Backing up {percent}%",
+  "@backingUpPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "audioLoadError": "Error loading audio: {error}",
+  "@audioLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "positionOfDuration": "{position} of {duration}",
+  "@positionOfDuration": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "itemsNeedAttention": "{count, plural, =1{1 item needs attention} other{{count} items need attention}}",
+  "@itemsNeedAttention": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "itemsWaitingBackup": "{count, plural, =1{1 item is waiting for an online copy} other{{count} items are waiting for an online copy}}",
+  "@itemsWaitingBackup": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lastBackup": "Last online copy: {time}",
+  "@lastBackup": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "attemptCount": "Tried {count} times",
+  "@attemptCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

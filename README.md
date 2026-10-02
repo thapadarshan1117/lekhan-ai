@@ -1,17 +1,51 @@
-# lekkhan_ai
+# Lekhan AI
 
-A new Flutter project.
+Lekhan AI helps people turn memories, experiences, and ideas into books,
+biographies, memoirs, and other long-form writing.
 
-## Getting Started
+## Voice-first writing
 
-This project is a starting point for a Flutter application.
+Voice recording is the primary collection method:
 
-A few resources to get you started if this is your first Flutter project:
+1. Open a book.
+2. Choose a chapter.
+3. Tap **Record voice**.
+4. Speak naturally, then tap **Stop and save**.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Recordings are saved on the device first and can be created without an internet
+connection. An online backup is made automatically when connectivity is
+available. Photos, existing audio, documents, and other files remain available
+as secondary collection methods.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Languages
+
+The active book-writing experience is available in **English** and **Nepali**.
+Use the large language control on the **Your Books** screen to switch languages;
+the choice is saved on the device and applies immediately to book, chapter,
+recording, playback, and backup screens.
+
+## Accessibility
+
+The interface is designed with older users in mind:
+
+- high-contrast green visual theme;
+- large type, controls, and touch targets;
+- plain-language labels and step-by-step guidance;
+- support for the device's preferred text size;
+- portrait and landscape orientation support;
+- screen-reader labels for primary recording and playback controls;
+- protection against accidentally closing an active recording;
+- clear offline and save-status messaging.
+
+## Development
+
+This is a Flutter application. After installing Flutter, run:
+
+```sh
+flutter pub get
+flutter gen-l10n
+dart format lib test
+flutter analyze
+flutter test
+flutter run
+```

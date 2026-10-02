@@ -7,6 +7,7 @@ import 'package:lekhan_ai/core/theme/app_color.dart';
 import 'package:lekhan_ai/features/sync/domain/usecases/get_sync_status_usecase.dart';
 import 'package:lekhan_ai/features/sync/domain/usecases/retry_sync_usecase.dart';
 import 'package:lekhan_ai/features/sync/presentation/bloc/sync_status_cubit.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 
 /// The sync centre: what is still on the device, and why.
 ///
@@ -57,11 +58,6 @@ class _SyncCentrePageState extends State<SyncCentrePage> {
     await _load();
   }
 
-  Future<void> _cancelOne(String taskId) async {
-    await sl<CancelSyncTaskUsecase>()(taskId);
-    await _load();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,10 +65,10 @@ class _SyncCentrePageState extends State<SyncCentrePage> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
-          'Sync centre',
+        title: Text(
+          context.l10n.backupStatus,
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 21,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
@@ -92,21 +88,23 @@ class _SyncCentrePageState extends State<SyncCentrePage> {
                   _StatusCard(lastSyncedAt: _lastSyncedAt),
                   const SizedBox(height: 20),
                   if (_failed.isNotEmpty) ...<Widget>[
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: <Widget>[
-                        const Expanded(
-                          child: Text(
-                            'Needs attention',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
+                        Text(
+                          context.l10n.needsAttention,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         TextButton(
                           onPressed: _retryAll,
-                          child: const Text('Retry all'),
+                          child: Text(context.l10n.tryAllAgain),
                         ),
                       ],
                     ),
@@ -118,29 +116,27 @@ class _SyncCentrePageState extends State<SyncCentrePage> {
                           task: task,
                           failed: true,
                           onRetry: () => _retryOne(task.id),
-                          onCancel: () => _cancelOne(task.id),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
                   ],
-                  const Text(
-                    'Waiting to upload',
-                    style: TextStyle(
-                      fontSize: 15,
+                  Text(
+                    context.l10n.waitingForBackup,
+                    style: const TextStyle(
+                      fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 10),
                   if (_pending.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Text(
-                        'Nothing is waiting. Everything on this device has been '
-                        'sent.',
-                        style: TextStyle(
-                          fontSize: 13,
+                        context.l10n.nothingWaiting,
+                        style: const TextStyle(
+                          fontSize: 16,
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -171,12 +167,12 @@ class _StatusCard extends StatelessWidget {
       child: BlocBuilder<SyncStatusCubit, SyncStatusState>(
         builder: (BuildContext context, SyncStatusState state) {
           final String headline = state.isSyncing
-              ? 'Syncing now'
+              ? context.l10n.saving
               : state.hasFailures
-                  ? '${state.failedCount} item(s) need attention'
+                  ? context.l10n.itemsNeedAttention(state.failedCount)
                   : state.hasPending
-                      ? '${state.pendingCount} item(s) waiting to upload'
-                      : 'Everything is saved';
+                      ? context.l10n.itemsWaitingBackup(state.pendingCount)
+                      : context.l10n.everythingSaved;
 
           return Container(
             width: double.infinity,
@@ -208,8 +204,8 @@ class _StatusCard extends StatelessWidget {
                       child: Text(
                         headline,
                         style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                         ),
                       ),
@@ -219,45 +215,39 @@ class _StatusCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   lastSyncedAt == null
-                      ? 'Never synced yet.'
-                      : 'Last successful sync: ${_format(lastSyncedAt!)}',
+                      ? context.l10n.noOnlineCopyYet
+                      : context.l10n.lastBackup(
+                          _format(context, lastSyncedAt!),
+                        ),
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 16,
                     color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => context
-                            .read<SyncStatusCubit>()
-                            .syncNow(),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(0, 42),
-                        ),
-                        child: const Text('Sync now'),
-                      ),
-                    ),
-                    if (state.hasFailures) ...<Widget>[
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => context
-                              .read<SyncStatusCubit>()
-                              .retryFailed(),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(0, 42),
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('Retry failed'),
-                        ),
-                      ),
-                    ],
-                  ],
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      context.read<SyncStatusCubit>().syncNow(),
+                  icon: const Icon(Icons.cloud_upload_outlined),
+                  label: Text(context.l10n.backupNow),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 56),
+                  ),
                 ),
+                if (state.hasFailures) ...<Widget>[
+                  const SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    onPressed: () =>
+                        context.read<SyncStatusCubit>().retryFailed(),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(context.l10n.retryFailed),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 56),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
               ],
             ),
           );
@@ -266,10 +256,13 @@ class _StatusCard extends StatelessWidget {
     );
   }
 
-  static String _format(DateTime value) {
-    final String two = value.minute.toString().padLeft(2, '0');
-    return '${value.day}/${value.month}/${value.year} '
-        '${value.hour}:$two';
+  static String _format(BuildContext context, DateTime value) {
+    final MaterialLocalizations material = MaterialLocalizations.of(context);
+    final String date = material.formatShortDate(value);
+    final String time = material.formatTimeOfDay(
+      TimeOfDay.fromDateTime(value),
+    );
+    return '$date, $time';
   }
 }
 
@@ -278,18 +271,17 @@ class _TaskTile extends StatelessWidget {
     required this.task,
     required this.failed,
     this.onRetry,
-    this.onCancel,
   });
 
   final SyncTask task;
   final bool failed;
   final VoidCallback? onRetry;
-  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
     final String title =
-        '${_label(task.entityType)} · ${_operationLabel(task.operation)}';
+        '${_label(context, task.entityType)} · '
+        '${_operationLabel(context, task.operation)}';
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -306,24 +298,24 @@ class _TaskTile extends StatelessWidget {
                 child: Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                 decoration: BoxDecoration(
                   color: (failed ? AppColors.error : AppColors.secondary)
                       .withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  failed ? 'Failed' : 'Queued',
+                  failed ? context.l10n.taskNeedsHelp : context.l10n.taskWaiting,
                   style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
                     color: failed ? AppColors.error : AppColors.secondary,
                   ),
                 ),
@@ -336,7 +328,7 @@ class _TaskTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: task.progress!.clamp(0, 1).toDouble(),
-                minHeight: 5,
+                minHeight: 9,
                 backgroundColor: AppColors.surfaceVariant,
                 valueColor:
                     const AlwaysStoppedAnimation<Color>(AppColors.primary),
@@ -347,43 +339,30 @@ class _TaskTile extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               task.errorMessage!,
-              style: const TextStyle(fontSize: 12, color: AppColors.error),
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.4,
+                color: AppColors.error,
+              ),
             ),
             const SizedBox(height: 2),
             Text(
-              'Attempt ${task.attemptCount} of ${task.maxAttempts}',
+              context.l10n.attemptCount(task.attemptCount),
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 14,
                 color: AppColors.textSecondary,
               ),
             ),
           ],
           if (failed && onRetry != null) ...<Widget>[
             const SizedBox(height: 6),
-            Row(
-              children: <Widget>[
-                TextButton(
-                  onPressed: onRetry,
-                  style: TextButton.styleFrom(
-                    minimumSize: const Size(0, 34),
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                  child: const Text('Retry', style: TextStyle(fontSize: 13)),
-                ),
-                if (onCancel != null)
-                  TextButton(
-                    onPressed: onCancel,
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(0, 34),
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      foregroundColor: AppColors.textSecondary,
-                    ),
-                    child: const Text(
-                      'Discard',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                  ),
-              ],
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(context.l10n.retry),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 52),
+              ),
             ),
           ],
         ],
@@ -391,35 +370,38 @@ class _TaskTile extends StatelessWidget {
     );
   }
 
-  static String _label(SyncEntityType type) {
+  static String _label(BuildContext context, SyncEntityType type) {
     switch (type) {
       case SyncEntityType.project:
-        return 'Project';
+        return context.l10n.taskProject;
       case SyncEntityType.book:
-        return 'Book';
+        return context.l10n.taskBook;
       case SyncEntityType.chapter:
-        return 'Chapter';
+        return context.l10n.taskChapter;
       case SyncEntityType.chapterSource:
-        return 'Source file';
+        return context.l10n.taskSource;
       case SyncEntityType.uploadSession:
-        return 'Upload';
+        return context.l10n.taskBackup;
       case SyncEntityType.progress:
-        return 'Writing progress';
+        return context.l10n.taskProgress;
     }
   }
 
-  static String _operationLabel(SyncOperation operation) {
+  static String _operationLabel(
+    BuildContext context,
+    SyncOperation operation,
+  ) {
     switch (operation) {
       case SyncOperation.create:
-        return 'create';
+        return context.l10n.taskCreate;
       case SyncOperation.update:
-        return 'update';
+        return context.l10n.taskUpdate;
       case SyncOperation.delete:
-        return 'delete';
+        return context.l10n.taskDelete;
       case SyncOperation.uploadFile:
-        return 'upload';
+        return context.l10n.taskUpload;
       case SyncOperation.pullMetadata:
-        return 'download';
+        return context.l10n.taskDownload;
     }
   }
 }

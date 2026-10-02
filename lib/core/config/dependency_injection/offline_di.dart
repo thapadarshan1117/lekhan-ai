@@ -449,7 +449,10 @@ Future<void> registerOfflineFirstDependencies() async {
     () => RetryUploadUsecase(repository: sl<ChapterSourceRepository>()),
   );
   sl.registerLazySingleton(
-    () => AddExistingFileUsecase(repository: sl<ChapterSourceRepository>()),
+    () => AddExistingFileUsecase(
+      repository: sl<ChapterSourceRepository>(),
+      chapterRepository: sl<ChapterRepository>(),
+    ),
   );
   sl.registerLazySingleton(
     () => AddSourceUsecase(

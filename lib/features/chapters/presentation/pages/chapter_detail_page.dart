@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lekhan_ai/core/config/dependency_injection/di_config.dart';
 import 'package:lekhan_ai/core/enums/entity_status.dart';
+import 'package:lekhan_ai/core/enums/source_type.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
 import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
@@ -16,6 +17,7 @@ import 'package:lekhan_ai/features/source_content/presentation/bloc/sources_bloc
 import 'package:lekhan_ai/features/source_content/presentation/widgets/add_source_sheet.dart';
 import 'package:lekhan_ai/features/source_content/presentation/widgets/source_tile.dart';
 import 'package:lekhan_ai/features/sync/presentation/widgets/sync_status_chip.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
 import 'package:fpdart/fpdart.dart' hide State;
 
@@ -64,24 +66,24 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
     final bool? save = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
-        title: const Text('Word count'),
+        title: Text(dialogContext.l10n.wordCount),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Words written so far',
+            decoration: InputDecoration(
+              labelText: dialogContext.l10n.wordsWrittenSoFar,
             border: OutlineInputBorder(),
           ),
         ),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
+            child: Text(dialogContext.l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Save'),
+            child: Text(dialogContext.l10n.save),
           ),
         ],
       ),
@@ -137,9 +139,9 @@ class _ChapterDetailPageState extends State<ChapterDetailPage> {
         body: Center(
           child: _loading
               ? const CircularProgressIndicator(color: AppColors.primary)
-              : const Text(
-                  'This chapter could not be found on this device.',
-                  style: TextStyle(color: AppColors.textSecondary),
+              : Text(
+                  context.l10n.chapterNotFound,
+                  style: const TextStyle(color: AppColors.textSecondary),
                 ),
         ),
       );
@@ -176,11 +178,11 @@ class _ChapterView extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text(
-          'Chapter',
+        title: Text(
+          context.l10n.yourChapter,
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
+            fontSize: 21,
+            fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
           ),
         ),
@@ -191,12 +193,20 @@ class _ChapterView extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => AddSourceSheet.show(context, chapter),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Add source'),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Semantics(
+        button: true,
+        label: context.l10n.recordVoiceChapterSemantics,
+        child: FloatingActionButton.extended(
+          onPressed: () => AddSourceSheet.show(context, chapter),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.mic_rounded, size: 28),
+          label: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(context.l10n.recordVoiceTitle),
+          ),
+        ),
       ),
       body: BlocConsumer<SourcesBloc, SourcesState>(
         listener: (BuildContext context, SourcesState state) {
@@ -205,120 +215,159 @@ class _ChapterView extends StatelessWidget {
               if (message != null) {
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(message)));
+                  ..showSnackBar(
+                    SnackBar(
+                      content: Text(_localizedSourceMessage(context, message)),
+                    ),
+                  );
               }
             },
             orElse: () {},
           );
         },
         builder: (BuildContext context, SourcesState state) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              _ChapterHeader(chapter: chapter, onEditProgress: onEditProgress),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
-                child: Text(
-                  'Source material',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+          return NestedScrollView(
+            headerSliverBuilder: (_, __) => <Widget>[
+              SliverToBoxAdapter(
+                child: _ChapterHeader(
+                  chapter: chapter,
+                  onEditProgress: onEditProgress,
                 ),
               ),
-              Expanded(
-                child: state.when(
-                  initial: () => const SizedBox.shrink(),
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  ),
-                  error: (String message) => Center(
-                    child: Text(
-                      message,
-                      style: const TextStyle(color: AppColors.textSecondary),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                  child: Text(
+                    context.l10n.yourRecordingsAndFiles,
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                  loaded: (List<ChapterSource> sources, bool isBusy,
-                      String? message) {
-                    if (sources.isEmpty) return const _NoSourcesYet();
-
-                    return ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                      itemCount: sources.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (BuildContext context, int index) {
-                        final ChapterSource source = sources[index];
-
-                        return Dismissible(
-                          key: ValueKey<String>(source.id),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
-                            decoration: BoxDecoration(
-                              color: AppColors.error,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.white,
-                            ),
-                          ),
-                          confirmDismiss: (_) => _confirmDelete(context, source),
-                          onDismissed: (_) => context
-                              .read<SourcesBloc>()
-                              .add(SourcesEvent.deleted(source.id)),
-                          child: SourceTile(
-                            source: source,
-                            onDelete: () async {
-                              if (await _confirmDelete(context, source) == true &&
-                                  context.mounted) {
-                                context
-                                    .read<SourcesBloc>()
-                                    .add(SourcesEvent.deleted(source.id));
-                              }
-                            },
-                            onRetry: source.hasFailed
-                                ? () => context
-                                    .read<SourcesBloc>()
-                                    .add(SourcesEvent.uploadRetried(source.id))
-                                : null,
-                          ),
-                        );
-                      },
-                    );
-                  },
                 ),
               ),
             ],
+            body: state.when(
+              initial: () => const SizedBox.shrink(),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+              error: (String message) => Center(
+                child: Text(
+                  _localizedSourceMessage(context, message),
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+              loaded: (
+                List<ChapterSource> sources,
+                bool isBusy,
+                String? message,
+              ) {
+                if (sources.isEmpty) return const _NoSourcesYet();
+
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 128),
+                  itemCount: sources.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (BuildContext context, int index) {
+                    final ChapterSource source = sources[index];
+
+                    return Dismissible(
+                      key: ValueKey<String>(source.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.white,
+                        ),
+                      ),
+                      confirmDismiss: (_) => _confirmDelete(context, source),
+                      onDismissed: (_) => context
+                          .read<SourcesBloc>()
+                          .add(SourcesEvent.deleted(source.id)),
+                      child: SourceTile(
+                        source: source,
+                        onDelete: () async {
+                          if (await _confirmDelete(context, source) == true &&
+                              context.mounted) {
+                            context
+                                .read<SourcesBloc>()
+                                .add(SourcesEvent.deleted(source.id));
+                          }
+                        },
+                        onRetry: source.hasFailed
+                            ? () => context
+                                .read<SourcesBloc>()
+                                .add(SourcesEvent.uploadRetried(source.id))
+                            : null,
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           );
         },
       ),
     );
   }
 
+  static String _localizedSourceMessage(
+    BuildContext context,
+    String message,
+  ) {
+    switch (message) {
+      case 'Sources could not be read from this device.':
+        return context.l10n.sourcesReadError;
+      case 'Saved on this device. It will be backed up automatically.':
+        return context.l10n.savedAndBackedUpLater;
+      case 'Recording saved on this device.':
+        return context.l10n.recordingSavedOnDevice;
+      case 'Source removed.':
+        return context.l10n.sourceRemoved;
+      case 'We will try the backup again.':
+        return context.l10n.backupWillRetry;
+      default:
+        return message;
+    }
+  }
+
   static Future<bool> _confirmDelete(
     BuildContext context,
     ChapterSource source,
   ) async {
+    final bool isVoice = source.sourceType == SourceType.audio ||
+        source.sourceType == SourceType.recording;
+    final String displayName = isVoice
+        ? '${context.l10n.voiceRecording} · '
+            '${MaterialLocalizations.of(context).formatShortDate(source.createdAt)}'
+        : source.name;
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) => AlertDialog(
-        title: const Text('Remove this source?'),
+        title: Text(dialogContext.l10n.removeSourceQuestion),
         content: Text(
-          '“${source.name}” will be deleted from this device.'
-          '${source.isUploaded ? ' The copy on the server stays.' : ''}',
+          dialogContext.l10n.removeSourceBody(displayName) +
+              (source.isUploaded
+                  ? dialogContext.l10n.onlineCopyAlsoRemoved
+                  : ''),
         ),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep'),
+            child: Text(dialogContext.l10n.keep),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Remove'),
+            child: Text(dialogContext.l10n.remove),
           ),
         ],
       ),
@@ -355,8 +404,8 @@ class _ChapterHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Container(
-                width: 32,
-                height: 32,
+                width: 46,
+                height: 46,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.10),
@@ -365,8 +414,8 @@ class _ChapterHeader extends StatelessWidget {
                 child: Text(
                   '${chapter.number}',
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.primary,
                   ),
                 ),
@@ -374,10 +423,12 @@ class _ChapterHeader extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  chapter.title.isEmpty ? 'Chapter ${chapter.number}' : chapter.title,
+                  chapter.title.isEmpty
+                      ? context.l10n.chapterTitle(chapter.number)
+                      : chapter.title,
                   style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -389,8 +440,8 @@ class _ChapterHeader extends StatelessWidget {
             Text(
               chapter.summary,
               style: const TextStyle(
-                fontSize: 13,
-                height: 1.4,
+                fontSize: 16,
+                height: 1.5,
                 color: AppColors.textSecondary,
               ),
             ),
@@ -400,35 +451,40 @@ class _ChapterHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 6,
+              minHeight: 10,
               backgroundColor: AppColors.surfaceVariant,
               valueColor:
                   const AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 6,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
               Text(
                 chapter.targetWords > 0
-                    ? '${chapter.currentWords} of ${chapter.targetWords} words'
-                    : '${chapter.currentWords} words',
+                    ? context.l10n.chapterWordsProgress(
+                        chapter.currentWords,
+                        chapter.targetWords,
+                      )
+                    : context.l10n.wordsCount(
+                        chapter.currentWords.toString(),
+                      ),
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   color: AppColors.textSecondary,
                 ),
               ),
-              const Spacer(),
               TextButton.icon(
                 onPressed: onEditProgress,
-                icon: const Icon(Icons.edit_outlined, size: 15),
-                label: const Text(
-                  'Update',
-                  style: TextStyle(fontSize: 12),
-                ),
+                icon: const Icon(Icons.edit_outlined, size: 21),
+                label: Text(context.l10n.updateProgress),
                 style: TextButton.styleFrom(
-                  minimumSize: const Size(0, 32),
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: const Size(0, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                 ),
               ),
             ],
@@ -444,34 +500,43 @@ class _NoSourcesYet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(32),
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(32, 24, 32, 140),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(
-              Icons.folder_open_outlined,
-              size: 44,
-              color: AppColors.textDisabled,
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: SizedBox(
+                width: 104,
+                height: 104,
+                child: Icon(
+                  Icons.mic_rounded,
+                  size: 52,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
-            SizedBox(height: 14),
+            SizedBox(height: 22),
             Text(
-              'No source material yet',
+              context.l10n.noRecordingsYet,
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontSize: 23,
+                fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
               ),
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 10),
             Text(
-              'Record the author talking, or add documents, photos and videos. '
-              'Everything is saved here first, even without a connection.',
+              context.l10n.noRecordingsHelp,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13,
-                height: 1.4,
+                fontSize: 17,
+                height: 1.5,
                 color: AppColors.textSecondary,
               ),
             ),

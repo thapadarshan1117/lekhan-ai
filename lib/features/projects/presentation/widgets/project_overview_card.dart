@@ -6,6 +6,7 @@ import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
 import 'package:lekhan_ai/features/chapters/presentation/bloc/chapters_bloc/chapters_bloc.dart';
 import 'package:lekhan_ai/features/projects/domain/entities/project.dart';
 import 'package:lekhan_ai/features/projects/presentation/widgets/project_category.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 import 'package:lekhan_ai/features/projects/presentation/widgets/project_status_chip.dart';
 
 /// Who a manuscript is for, how far its words have come, and what the chapters
@@ -102,26 +103,21 @@ class ProjectOverviewCard extends StatelessWidget {
               children: <Widget>[
                 _InfoPill(
                   icon: Icons.menu_book_outlined,
-                  label: 'Book: $title',
+                  label: context.l10n.bookSemantics(title),
                   accent: AppColors.primary,
                 ),
                 if (genre != null)
                   _InfoPill(
                     icon: Icons.category_outlined,
-                    label: 'Genre: $genre',
+                    label: ProjectCategory.localizedLabel(context, genre),
                     accent: ProjectCategory.color(genre),
                   ),
                 if (book.author.trim().isNotEmpty)
                   _InfoPill(
                     icon: Icons.person_outline,
-                    label: 'Author: ${book.author.trim()}',
+                    label: context.l10n.byAuthor(book.author.trim()),
                     accent: AppColors.tertiary,
                   ),
-                _InfoPill(
-                  icon: Icons.description_outlined,
-                  label: 'Manuscript: ${_shortTag(book.id)}',
-                  accent: AppColors.textSecondary,
-                ),
                 const SizedBox(width: 4),
                 _AddChapterButton(
                   bookId: book.id,
@@ -139,16 +135,6 @@ class ProjectOverviewCard extends StatelessWidget {
     );
   }
 
-  /// `prj_1a2b3c…` → `PRJ-1A2B3C`: something a person can read out loud.
-  static String _shortTag(String id) {
-    final String compact = id.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
-    if (compact.isEmpty) return '—';
-    final String head = compact.substring(0, 3).toUpperCase();
-    final String tail = compact.length > 3
-        ? compact.substring(3, 9).toUpperCase()
-        : '';
-    return tail.isEmpty ? head : '$head-$tail';
-  }
 }
 
 class _Identity extends StatelessWidget {
@@ -191,15 +177,14 @@ class _Identity extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     title,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  _IdBadge(label: '#${ProjectOverviewCard._shortTag(project.id)}'),
                 ],
               ),
               const SizedBox(height: 8),
@@ -209,7 +194,9 @@ class _Identity extends StatelessWidget {
                 children: <Widget>[
                   _Meta(
                     icon: Icons.schedule,
-                    text: 'Last active: ${_relativeDay(project.updatedAt)}',
+                    text: context.l10n.lastActive(
+                      _relativeDay(context, project.updatedAt),
+                    ),
                   ),
                 ],
               ),
@@ -239,17 +226,17 @@ class _Identity extends StatelessWidget {
     return '${words[0][0]}${words[1][0]}'.toUpperCase();
   }
 
-  static String _relativeDay(DateTime when) {
+  static String _relativeDay(BuildContext context, DateTime when) {
     final DateTime now = DateTime.now();
     final int days = DateTime(now.year, now.month, now.day)
         .difference(DateTime(when.year, when.month, when.day))
         .inDays;
-    if (days <= 0) return 'today';
-    if (days == 1) return 'yesterday';
-    if (days < 30) return '$days days ago';
+    if (days <= 0) return context.l10n.today;
+    if (days == 1) return context.l10n.yesterday;
+    if (days < 30) return context.l10n.daysAgo(days);
     final int months = (days / 30).floor();
-    if (months < 12) return '$months mo ago';
-    return '${(months / 12).floor()} yr ago';
+    if (months < 12) return context.l10n.monthsAgo(months);
+    return context.l10n.yearsAgo((months / 12).floor());
   }
 }
 
@@ -270,7 +257,7 @@ class _WordScore extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: <Widget>[
         Text(
-          '$percent% Done',
+          context.l10n.percentDone(percent),
           style: const TextStyle(
             fontSize: 26,
             height: 1.1,
@@ -281,10 +268,13 @@ class _WordScore extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           target > 0
-              ? '${_grouped(written)} / ${_grouped(target)} words'
-              : '${_grouped(written)} words',
+              ? context.l10n.wordsOfGoal(
+                  _grouped(written),
+                  _grouped(target),
+                )
+              : context.l10n.wordsCount(_grouped(written)),
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 14,
             color: AppColors.textSecondary,
           ),
         ),
@@ -328,14 +318,14 @@ class _OverallProgress extends StatelessWidget {
       children: <Widget>[
         const Icon(
           Icons.schedule,
-          size: 14,
+          size: 18,
           color: AppColors.textSecondary,
         ),
         const SizedBox(width: 6),
         Text(
-          'Overall: $percent%',
+          context.l10n.overallPercent(percent),
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: AppColors.textSecondary,
           ),
@@ -397,24 +387,48 @@ class _ChapterTallies extends StatelessWidget {
             .length;
 
         final List<_Tally> tallies = <_Tally>[
-          _Tally(Icons.event_note_outlined, 'Planned', planned,
-              AppColors.textSecondary),
-          _Tally(Icons.mic_none_outlined, 'Collecting', collecting,
-              AppColors.info),
-          _Tally(Icons.edit_note_outlined, 'Drafting', drafting,
-              AppColors.secondary),
-          _Tally(Icons.rate_review_outlined, 'In review', review,
-              const Color(0xFF6D28D9)),
-          _Tally(Icons.task_alt_outlined, 'Completed', done,
-              AppColors.success),
-          _Tally(Icons.graphic_eq, 'Pending Audio', pendingAudio,
-              const Color(0xFF7C3AED)),
+          _Tally(
+            Icons.event_note_outlined,
+            context.l10n.planned,
+            planned,
+            AppColors.textSecondary,
+          ),
+          _Tally(
+            Icons.mic_none_outlined,
+            context.l10n.collecting,
+            collecting,
+            AppColors.info,
+          ),
+          _Tally(
+            Icons.edit_note_outlined,
+            context.l10n.drafting,
+            drafting,
+            AppColors.secondary,
+          ),
+          _Tally(
+            Icons.rate_review_outlined,
+            context.l10n.inReview,
+            review,
+            AppColors.tertiary,
+          ),
+          _Tally(
+            Icons.task_alt_outlined,
+            context.l10n.completed,
+            done,
+            AppColors.success,
+          ),
+          _Tally(
+            Icons.graphic_eq,
+            context.l10n.waitingForBackup,
+            pendingAudio,
+            AppColors.primary,
+          ),
         ].where((_Tally t) => t.count > 0).toList();
 
         if (tallies.isEmpty) {
-          return const Text(
-            'No chapters on this manuscript yet.',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          return Text(
+            context.l10n.noChaptersInBook,
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           );
         }
 
@@ -470,12 +484,12 @@ class _TallyPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 13, color: color),
+          Icon(icon, size: 18, color: color),
           const SizedBox(width: 6),
           Text(
             '$count $label',
             style: TextStyle(
-              fontSize: 11.5,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
               color: color,
             ),
@@ -509,7 +523,7 @@ class _InfoPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, size: 13, color: accent),
+          Icon(icon, size: 18, color: accent),
           const SizedBox(width: 6),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 260),
@@ -518,40 +532,13 @@ class _InfoPill extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 11.5,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _IdBadge extends StatelessWidget {
-  const _IdBadge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.3,
-          color: AppColors.primary,
-        ),
       ),
     );
   }
@@ -568,12 +555,12 @@ class _Meta extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Icon(icon, size: 13, color: AppColors.textDisabled),
+        Icon(icon, size: 18, color: AppColors.textDisabled),
         const SizedBox(width: 5),
         Text(
           text,
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 14,
             color: AppColors.textSecondary,
           ),
         ),
@@ -595,27 +582,25 @@ class _AddChapterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 34,
-      child: ElevatedButton.icon(
-        onPressed: () => _openForm(context),
-        icon: const Icon(Icons.add, size: 15, color: Colors.white),
-        label: const Text(
-          'Add Chapter',
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
+    return ElevatedButton.icon(
+      onPressed: () => _openForm(context),
+      icon: const Icon(Icons.add_rounded, size: 24, color: Colors.white),
+            label: Text(
+              context.l10n.addChapter,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        minimumSize: const Size(0, 54),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
         ),
       ),
     );

@@ -8,6 +8,7 @@ import 'package:lekhan_ai/features/books/domain/entities/book.dart';
 import 'package:lekhan_ai/features/books/domain/usecases/get_book_detail_usecase.dart';
 import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
 import 'package:lekhan_ai/features/chapters/domain/usecases/save_chapter_usecase.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 
 /// Create or edit a chapter. [projectId] is carried along because every chapter
 /// record stores the whole ancestor chain (the file path needs it later).
@@ -115,7 +116,7 @@ class _ChapterFormPageState extends State<ChapterFormPage> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(content: Text('The parent book is still loading.')),
+          SnackBar(content: Text(context.l10n.parentBookLoading)),
         );
       return;
     }
@@ -175,10 +176,10 @@ class _ChapterFormPageState extends State<ChapterFormPage> {
         backgroundColor: AppColors.background,
         elevation: 0,
         title: Text(
-          _isEditing ? 'Edit chapter' : 'New chapter',
+          _isEditing ? context.l10n.editChapter : context.l10n.addAChapter,
           style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
+            fontSize: 21,
+            fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
           ),
         ),
@@ -188,47 +189,48 @@ class _ChapterFormPageState extends State<ChapterFormPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: <Widget>[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                SizedBox(
-                  width: 96,
-                  child: TextFormField(
-                    controller: _numberController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Number',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (String? value) {
-                      final int? parsed = int.tryParse(value?.trim() ?? '');
-                      if (parsed == null || parsed < 1) {
-                        return '1 or more';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _titleController,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
-                      labelText: 'Chapter title',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              context.l10n.chapterFormIntro,
+              style: TextStyle(
+                fontSize: 18,
+                height: 1.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 22),
+            TextFormField(
+              controller: _numberController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: context.l10n.chapterNumber,
+                border: OutlineInputBorder(),
+              ),
+              validator: (String? value) {
+                final int? parsed = int.tryParse(value?.trim() ?? '');
+                if (parsed == null || parsed < 1) {
+                  return context.l10n.chapterNumberError;
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _titleController,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                labelText: context.l10n.chapterTitleLabel,
+                hintText: context.l10n.chapterTitleHint,
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _summaryController,
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'What happens in this chapter?',
+              decoration: InputDecoration(
+                labelText: context.l10n.chapterPrompt,
+                hintText: context.l10n.chapterPromptHint,
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
@@ -237,23 +239,23 @@ class _ChapterFormPageState extends State<ChapterFormPage> {
             TextFormField(
               controller: _targetWordsController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Target words',
+              decoration: InputDecoration(
+                labelText: context.l10n.wordGoal,
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<ChapterStatus>(
               value: _status,
-              decoration: const InputDecoration(
-                labelText: 'Status',
+              decoration: InputDecoration(
+                labelText: context.l10n.writingProgress,
                 border: OutlineInputBorder(),
               ),
               items: ChapterStatus.values
                   .map(
                     (ChapterStatus status) => DropdownMenuItem<ChapterStatus>(
                       value: status,
-                      child: Text(status.label),
+                      child: Text(_statusLabel(context, status)),
                     ),
                   )
                   .toList(),
@@ -262,29 +264,40 @@ class _ChapterFormPageState extends State<ChapterFormPage> {
               },
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _saving ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            ElevatedButton.icon(
+              onPressed: _saving ? null : _save,
+              icon: const Icon(Icons.add_to_photos_outlined, size: 24),
+              label: Text(
+                _isEditing
+                    ? context.l10n.saveChanges
+                    : context.l10n.addThisChapter,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
                 ),
-                child: Text(
-                  _isEditing ? 'Save changes' : 'Create chapter',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 60),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  static String _statusLabel(BuildContext context, ChapterStatus status) {
+    switch (status) {
+      case ChapterStatus.notStarted:
+        return context.l10n.planned;
+      case ChapterStatus.researching:
+        return context.l10n.collecting;
+      case ChapterStatus.drafting:
+        return context.l10n.drafting;
+      case ChapterStatus.review:
+        return context.l10n.inReview;
+      case ChapterStatus.completed:
+        return context.l10n.completed;
+    }
   }
 }

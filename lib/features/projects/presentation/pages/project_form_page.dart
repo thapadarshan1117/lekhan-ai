@@ -5,6 +5,7 @@ import 'package:lekhan_ai/core/theme/app_color.dart';
 import 'package:lekhan_ai/core/utils/id_generator.dart';
 import 'package:lekhan_ai/features/projects/domain/entities/project.dart';
 import 'package:lekhan_ai/features/projects/domain/usecases/save_project_usecase.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 
 /// Create or edit a project.
 ///
@@ -116,10 +117,10 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
         backgroundColor: AppColors.background,
         elevation: 0,
         title: Text(
-          _isEditing ? 'Edit project' : 'New project',
+          _isEditing ? context.l10n.editBookPage : context.l10n.startNewBook,
           style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
+            fontSize: 21,
+            fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
           ),
         ),
@@ -129,17 +130,26 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: <Widget>[
+            Text(
+              context.l10n.bookFormIntro,
+              style: TextStyle(
+                fontSize: 18,
+                height: 1.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 22),
             TextFormField(
               controller: _nameController,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Project name',
-                hintText: 'e.g. Memoir of Ramesh Thapa',
+              decoration: InputDecoration(
+                labelText: context.l10n.bookTitle,
+                hintText: context.l10n.bookTitleHint,
                 border: OutlineInputBorder(),
               ),
               validator: (String? value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Give the project a name.';
+                  return context.l10n.bookTitleRequired;
                 }
                 return null;
               },
@@ -149,9 +159,9 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
               controller: _descriptionController,
               maxLines: 4,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                hintText: 'What is this book about?',
+              decoration: InputDecoration(
+                labelText: context.l10n.bookAbout,
+                hintText: context.l10n.bookAboutHint,
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
@@ -159,15 +169,15 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _type,
-              decoration: const InputDecoration(
-                labelText: 'Type',
+              decoration: InputDecoration(
+                labelText: context.l10n.bookKind,
                 border: OutlineInputBorder(),
               ),
               items: _types
                   .map(
                     (String type) => DropdownMenuItem<String>(
                       value: type,
-                      child: Text(_capitalise(type)),
+                      child: Text(_bookTypeLabel(context, type)),
                     ),
                   )
                   .toList(),
@@ -178,15 +188,15 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
             const SizedBox(height: 16),
             DropdownButtonFormField<ProjectStatus>(
               value: _status,
-              decoration: const InputDecoration(
-                labelText: 'Status',
+              decoration: InputDecoration(
+                labelText: context.l10n.writingProgress,
                 border: OutlineInputBorder(),
               ),
               items: ProjectStatus.values
                   .map(
                     (ProjectStatus status) => DropdownMenuItem<ProjectStatus>(
                       value: status,
-                      child: Text(status.label),
+                      child: Text(_statusLabel(context, status)),
                     ),
                   )
                   .toList(),
@@ -195,32 +205,31 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
               },
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _saving ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            ElevatedButton.icon(
+              onPressed: _saving ? null : _save,
+              icon: const Icon(Icons.menu_book_rounded, size: 24),
+              label: Text(
+                _isEditing
+                    ? context.l10n.saveChanges
+                    : context.l10n.createMyBook,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
                 ),
-                child: Text(
-                  _isEditing ? 'Save changes' : 'Create project',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 60),
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Saved on this device first. It uploads automatically once a '
-              'connection is available.',
+            Text(
+              context.l10n.bookBackupHelp,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.4,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -228,6 +237,39 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
     );
   }
 
-  static String _capitalise(String value) =>
-      value.isEmpty ? value : value[0].toUpperCase() + value.substring(1);
+  static String _bookTypeLabel(BuildContext context, String value) {
+    switch (value) {
+      case 'biography':
+        return context.l10n.bookTypeBiography;
+      case 'memoir':
+        return context.l10n.bookTypeMemoir;
+      case 'self-help':
+        return context.l10n.bookTypeSelfHelp;
+      case 'fiction':
+        return context.l10n.bookTypeFiction;
+      case 'business':
+        return context.l10n.bookTypeBusiness;
+      case 'academic':
+        return context.l10n.bookTypeAcademic;
+      default:
+        return value;
+    }
+  }
+
+  static String _statusLabel(BuildContext context, ProjectStatus status) {
+    switch (status) {
+      case ProjectStatus.draft:
+        return context.l10n.projectStatusDraft;
+      case ProjectStatus.assigned:
+        return context.l10n.projectStatusAssigned;
+      case ProjectStatus.inProgress:
+        return context.l10n.projectStatusInProgress;
+      case ProjectStatus.onHold:
+        return context.l10n.projectStatusOnHold;
+      case ProjectStatus.completed:
+        return context.l10n.projectStatusCompleted;
+      case ProjectStatus.archived:
+        return context.l10n.projectStatusArchived;
+    }
+  }
 }

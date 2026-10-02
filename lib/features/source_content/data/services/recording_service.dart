@@ -7,8 +7,9 @@ import 'package:lekhan_ai/core/storage/local_file_storage.dart';
 import 'package:lekhan_ai/core/utils/either_utils.dart';
 import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
 import 'package:lekhan_ai/features/source_content/domain/entities/chapter_source.dart';
-import 'package:lekhan_ai/features/source_content/domain/repositories/chapter_source_repository.dart';
+import 'package:lekhan_ai/features/source_content/domain/usecases/add_existing_file_usecase.dart';
 import 'package:lekhan_ai/core/enums/source_type.dart';
+import 'package:intl/intl.dart';
 import 'package:record/record.dart';
 
 /// Voice recording, wired straight into the offline write path.
@@ -121,11 +122,14 @@ class RecordingService {
       return const RecordingOutcome(error: 'That recording was empty.');
     }
 
-    final result = await sl<ChapterSourceRepository>().addExistingFile(
-      localPath: file.path,
-      chapter: chapter,
-      sourceType: SourceType.recording,
-      displayName: 'Voice memo ${DateTime.now().toIso8601String().substring(0, 16)}',
+    final result = await sl<AddExistingFileUsecase>()(
+      AddExistingFileParams(
+        localPath: file.path,
+        chapter: chapter,
+        sourceType: SourceType.recording,
+        displayName:
+            'Voice recording – ${DateFormat('MMM d, yyyy, h:mm a').format(DateTime.now())}',
+      ),
     );
 
     final ChapterSource? source = result.valueOrNull;
