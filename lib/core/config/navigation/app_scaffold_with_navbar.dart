@@ -16,7 +16,7 @@ class _TabMeta {
   });
 }
 
-const _orange = Color(0xFFFF6B00);
+const _orange = Color(0xFF176B45);
 const _inactive = Color(0xFF6B7280);
 
 // 5 branches: index 0..4. The center (index 2) is the elevated "lekhan_ai AI" button.
@@ -38,7 +38,7 @@ class AppScaffoldWithNavbar extends StatelessWidget {
     final currentIndex = appNavigationShell.currentIndex;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE5F0FD),
+      backgroundColor: const Color(0xFFF7FAF8),
       extendBody: true,
       body: appNavigationShell,
       bottomNavigationBar: SafeArea(

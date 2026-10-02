@@ -39,8 +39,12 @@ class LanguageLocalDatasourceImpl implements LanguageLocalDataSource {
       if(data == null) {
         return const Right(Language.english);
       } else{
-        final decodeString = jsonDecode(data);
-        return Right(Language.values.firstWhere((element) => element.name == decodeString));
+        final Object? decoded = jsonDecode(data);
+        final Language selected = Language.values.firstWhere(
+          (Language language) => language.name == decoded,
+          orElse: () => Language.english,
+        );
+        return Right(selected);
       }
     } catch (e) {
       return Left(

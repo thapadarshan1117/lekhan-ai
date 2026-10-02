@@ -5,6 +5,7 @@ import 'package:lekhan_ai/core/enums/source_type.dart';
 import 'package:lekhan_ai/core/enums/upload_status.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
 import 'package:lekhan_ai/features/source_content/domain/entities/chapter_source.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 
 /// One piece of source material, with the upload state made visible.
 ///
@@ -28,7 +29,9 @@ class SourceTile extends StatelessWidget {
     // Only block if it's truly unavailable (failed upload with file deleted, etc).
     if (source.hasFailed && source.errorMessage?.contains('no longer on this device') == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(source.errorMessage ?? 'File is no longer available.')),
+        SnackBar(
+          content: Text(source.errorMessage ?? context.l10n.fileUnavailable),
+        ),
       );
       return;
     }
@@ -57,85 +60,124 @@ class SourceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _openViewer(context),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+    final bool isVoice = source.sourceType == SourceType.audio ||
+        source.sourceType == SourceType.recording;
+    final String displayName = isVoice
+        ? '${context.l10n.voiceRecording} · '
+            '${MaterialLocalizations.of(context).formatShortDate(source.createdAt)}'
+        : source.name;
+    final String typeLabel =
+        isVoice ? context.l10n.voiceRecording : context.l10n.savedFile;
+
+    return Semantics(
+      button: true,
+      label: context.l10n.sourceSemantics(typeLabel, displayName),
+      hint: isVoice
+          ? context.l10n.doubleTapListen
+          : context.l10n.doubleTapOpen,
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: AppColors.lekhan_aiBorder),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _openViewer(context),
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                _TypeIcon(type: source.sourceType),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        source.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    _TypeIcon(type: source.sourceType),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            displayName,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              height: 1.35,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _subtitle(context, source),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              height: 1.4,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          if (isVoice) ...<Widget>[
+                            const SizedBox(height: 6),
+                            Text(
+                              context.l10n.tapToListen,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _subtitle(source),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (onDelete != null)
-                  IconButton(
-                    onPressed: onDelete,
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      size: 20,
-                      color: AppColors.textSecondary,
                     ),
-                    tooltip: 'Remove',
-                  ),
+                    if (onDelete != null)
+                      IconButton(
+                        onPressed: onDelete,
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        tooltip: context.l10n.removeThisItem,
+                        style: IconButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          backgroundColor: AppColors.errorContainer,
+                          minimumSize: const Size(50, 50),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _UploadStateRow(source: source, onRetry: onRetry),
+                if (source.uploadStatus == UploadStatus.uploaded &&
+                    source.processingStatus != ProcessingStatus.notStarted) ...<Widget>[
+                  const SizedBox(height: 8),
+                  _ProcessingStateRow(status: source.processingStatus),
+                ],
               ],
             ),
-            const SizedBox(height: 10),
-            _UploadStateRow(source: source, onRetry: onRetry),
-            if (source.uploadStatus == UploadStatus.uploaded &&
-                source.processingStatus != ProcessingStatus.notStarted) ...<Widget>[
-              const SizedBox(height: 6),
-              _ProcessingStateRow(status: source.processingStatus),
-            ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  static String _subtitle(ChapterSource source) {
+  static String _subtitle(BuildContext context, ChapterSource source) {
     final String size = source.readableSize;
 
     switch (source.sourceType) {
       case SourceType.audio:
       case SourceType.recording:
-        return 'Audio · $size${source.duration == null ? '' : ' · ${source.readableDuration}'}';
+        return context.l10n.voiceDetails(
+          size,
+          source.duration == null ? '' : ' · ${source.readableDuration}',
+        );
       case SourceType.video:
-        return 'Video · $size';
+        return context.l10n.videoDetails(size);
       case SourceType.image:
-        return 'Image · $size';
+        return context.l10n.imageDetails(size);
       case SourceType.document:
-        return 'Document · $size';
+        return context.l10n.documentDetails(size);
     }
   }
 }
@@ -161,14 +203,36 @@ class _ProcessingStateRow extends StatelessWidget {
             : Icons.sync;
     return Row(
       children: <Widget>[
-        Icon(icon, size: 15, color: color),
+        Icon(icon, size: 18, color: color),
         const SizedBox(width: 6),
         Text(
-          'Processing · ${status.label}',
-          style: TextStyle(fontSize: 12, color: color),
+          context.l10n.processingStatus(_processingLabel(context, status)),
+          style: TextStyle(fontSize: 14, color: color),
         ),
       ],
     );
+  }
+
+  static String _processingLabel(
+    BuildContext context,
+    ProcessingStatus status,
+  ) {
+    switch (status) {
+      case ProcessingStatus.notStarted:
+        return context.l10n.processingNotStarted;
+      case ProcessingStatus.queued:
+        return context.l10n.processingQueued;
+      case ProcessingStatus.transcribing:
+        return context.l10n.processingTranscribing;
+      case ProcessingStatus.diarizing:
+        return context.l10n.processingDiarizing;
+      case ProcessingStatus.ingesting:
+        return context.l10n.processingIngesting;
+      case ProcessingStatus.completed:
+        return context.l10n.processingReady;
+      case ProcessingStatus.failed:
+        return context.l10n.processingFailed;
+    }
   }
 }
 
@@ -183,31 +247,31 @@ class _UploadStateRow extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (source.uploadStatus) {
       case UploadStatus.uploaded:
-        return const _StatusLine(
+        return _StatusLine(
           icon: Icons.cloud_done_outlined,
-          color: Color(0xFF1B7F4B),
-          label: 'Uploaded',
+          color: const Color(0xFF1B7F4B),
+          label: context.l10n.backedUp,
         );
 
       case UploadStatus.pending:
-        return const _StatusLine(
+        return _StatusLine(
           icon: Icons.cloud_upload_outlined,
           color: AppColors.secondary,
-          label: 'Waiting to upload',
+          label: context.l10n.savedOnDevice,
         );
 
       case UploadStatus.preparing:
-        return const _StatusLine(
+        return _StatusLine(
           icon: Icons.hourglass_empty,
           color: AppColors.secondary,
-          label: 'Preparing upload',
+          label: context.l10n.gettingReadyBackup,
         );
 
       case UploadStatus.paused:
-        return const _StatusLine(
+        return _StatusLine(
           icon: Icons.pause_circle_outline,
           color: AppColors.secondary,
-          label: 'Paused - waiting for a better connection',
+          label: context.l10n.pausedForConnection,
         );
 
       case UploadStatus.uploading:
@@ -218,14 +282,16 @@ class _UploadStateRow extends StatelessWidget {
               children: <Widget>[
                 const Icon(
                   Icons.cloud_upload_outlined,
-                  size: 15,
+                  size: 18,
                   color: AppColors.primary,
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Uploading ${(source.uploadProgress * 100).round()}%',
+                  context.l10n.backingUpPercent(
+                    (source.uploadProgress * 100).round(),
+                  ),
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: AppColors.primary,
                   ),
@@ -249,26 +315,29 @@ class _UploadStateRow extends StatelessWidget {
       case UploadStatus.failed:
         return Row(
           children: <Widget>[
-            const Icon(Icons.error_outline, size: 15, color: AppColors.error),
+            const Icon(Icons.error_outline, size: 18, color: AppColors.error),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 source.errorMessage?.isNotEmpty == true
                     ? source.errorMessage!
-                    : 'Upload failed',
+                    : context.l10n.backupFailed,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12, color: AppColors.error),
+                style: const TextStyle(fontSize: 14, color: AppColors.error),
               ),
             ),
             if (onRetry != null)
               TextButton(
                 onPressed: onRetry,
                 style: TextButton.styleFrom(
-                  minimumSize: const Size(0, 32),
+                  minimumSize: const Size(0, 48),
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                 ),
-                child: const Text('Retry', style: TextStyle(fontSize: 12)),
+                child: Text(
+                  context.l10n.retry,
+                  style: const TextStyle(fontSize: 14),
+                ),
               ),
           ],
         );
@@ -291,14 +360,16 @@ class _StatusLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: <Widget>[
-        Icon(icon, size: 15, color: color),
+        Icon(icon, size: 18, color: color),
         const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: color,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ),
       ],
@@ -314,13 +385,13 @@ class _TypeIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 38,
-      height: 38,
+      width: 52,
+      height: 52,
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(11),
       ),
-      child: Icon(_iconFor(type), size: 19, color: AppColors.primary),
+      child: Icon(_iconFor(type), size: 27, color: AppColors.primary),
     );
   }
 

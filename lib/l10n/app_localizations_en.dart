@@ -1,421 +1,880 @@
-// ignore: unused_import
-import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
-// ignore_for_file: type=lint
-
-/// The translations for English (`en`).
 class AppLocalizationsEn extends AppLocalizations {
-  AppLocalizationsEn([String locale = 'en']) : super(locale);
+  AppLocalizationsEn() : super('en');
 
   @override
-  String get appTitle => 'Sahara App';
+  String get appTitle => "Lekhan AI";
 
   @override
-  String get searchHint => 'Search Patients, doctors';
+  String get next => "Next";
 
   @override
-  String get loginTitle => 'Login';
+  String get language => "Language";
 
   @override
-  String get welcomeMessage => 'Welcome back';
+  String get changeLanguage => "Change language";
 
   @override
-  String get createProfile => 'Create Profile';
+  String get english => "English";
 
   @override
-  String get fullName => 'Full Name';
+  String get nepali => "नेपाली";
 
   @override
-  String get fullNameHint => 'Enter your full name';
+  String get cancel => "Cancel";
 
   @override
-  String get specification => 'Specification';
+  String get save => "Save";
 
   @override
-  String get specificationHint => 'Select your specification';
+  String get tryAgain => "Try again";
 
   @override
-  String get dateOfBirth => 'Date of Birth';
+  String get edit => "Edit";
 
   @override
-  String get dateOfBirthHint => 'MM/DD/YYYY';
+  String get close => "Close";
 
   @override
-  String get licenceNumber => 'Licence Number';
+  String get offline => "Offline";
 
   @override
-  String get licenceNumberHint => 'Enter your licence number';
+  String get allSaved => "All saved";
 
   @override
-  String get next => 'Next';
+  String get upToDate => "Up to date";
 
   @override
-  String get alreadyHaveAccount => 'Already have an account? ';
+  String get saving => "Saving";
 
   @override
-  String get login => 'Login';
+  String get backupIssue => "Backup issue";
 
   @override
-  String get loginWithPassword => 'Login With Password';
+  String get yourBooks => "Your Books";
 
   @override
-  String get loginWithOTP => 'Login With OTP';
+  String get booksIntroduction => "Turn your memories, experiences, and ideas into a book — one comfortable step at a time.";
 
   @override
-  String get letsGetStarted => 'Let\'s Get Started';
+  String get startNewBook => "Start a New Book";
 
   @override
-  String get createProfileSubtitle => 'Let’s Get You Started on Your Medical Mission';
+  String get voiceComesFirst => "Your voice comes first";
 
   @override
-  String get mobileNumber => 'Mobile Number';
+  String get voiceGuideDetail => "Open a book, choose a chapter, and tap Record voice. Speak naturally — your recording is saved on this device.";
 
   @override
-  String get mobileNumberHint => 'Enter your mobile number';
+  String get openBook => "Open a book";
 
   @override
-  String get sendOtp => 'Send OTP';
+  String get chooseChapter => "Choose a chapter";
 
   @override
-  String get or => 'Or';
+  String get recordVoice => "Record voice";
 
   @override
-  String get dontHaveAccount => 'Don\'t have an account? ';
+  String get deleteBookQuestion => "Delete this book?";
 
   @override
-  String get verifyCode => 'Verify Code';
+  String get deleteBook => "Delete book";
 
   @override
-  String get verifyCodeMessage => 'Enter the verification code sent to your registered mobile number or email address';
+  String get bookDeleted => "Book deleted.";
 
   @override
-  String get didNotReceiveCode => 'Did not receive the code?';
+  String get bookCouldNotBeDeleted => "Book could not be deleted.";
 
   @override
-  String get resend => 'Resend Code';
+  String get searchYourBooks => "Search your books";
 
   @override
-  String get password => 'Password';
+  String get noBooksFound => "No books found";
 
   @override
-  String get confirmPassword => 'Confirm Password';
+  String get changeBookSearch => "Try another category or change your search.";
 
   @override
-  String get signInWithGoogle => 'Sign In with Google';
+  String get booksUnavailable => "Your books are not available yet";
 
   @override
-  String get signInWithApple => 'Sign In with Apple';
+  String get noBooksYet => "No books yet";
 
   @override
-  String get joinOurMedicalNetwork => 'Join Our Medical Network';
+  String get checkConnection => "Check your connection and pull down to try again.";
 
   @override
-  String get joinOurMedicalNetworkSubtitle => 'Join Our Platform & Grow Your Medical Reach';
+  String get emptyBooksHelp => "Tap “Start a New Book” above. We will guide you through the rest, one step at a time.";
 
   @override
-  String get onboardingTitle1 => 'Consult a Doctor Anytime, Anywhere';
+  String get allCategories => "All";
 
   @override
-  String get onboardingDescription1 => 'Get expert medical advice through video calls or online chat with certified doctors.';
+  String get readyFirstChapter => "Ready for your first chapter";
 
   @override
-  String get onboardingTitle2 => 'Nurse & Therapist at Your Doorstep';
+  String get bookActions => "Book actions";
 
   @override
-  String get onboardingDescription2 => 'Look professional nurses and therapists for home visits, ensuring quality care at your convenience.';
+  String get editBook => "Edit book";
 
   @override
-  String get onboardingTitle3 => 'Track Your Health & Medications';
+  String get today => "today";
 
   @override
-  String get onboardingDescription3 => 'Manage prescriptions, set medication reminders, and monitor your health metrics all in one secure place.';
+  String get yesterday => "yesterday";
 
   @override
-  String get welcomeBack => 'Welcome Back';
+  String get categoryBook => "Book";
 
   @override
-  String get welcomeMessagePatient => 'Create your profile and start connecting with patients today';
+  String get categoryMemoir => "Memoir / Autobiography";
 
   @override
-  String get phoneNumber => 'Phone Number';
+  String get categoryTravel => "Tourism & Exploration";
 
   @override
-  String get register => 'Register';
+  String get categoryMilitary => "Military & Geopolitics";
 
   @override
-  String get enterYourPhoneNumber => 'Enter your phone number';
+  String get categoryHeritage => "Non-Fiction / Cultural Heritage";
 
   @override
-  String get enterYourPassword => 'Enter your password';
+  String get categoryPhilosophy => "Philosophy & Mindfulness";
 
   @override
-  String get confirmation => 'Confirmation';
+  String get categoryBusiness => "Business & Leadership";
 
   @override
-  String get confirmationText => 'Enter the verification code sent to your registered mobile number or email address';
+  String get categoryFiction => "Fiction & Stories";
 
   @override
-  String get sendAgain => 'Send Again';
+  String get projectStatusDraft => "Draft";
 
   @override
-  String get patientPersonalInfo => 'Personal Information';
+  String get projectStatusAssigned => "Assigned";
 
   @override
-  String get patientPersonalInfoSubtitle => 'Let’s Get You Started on Your Medical Mission';
+  String get projectStatusInProgress => "In progress";
 
   @override
-  String get firstName => 'First Name';
+  String get projectStatusOnHold => "On hold";
 
   @override
-  String get lastName => 'Last Name';
+  String get projectStatusCompleted => "Completed";
 
   @override
-  String get gender => 'Gender';
+  String get projectStatusArchived => "Archived";
 
   @override
-  String get selectGender => 'Select Gender';
+  String get editBookPage => "Edit Book";
 
   @override
-  String get enterYourLastName => 'Enter your last name';
+  String get bookFormIntro => "Begin with a title. You can change these details later.";
 
   @override
-  String get enterYourFirstName => 'Enter your first name';
+  String get bookTitle => "Book title";
 
   @override
-  String get dob => 'Date of Birth';
+  String get bookTitleHint => "For example: My Life Story";
 
   @override
-  String get iAgree => 'I agree to the';
+  String get bookTitleRequired => "Please give your book a title.";
 
   @override
-  String get terms => 'terms';
+  String get bookAbout => "What is this book about?";
 
   @override
-  String get and => 'and';
+  String get bookAboutHint => "A short description (optional)";
 
   @override
-  String get conditions => 'conditions';
+  String get bookKind => "Kind of book";
 
   @override
-  String get setPassword => 'Set Password';
+  String get writingProgress => "Writing progress";
 
   @override
-  String get setPasswordSubtitle => 'Try changing your password once in a while to keep your security stronger.';
+  String get saveChanges => "Save Changes";
 
   @override
-  String get submit => 'Submit';
+  String get createMyBook => "Create My Book";
 
   @override
-  String get findADoctor => 'Find a Doctor';
+  String get bookBackupHelp => "Saved on this device first. An online copy is made automatically when an internet connection is available.";
 
   @override
-  String get videoConsult => 'Video Consult';
+  String get bookTypeBiography => "Biography";
 
   @override
-  String get labReports => 'Lab Reports';
+  String get bookTypeMemoir => "Memoir";
 
   @override
-  String get medicalRecord => 'Medical Record';
+  String get bookTypeSelfHelp => "Self-help";
 
   @override
-  String get healthPlan => 'Health Plan';
+  String get bookTypeFiction => "Fiction";
 
   @override
-  String get emergencyHelp => 'Emergency Help';
+  String get bookTypeBusiness => "Business";
 
   @override
-  String get keyFeatures => 'Key Features';
+  String get bookTypeAcademic => "Academic";
 
   @override
-  String get specialistCare => 'Specialist Care';
+  String get couldNotOpenBook => "This book could not be opened on this device.";
 
   @override
-  String get topDoctors => 'Top Doctors';
+  String get untitled => "Untitled";
 
   @override
-  String get paymentAndBillings => 'Payment and Billings';
+  String get bookFallback => "Book";
 
   @override
-  String get settings => 'Settings';
+  String get readyShareMemory => "Ready to share a memory?";
 
   @override
-  String get home => 'Home';
+  String get chapterRecordingGuide => "Choose a chapter below and tap the large green “Record voice” button.";
 
   @override
-  String get appointment => 'Appointment';
+  String get yourChapters => "Your Chapters";
 
   @override
-  String get message => 'Messages';
+  String get searchChapters => "Search chapters";
 
   @override
-  String get profile => 'Profile';
+  String get deleteChapterQuestion => "Delete chapter?";
 
   @override
-  String get search => 'Search';
+  String get deleteChapter => "Delete chapter";
 
   @override
-  String get applyAsDoctor => 'Apply as Doctor';
+  String get chapterDeleted => "Chapter deleted.";
 
   @override
-  String get helpAndSupport => 'Help & Support';
+  String get chapterCouldNotBeDeleted => "Chapter could not be deleted.";
 
   @override
-  String get healthCareServices => 'Health Care Services';
+  String get noChaptersYet => "No chapters yet";
 
   @override
-  String get healthAndWellness => 'Health and Wellness';
+  String get noChaptersHelp => "Tap “Add Chapter” above to make a place for your first recording.";
 
   @override
-  String get accountAndSupport => 'Account and Support';
+  String get noChapterMatches => "No chapter matches that search";
 
   @override
-  String get becomeADoctor => 'Become a Doctor';
+  String get addChapter => "Add Chapter";
 
   @override
-  String get past => 'Past';
+  String get planned => "Planned";
 
   @override
-  String get upcoming => 'Upcoming';
+  String get collecting => "Collecting";
 
   @override
-  String get cancelled => 'Cancelled';
+  String get drafting => "Drafting";
 
   @override
-  String get ongoing => 'Ongoing';
+  String get inReview => "In review";
 
   @override
-  String get scheduled => 'Scheduled';
+  String get completed => "Completed";
 
   @override
-  String get rescheduled => 'Rescheduled';
+  String get waitingForBackup => "Waiting for online copy";
 
   @override
-  String get completed => 'Completed';
+  String get noChaptersInBook => "No chapters in this book yet.";
 
   @override
-  String get calls => 'Calls';
+  String get overall => "Overall";
 
   @override
-  String get email => 'Email';
+  String get wordCount => "Word count";
 
   @override
-  String get contactNo => 'Contact No.';
+  String get wordsWrittenSoFar => "Words written so far";
 
   @override
-  String get alternateEmail => 'Alternate Email';
+  String get chapterNotFound => "This chapter could not be found on this device.";
 
   @override
-  String get bloodGroup => 'Blood Group';
+  String get yourChapter => "Your Chapter";
 
   @override
-  String get address => 'Address';
+  String get recordVoiceChapterSemantics => "Record your voice for this chapter";
 
   @override
-  String get editProfile => 'Edit Profile';
+  String get recordVoiceTitle => "Record Voice";
 
   @override
-  String get bookAnAppointment => 'Book an Appointment';
+  String get yourRecordingsAndFiles => "Your recordings and files";
 
   @override
-  String get chooseAPatient => 'Choose a Patient';
+  String get removeSourceQuestion => "Remove this item?";
 
   @override
-  String get doctorBio => 'Doctor Biography';
+  String get onlineCopyAlsoRemoved => " Its online copy will also be removed when you are connected.";
 
   @override
-  String get schedule => 'Schedule';
+  String get keep => "Keep";
 
   @override
-  String get quickSelectionOfTimes => 'Quick Selection of Times';
+  String get remove => "Remove";
 
   @override
-  String get morning => 'Morning';
+  String get updateProgress => "Update progress";
 
   @override
-  String get afternoon => 'Afternoon';
+  String get noRecordingsYet => "No recordings yet";
 
   @override
-  String get evening => 'Evening';
+  String get noRecordingsHelp => "Tap the green “Record Voice” button below. Speak naturally and take your time — recording works without internet.";
 
   @override
-  String get selectPatient => 'Select Patient';
+  String get editChapter => "Edit Chapter";
 
   @override
-  String get ownSelf => 'Own Self';
+  String get addAChapter => "Add a Chapter";
 
   @override
-  String get doctorDetails => 'Doctor Details';
+  String get chapterFormIntro => "Give this part of your story a simple name. You can change it later.";
 
   @override
-  String get appointmentDetails => 'Appointment Details';
+  String get chapterNumber => "Chapter number";
 
   @override
-  String get patientDetails => 'Patient Details';
+  String get chapterNumberError => "Please enter 1 or more.";
 
   @override
-  String get paymentAmount => 'Payment Amount';
+  String get chapterTitleLabel => "Chapter title";
 
   @override
-  String get confirmAppointment => 'Confirm Appointment';
+  String get chapterTitleHint => "For example: My Childhood";
 
   @override
-  String get paymentDetails => 'Payment Details';
+  String get chapterPrompt => "What would you like to talk about?";
 
   @override
-  String get payNow => 'Pay Now';
+  String get chapterPromptHint => "A short note to help you remember (optional)";
 
   @override
-  String get addNewDependent => 'Add New Dependent';
+  String get wordGoal => "Word goal (optional)";
 
   @override
-  String get dependentText => 'You can book this appointment for yourself or someone else (family or friend). Select an option to continue.';
+  String get addThisChapter => "Add This Chapter";
 
   @override
-  String get otherDependent => 'Other Dependents';
+  String get parentBookLoading => "The book is still loading.";
 
   @override
-  String get continuee => 'Continue';
+  String get openChapter => "Open chapter";
 
   @override
-  String get paymentMethod => 'Payment Method';
+  String get voiceOrFilesAdded => "Voice or files added";
 
   @override
-  String get addDependent => 'Add Dependent';
+  String get readyToBegin => "Ready to begin";
 
   @override
-  String get addFamilyMember => 'Add Family Member,Friends and Relatives';
+  String get collectingStories => "Collecting stories";
 
   @override
-  String get uploadPhoto => 'Upload Photo';
+  String get writingInProgress => "Writing in progress";
 
   @override
-  String get personalInformation => 'Personal Information';
+  String get readyToReview => "Ready to review";
 
   @override
-  String get relationshipWithPatient => 'Relationship With Patient';
+  String get noVoiceRecording => "No voice recording yet";
 
   @override
-  String get relationship => 'Relationship';
+  String get fileOpenError => "We could not open that file. Please choose another one.";
 
   @override
-  String get selectRelation => 'Select Relation';
+  String get allowMicrophoneSuffix => "Please allow microphone access and try again.";
 
   @override
-  String get contactInformation => 'Contact Information';
+  String get pleaseTryAgainSuffix => "Please try again.";
 
   @override
-  String get reasonForVisit => 'Reason For Visit';
+  String get couldNotSaveRecording => "We could not save that recording.";
 
   @override
-  String get selectReason => 'Select Reason';
+  String get discardRecordingQuestion => "Discard this recording?";
 
   @override
-  String get save => 'Save';
+  String get unsavedRecordingWarning => "Your current recording has not been saved yet.";
 
   @override
-  String get enterEmail => 'Enter Email';
+  String get keepRecording => "Keep recording";
 
   @override
-  String get speciality => 'Speciality';
+  String get discard => "Discard";
+
+  @override
+  String get recordingYourVoice => "Recording your voice";
+
+  @override
+  String get tellYourStory => "Tell your story";
+
+  @override
+  String get speakNaturally => "Speak naturally and take your time.";
+
+  @override
+  String get voiceIsEasiest => "The easiest way to add memories and ideas is to speak.";
+
+  @override
+  String get startRecordingSemantics => "Start voice recording. Recommended.";
+
+  @override
+  String get startRecordingHint => "Tap once, then begin speaking.";
+
+  @override
+  String get recommended => "RECOMMENDED";
+
+  @override
+  String get openingMicrophone => "Opening microphone…";
+
+  @override
+  String get startVoiceRecording => "Start voice recording";
+
+  @override
+  String get tapThenSpeak => "Tap once, then speak. We will save your recording when you stop.";
+
+  @override
+  String get otherWaysToAdd => "Other ways to add information";
+
+  @override
+  String get chooseFile => "Choose a photo, audio, or document";
+
+  @override
+  String get recordingNow => "RECORDING NOW";
+
+  @override
+  String get speakAtOwnPace => "Speak at your own pace. There is no need to hurry.";
+
+  @override
+  String get savingRecording => "Saving your recording…";
+
+  @override
+  String get stopAndSave => "Stop and save";
+
+  @override
+  String get discardAndRestart => "Discard and start again";
+
+  @override
+  String get openPhoneSettings => "Open phone settings";
+
+  @override
+  String get offlineRecordingSafe => "Saved safely on this device first. You can record without internet.";
+
+  @override
+  String get fileUnavailable => "File is no longer available.";
+
+  @override
+  String get voiceRecording => "Voice recording";
+
+  @override
+  String get savedFile => "Saved file";
+
+  @override
+  String get doubleTapListen => "Double tap to listen.";
+
+  @override
+  String get doubleTapOpen => "Double tap to open.";
+
+  @override
+  String get tapToListen => "Tap to listen";
+
+  @override
+  String get removeThisItem => "Remove this item";
+
+  @override
+  String get video => "Video";
+
+  @override
+  String get image => "Image";
+
+  @override
+  String get document => "Document";
+
+  @override
+  String get processingNotStarted => "Not processed yet";
+
+  @override
+  String get processingQueued => "Waiting";
+
+  @override
+  String get processingTranscribing => "Turning speech into text";
+
+  @override
+  String get processingDiarizing => "Identifying speakers";
+
+  @override
+  String get processingIngesting => "Reading content";
+
+  @override
+  String get processingReady => "Ready";
+
+  @override
+  String get processingFailed => "Processing failed";
+
+  @override
+  String get backedUp => "Backed up";
+
+  @override
+  String get savedOnDevice => "Saved on device";
+
+  @override
+  String get gettingReadyBackup => "Getting ready to back up";
+
+  @override
+  String get pausedForConnection => "Paused — waiting for a better connection";
+
+  @override
+  String get backupFailed => "Backup failed";
+
+  @override
+  String get retry => "Retry";
+
+  @override
+  String get audioNotFound => "Audio file not found";
+
+  @override
+  String get listenToRecording => "Listen to Recording";
+
+  @override
+  String get recordingPosition => "Recording position";
+
+  @override
+  String get backTenSeconds => "Go back 10 seconds";
+
+  @override
+  String get pauseRecording => "Pause recording";
+
+  @override
+  String get playRecording => "Play recording";
+
+  @override
+  String get forwardTenSeconds => "Go forward 10 seconds";
+
+  @override
+  String get playing => "Playing";
+
+  @override
+  String get paused => "Paused";
+
+  @override
+  String get backupStatus => "Backup Status";
+
+  @override
+  String get needsAttention => "Needs attention";
+
+  @override
+  String get tryAllAgain => "Try all again";
+
+  @override
+  String get nothingWaiting => "Nothing is waiting. Everything on this device has an online copy.";
+
+  @override
+  String get everythingSaved => "Everything is saved";
+
+  @override
+  String get noOnlineCopyYet => "No online copy yet.";
+
+  @override
+  String get backupNow => "Back up now";
+
+  @override
+  String get retryFailed => "Try failed items again";
+
+  @override
+  String get taskNeedsHelp => "Needs help";
+
+  @override
+  String get taskWaiting => "Waiting";
+
+  @override
+  String get taskProject => "Book details";
+
+  @override
+  String get taskBook => "Book";
+
+  @override
+  String get taskChapter => "Chapter";
+
+  @override
+  String get taskSource => "Recording or file";
+
+  @override
+  String get taskBackup => "Online copy";
+
+  @override
+  String get taskProgress => "Writing progress";
+
+  @override
+  String get taskCreate => "save";
+
+  @override
+  String get taskUpdate => "update";
+
+  @override
+  String get taskDelete => "remove";
+
+  @override
+  String get taskUpload => "back up";
+
+  @override
+  String get taskDownload => "check for updates";
+
+  @override
+  String get noInternet => "No internet connection. Your work is still safe on this device.";
+
+  @override
+  String get microphonePermissionNeeded => "Microphone access is needed to record. Please allow it and try again.";
+
+  @override
+  String get recordingStartFailed => "Recording could not be started on this device. Please try again.";
+
+  @override
+  String get nothingRecording => "Nothing is being recorded.";
+
+  @override
+  String get emptyRecording => "That recording was empty. Please try again and speak after tapping record.";
+
+  @override
+  String get sourcesReadError => "Recordings and files could not be read from this device.";
+
+  @override
+  String get savedAndBackedUpLater => "Saved on this device. An online copy will be made automatically.";
+
+  @override
+  String get recordingSavedOnDevice => "Recording saved on this device.";
+
+  @override
+  String get sourceRemoved => "Item removed.";
+
+  @override
+  String get backupWillRetry => "We will try the online copy again.";
+
+  @override
+  String countWaiting(int count) {
+    return "${count} waiting";
+  }
+
+  @override
+  String deleteBookBody(String name) {
+    return "“${name}” and all of its chapters, recordings, and files will be removed from this device. This cannot be undone here.";
+  }
+
+  @override
+  String couldNotDeleteBook(String error) {
+    return "Could not delete book: ${error}";
+  }
+
+  @override
+  String bookSemantics(String title) {
+    return "Book: ${title}";
+  }
+
+  @override
+  String byAuthor(String author) {
+    return "By ${author}";
+  }
+
+  @override
+  String chaptersComplete(int completed, int total) {
+    return "${completed} of ${total} chapters complete";
+  }
+
+  @override
+  String wordsOfGoal(String written, String target) {
+    return "${written} of ${target} words";
+  }
+
+  @override
+  String updatedWhen(String when) {
+    return "Updated ${when}";
+  }
+
+  @override
+  String daysAgo(int count) {
+    return "${count} days ago";
+  }
+
+  @override
+  String monthsAgo(int count) {
+    return "${count} months ago";
+  }
+
+  @override
+  String yearsAgo(int count) {
+    return "${count} years ago";
+  }
+
+  @override
+  String chooseMemoryForBook(String title) {
+    return "Choose where your next memory belongs in “${title}”.";
+  }
+
+  @override
+  String chapterTitle(int number) {
+    return "Chapter ${number}";
+  }
+
+  @override
+  String deleteChapterBody(String title) {
+    return "“${title}” and its recordings and files will be removed from this device and its online copy when connected.";
+  }
+
+  @override
+  String couldNotDeleteChapter(String error) {
+    return "Could not delete chapter: ${error}";
+  }
+
+  @override
+  String lastActive(String when) {
+    return "Last active: ${when}";
+  }
+
+  @override
+  String percentDone(int percent) {
+    return "${percent}% Done";
+  }
+
+  @override
+  String wordsCount(String count) {
+    return "${count} words";
+  }
+
+  @override
+  String overallPercent(int percent) {
+    return "Overall: ${percent}%";
+  }
+
+  @override
+  String chapterSemantics(int number, String title) {
+    return "Chapter ${number}, ${title}";
+  }
+
+  @override
+  String draftVersion(int version) {
+    return "Draft ${version}";
+  }
+
+  @override
+  String voiceRecordingCount(int count) {
+    return count == 1 ? '1 voice recording' : '$count voice recordings';
+  }
+
+  @override
+  String savedItemCount(int count) {
+    return count == 1 ? '1 saved item' : '$count saved items';
+  }
+
+  @override
+  String wordsWritten(String count) {
+    return "${count} words written";
+  }
+
+  @override
+  String waitingBackupCount(int count) {
+    return "${count} waiting for online copy";
+  }
+
+  @override
+  String goalWords(String count) {
+    return "Goal: ${count} words";
+  }
+
+  @override
+  String chapterWordsProgress(int current, int target) {
+    return "${current} of ${target} words";
+  }
+
+  @override
+  String removeSourceBody(String name) {
+    return "“${name}” will be deleted from this device.";
+  }
+
+  @override
+  String failureWithSuffix(String failure, String suffix) {
+    return "${failure} ${suffix}";
+  }
+
+  @override
+  String recordingElapsed(String minutes, String seconds) {
+    return "Recording. ${minutes} minutes and ${seconds} seconds elapsed.";
+  }
+
+  @override
+  String sourceSemantics(String type, String name) {
+    return "${type}: ${name}";
+  }
+
+  @override
+  String voiceDetails(String size, String duration) {
+    return "Voice recording · ${size}${duration}";
+  }
+
+  @override
+  String videoDetails(String size) {
+    return "Video · ${size}";
+  }
+
+  @override
+  String imageDetails(String size) {
+    return "Image · ${size}";
+  }
+
+  @override
+  String documentDetails(String size) {
+    return "Document · ${size}";
+  }
+
+  @override
+  String processingStatus(String status) {
+    return "Processing · ${status}";
+  }
+
+  @override
+  String backingUpPercent(int percent) {
+    return "Backing up ${percent}%";
+  }
+
+  @override
+  String audioLoadError(String error) {
+    return "Error loading audio: ${error}";
+  }
+
+  @override
+  String positionOfDuration(String position, String duration) {
+    return "${position} of ${duration}";
+  }
+
+  @override
+  String itemsNeedAttention(int count) {
+    return count == 1 ? '1 item needs attention' : '$count items need attention';
+  }
+
+  @override
+  String itemsWaitingBackup(int count) {
+    return count == 1
+        ? '1 item is waiting for an online copy'
+        : '$count items are waiting for an online copy';
+  }
+
+  @override
+  String lastBackup(String time) {
+    return "Last online copy: ${time}";
+  }
+
+  @override
+  String attemptCount(int count) {
+    return "Tried ${count} times";
+  }
+
 }

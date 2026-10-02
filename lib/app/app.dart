@@ -7,11 +7,12 @@ import 'package:lekhan_ai/main.dart' show scaffoldMessengerKey;
 import 'package:lekhan_ai/core/router/route_manager.dart';
 import 'package:lekhan_ai/core/theme/customs/chip_theme.dart';
 import 'package:lekhan_ai/core/theme/customs/elevated_button_theme.dart';
+import 'package:lekhan_ai/core/theme/app_color.dart';
 import 'package:lekhan_ai/core/theme/customs/outlined_button_theme.dart';
+import 'package:lekhan_ai/core/theme/customs/text_field_theme.dart';
 import 'package:lekhan_ai/core/theme/customs/text_theme.dart';
 import 'package:lekhan_ai/core/utils/snack_bars.dart';
 import 'package:lekhan_ai/core/utils/snackbra_utils.dart';
-import 'package:lekhan_ai/core/utils/text_scaler.dart';
 import 'package:lekhan_ai/core/theme/domain/model/app_theme_config.dart';
 import 'package:lekhan_ai/core/theme/domain/repository/app_theme_repository.dart';
 import 'package:lekhan_ai/core/theme/presentation/cubit/app_theme_cubit.dart';
@@ -25,7 +26,6 @@ import 'package:lekhan_ai/shared/language/presentation/language_bloc/language_bl
 import 'package:lekhan_ai/shared/user/bloc/user_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key, this.initialThemeConfig});
@@ -80,7 +80,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ),
         BlocProvider(create: (context) => sl<AuthBloc>()),
         BlocProvider(create: (context) => sl<AccountBloc>()),
-        BlocProvider(create: (context) => sl<LanguageBloc>()),
+        BlocProvider(
+          create: (context) =>
+              sl<LanguageBloc>()..add(const FetchedSelectedLanguage()),
+        ),
         BlocProvider(create: (context) => sl<NotificationBloc>()),
       ],
       child: BlocBuilder<LanguageBloc, LanguageState>(
@@ -89,29 +92,86 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             builder: (context, themeState) {
               final scheme = themeState.colorScheme;
 
+              final TextTheme accessibleTextTheme =
+                  TTextTheme.textTheme(AppColors.textPrimary);
+
               return MaterialApp.router(
                 scaffoldMessengerKey: scaffoldMessengerKey,
                 routerConfig: RouterManager.router,
+                color: AppColors.primary,
                 theme: ThemeData(
-                  dividerColor: Colors.transparent,
-                  scaffoldBackgroundColor: const Color(0xFFFFFFFF),
-                  outlinedButtonTheme: outlinedButtonTheme(scheme),
-                  elevatedButtonTheme: elevatedButtonTheme(context, scheme),
+                  useMaterial3: true,
                   colorScheme: scheme,
+                  scaffoldBackgroundColor: AppColors.background,
+                  canvasColor: AppColors.background,
+                  dividerColor: AppColors.dividerLight,
+                  visualDensity: VisualDensity.standard,
+                  materialTapTargetSize: MaterialTapTargetSize.padded,
+                  outlinedButtonTheme: outlinedButtonTheme(scheme),
+                  elevatedButtonTheme: elevatedButtonTheme(scheme),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: scheme.primary,
+                      minimumSize: const Size(48, 48),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  iconButtonTheme: IconButtonThemeData(
+                    style: IconButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      minimumSize: const Size(48, 48),
+                      iconSize: 26,
+                    ),
+                  ),
+                  floatingActionButtonTheme: FloatingActionButtonThemeData(
+                    backgroundColor: scheme.primary,
+                    foregroundColor: scheme.onPrimary,
+                    extendedTextStyle: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    extendedPadding:
+                        const EdgeInsets.symmetric(horizontal: 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  appBarTheme: AppBarTheme(
+                    backgroundColor: AppColors.background,
+                    foregroundColor: AppColors.textPrimary,
+                    surfaceTintColor: Colors.transparent,
+                    elevation: 0,
+                    scrolledUnderElevation: 0,
+                    centerTitle: false,
+                    iconTheme: const IconThemeData(
+                      color: AppColors.textPrimary,
+                      size: 28,
+                    ),
+                    titleTextStyle: accessibleTextTheme.titleLarge,
+                  ),
+                  inputDecorationTheme:
+                      TTextFieldTheme.inputDecorationTheme(scheme),
                   chipTheme: CustomChipTheme.lightChipTheme,
-                  textTheme: TTextTheme.textTheme(const Color(0xFF191c1f)),
+                  textTheme: accessibleTextTheme,
+                  snackBarTheme: const SnackBarThemeData(
+                    behavior: SnackBarBehavior.floating,
+                    contentTextStyle: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
                 debugShowCheckedModeBanner: false,
+                onGenerateTitle: (BuildContext context) => context.l10n.appTitle,
                 locale: state.selectedLanguage.value,
-                localizationsDelegates: const [
-                  AppLocalizations.delegate,
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
+                localizationsDelegates:
+                    AppLocalizations.localizationsDelegates,
                 supportedLocales: L10n.all,
                 builder: (context, child) {
-                  final MediaQueryData data = MediaQuery.of(context);
                   SizeConfig.init(context);
                   return BlocListener<AuthBloc, AuthState>(
                     listenWhen: (AuthState previous, AuthState current) =>
@@ -133,24 +193,20 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                       InternetConnectionCubit,
                       InternetConnectionState
                     >(
-                    listener: (context, state) {
-                      if (state.status == ConnectivityStatus.disconnected) {
-                        SnackbarUtils.internetConnectionSnackBar(
-                          context,
-                          'No internet connection!',
-                        );
-                      } else {
-                        SnackBars.hideCurrentSnackBar(context);
-                      }
-                    },
-                    child: MediaQuery(
-                      data: data.copyWith(
-                        textScaler: TextScaler.linear(
-                          ScaleSize.textScaleFactor(context),
-                        ),
-                      ),
+                      listener: (context, state) {
+                        if (state.status == ConnectivityStatus.disconnected) {
+                          SnackbarUtils.internetConnectionSnackBar(
+                            context,
+                            context.l10n.noInternet,
+                          );
+                        } else {
+                          SnackBars.hideCurrentSnackBar(context);
+                        }
+                      },
+                      // Preserve the operating system's text scale. Older users
+                      // who enlarge text in phone settings should see that choice
+                      // reflected throughout the app.
                       child: child!,
-                    ),
                     ),
                   );
                 },

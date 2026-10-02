@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 
 /// The shelf categories the ghost-writing desk sorts its projects into.
 ///
@@ -9,7 +10,7 @@ import 'package:lekhan_ai/core/theme/app_color.dart';
 class ProjectCategory {
   const ProjectCategory._();
 
-  static const String fallbackLabel = 'Manuscript';
+  static const String fallbackLabel = 'Book';
 
   static const Color _memoir = Color(0xFF1B7F4B);
   static const Color _travel = Color(0xFF0F766E);
@@ -58,6 +59,71 @@ class ProjectCategory {
       default:
         final String raw = (type ?? '').trim();
         return raw.isEmpty ? fallbackLabel : _titleCase(raw);
+    }
+  }
+
+  /// Localized display name for a stored project/book type.
+  static String localizedLabel(BuildContext context, String? type) {
+    switch (_key(type)) {
+      case 'memoir':
+      case 'biography':
+      case 'autobiography':
+      case 'life_story':
+        return context.l10n.categoryMemoir;
+      case 'travel':
+      case 'tourism':
+      case 'tourism_exploration':
+        return context.l10n.categoryTravel;
+      case 'military':
+      case 'geopolitics':
+      case 'military_geopolitics':
+        return context.l10n.categoryMilitary;
+      case 'history':
+      case 'culture':
+      case 'cultural_heritage':
+      case 'non_fiction':
+        return context.l10n.categoryHeritage;
+      case 'philosophy':
+      case 'mindfulness':
+      case 'spiritual':
+      case 'philosophy_mindfulness':
+        return context.l10n.categoryPhilosophy;
+      case 'business':
+      case 'leadership':
+      case 'business_leadership':
+        return context.l10n.categoryBusiness;
+      case 'fiction':
+      case 'stories':
+      case 'novel':
+      case 'memoir_stories':
+        return context.l10n.categoryFiction;
+      default:
+        final String raw = (type ?? '').trim();
+        return raw.isEmpty ? context.l10n.categoryBook : _titleCase(raw);
+    }
+  }
+
+  /// Localizes a canonical label returned by [label].
+  static String localizeCanonicalLabel(BuildContext context, String label) {
+    switch (label) {
+      case 'Memoir / Autobiography':
+        return context.l10n.categoryMemoir;
+      case 'Tourism & Exploration':
+        return context.l10n.categoryTravel;
+      case 'Military & Geopolitics':
+        return context.l10n.categoryMilitary;
+      case 'Non-Fiction / Cultural Heritage':
+        return context.l10n.categoryHeritage;
+      case 'Philosophy & Mindfulness':
+        return context.l10n.categoryPhilosophy;
+      case 'Business & Leadership':
+        return context.l10n.categoryBusiness;
+      case 'Fiction & Stories':
+        return context.l10n.categoryFiction;
+      case fallbackLabel:
+        return context.l10n.categoryBook;
+      default:
+        return label;
     }
   }
 
@@ -130,18 +196,19 @@ class ProjectCategoryChip extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: dense ? 6 : 8,
-        vertical: dense ? 2 : 3,
+        horizontal: dense ? 8 : 10,
+        vertical: dense ? 4 : 6,
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Text(
-        ProjectCategory.label(type),
+        ProjectCategory.localizedLabel(context, type),
         style: TextStyle(
-          fontSize: dense ? 10 : 11,
-          fontWeight: FontWeight.w600,
+          fontSize: dense ? 13 : 14,
+          fontWeight: FontWeight.w700,
           color: color,
         ),
       ),

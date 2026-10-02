@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lekhan_ai/core/enums/entity_status.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 
 /// Colour-coded status of a project, book or chapter.
 ///
@@ -15,20 +16,38 @@ class ProjectStatusChip extends StatelessWidget {
     final Color color = _colorFor(status);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Text(
-        status.label,
+        _labelFor(context, status),
         style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
           color: color,
         ),
       ),
     );
+  }
+
+  static String _labelFor(BuildContext context, ProjectStatus status) {
+    switch (status) {
+      case ProjectStatus.draft:
+        return context.l10n.projectStatusDraft;
+      case ProjectStatus.assigned:
+        return context.l10n.projectStatusAssigned;
+      case ProjectStatus.inProgress:
+        return context.l10n.projectStatusInProgress;
+      case ProjectStatus.onHold:
+        return context.l10n.projectStatusOnHold;
+      case ProjectStatus.completed:
+        return context.l10n.projectStatusCompleted;
+      case ProjectStatus.archived:
+        return context.l10n.projectStatusArchived;
+    }
   }
 
   static Color _colorFor(ProjectStatus status) {

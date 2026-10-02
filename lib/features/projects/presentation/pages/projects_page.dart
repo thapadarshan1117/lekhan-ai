@@ -13,7 +13,9 @@ import 'package:lekhan_ai/features/projects/presentation/widgets/project_card.da
 import 'package:lekhan_ai/features/projects/presentation/widgets/project_category.dart';
 import 'package:lekhan_ai/features/projects/presentation/widgets/projects_empty_state.dart';
 import 'package:lekhan_ai/features/sync/presentation/widgets/sync_status_chip.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 import 'package:lekhan_ai/shared/exceptions/http_exception.dart';
+import 'package:lekhan_ai/shared/language/presentation/widgets/language_switcher.dart';
 import 'package:fpdart/fpdart.dart';
 
 /// The projects list - the root of the writing structure
@@ -146,11 +148,13 @@ class _ProjectsViewState extends State<_ProjectsView> {
                                       onNewProject: _newProject,
                                     ),
                                   ),
+                                  const SliverToBoxAdapter(
+                                    child: _VoiceFirstGuide(),
+                                  ),
                                   SliverToBoxAdapter(
                                     child: _ShelfFilterBar(
                                       shelves: _shelves(projects, books),
                                       selected: _shelf,
-                                      query: _query,
                                       onShelf: (String value) => setState(
                                         () => _shelf = value,
                                       ),
@@ -160,19 +164,13 @@ class _ProjectsViewState extends State<_ProjectsView> {
                                     ),
                                   ),
                                   const SliverToBoxAdapter(
-                                    child: SizedBox(height: 16),
+                                    child: SizedBox(height: 18),
                                   ),
                                   if (projects.isEmpty)
-                                    SliverToBoxAdapter(
-                                      child: SizedBox(
-                                        height:
-                                            MediaQuery.of(
-                                              context,
-                                            ).size.height *
-                                            0.6,
-                                        child: ProjectsEmptyState(
-                                          offline: isEmptyBecauseOfError,
-                                        ),
+                                    SliverFillRemaining(
+                                      hasScrollBody: false,
+                                      child: ProjectsEmptyState(
+                                        offline: isEmptyBecauseOfError,
                                       ),
                                     )
                                   else if (visible.isEmpty)
@@ -187,48 +185,44 @@ class _ProjectsViewState extends State<_ProjectsView> {
                                         16,
                                         96,
                                       ),
-                                      sliver: SliverGrid(
-                                        gridDelegate:
-                                            const SliverGridDelegateWithMaxCrossAxisExtent(
-                                              maxCrossAxisExtent: 460,
-                                              mainAxisSpacing: 16,
-                                              crossAxisSpacing: 16,
-                                              mainAxisExtent: 288,
-                                            ),
-                                        itemCount: visible.length,
-                                        itemBuilder:
-                                            (
-                                              BuildContext context,
-                                              int index,
-                                            ) {
-                                              final Project project =
-                                                  visible[index];
-                                              final Book? book =
-                                                  books[project.id];
-                                              return ProjectCard(
-                                                project: project,
-                                                book: book,
-                                                onTap: () =>
-                                                    context.pushNamed(
-                                                      'projectDetail',
-                                                      pathParameters:
-                                                          <String, String>{
-                                                            'id': project.id,
-                                                          },
-                                                      extra: project,
-                                                    ),
-                                                onEdit: () => _editProject(
-                                                  project,
+                                      sliver: SliverList(
+                                        delegate: SliverChildBuilderDelegate(
+                                          (BuildContext context, int index) {
+                                            if (index.isOdd) {
+                                              return const SizedBox(height: 16);
+                                            }
+                                            final Project project =
+                                                visible[index ~/ 2];
+                                            final Book? book = books[project.id];
+                                            return Align(
+                                              alignment: Alignment.topCenter,
+                                              child: ConstrainedBox(
+                                                constraints:
+                                                    const BoxConstraints(
+                                                  maxWidth: 760,
                                                 ),
-                                                onDelete: () =>
-                                                    _deleteProject(project),
-                                                onAiStudio: () => _soon(
-                                                  'AI Studio',
+                                                child: ProjectCard(
+                                                  project: project,
+                                                  book: book,
+                                                  onTap: () =>
+                                                      context.pushNamed(
+                                                    'projectDetail',
+                                                    pathParameters:
+                                                        <String, String>{
+                                                      'id': project.id,
+                                                    },
+                                                    extra: project,
+                                                  ),
+                                                  onEdit: () =>
+                                                      _editProject(project),
+                                                  onDelete: () =>
+                                                      _deleteProject(project),
                                                 ),
-                                                onProof: () =>
-                                                    _soon('Proof desk'),
-                                              );
-                                            },
+                                              ),
+                                            );
+                                          },
+                                          childCount: visible.length * 2 - 1,
+                                        ),
                                       ),
                                     ),
                                 ],
@@ -311,23 +305,19 @@ class _ProjectsViewState extends State<_ProjectsView> {
         await showDialog<bool>(
           context: context,
           builder: (BuildContext dialogContext) => AlertDialog(
-            title: const Text('Delete project?'),
-            content: Text(
-              '“${project.name}” and all of its chapters and source files '
-              'will be removed from this device. The server deletion will sync '
-              'when available.',
-            ),
+            title: Text(dialogContext.l10n.deleteBookQuestion),
+            content: Text(dialogContext.l10n.deleteBookBody(project.name)),
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancel'),
+                child: Text(dialogContext.l10n.cancel),
               ),
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(true),
                 style: TextButton.styleFrom(
                   foregroundColor: Theme.of(dialogContext).colorScheme.error,
                 ),
-                child: const Text('Delete project'),
+                child: Text(dialogContext.l10n.deleteBook),
               ),
             ],
           ),
@@ -339,28 +329,25 @@ class _ProjectsViewState extends State<_ProjectsView> {
     if (!mounted) return;
     result.fold(
       (failure) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete project: ${failure.message}')),
+        SnackBar(
+          content: Text(context.l10n.couldNotDeleteBook(failure.message)),
+        ),
       ),
       (deleted) => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            deleted ? 'Project deleted.' : 'Project could not be deleted.',
+            deleted
+                ? context.l10n.bookDeleted
+                : context.l10n.bookCouldNotBeDeleted,
           ),
         ),
       ),
     );
   }
 
-  void _soon(String what) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text('$what is not wired up in this build yet.')),
-      );
-  }
 }
 
-/// Title, blurb and the shelf's primary action.
+/// A welcoming home screen with one clear way to start a book.
 class _PageHeader extends StatelessWidget {
   const _PageHeader({required this.onNewProject});
 
@@ -369,28 +356,27 @@ class _PageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 6),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final Widget text = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const <Widget>[
+            children: <Widget>[
               Text(
-                'Book & Ghostwriting Projects',
+                context.l10n.yourBooks,
                 style: TextStyle(
-                  fontSize: 24,
-                  height: 1.2,
+                  fontSize: 32,
+                  height: 1.15,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 6),
+              SizedBox(height: 8),
               Text(
-                'Track active biographies, corporate histories, and memoirs '
-                'across oral transcription, ghostwriting, and print press.',
+                context.l10n.booksIntroduction,
                 style: TextStyle(
-                  fontSize: 13,
-                  height: 1.45,
+                  fontSize: 18,
+                  height: 1.5,
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -398,23 +384,30 @@ class _PageHeader extends StatelessWidget {
           );
 
           final Widget button = _PrimaryButton(
-            icon: Icons.add,
-            label: 'New Book Project',
+            icon: Icons.add_rounded,
+            label: context.l10n.startNewBook,
             onTap: onNewProject,
           );
+          const Widget controls = Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: <Widget>[
+              LanguageSwitcher(),
+              SyncStatusChip(),
+            ],
+          );
 
-          if (constraints.maxWidth < 620) {
+          if (constraints.maxWidth < 680) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 text,
-                const SizedBox(height: 14),
-                Row(
-                  children: <Widget>[
-                    const SyncStatusChip(),
-                    const Spacer(),
-                    button,
-                  ],
+                const SizedBox(height: 18),
+                button,
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: controls,
                 ),
               ],
             );
@@ -424,18 +417,184 @@ class _PageHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Expanded(child: text),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: <Widget>[
-                  const SyncStatusChip(),
-                  const SizedBox(height: 12),
-                  button,
-                ],
+              const SizedBox(width: 24),
+              SizedBox(
+                width: 260,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    button,
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: controls,
+                    ),
+                  ],
+                ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Explains the simple voice-first path before users meet any technical terms.
+class _VoiceFirstGuide extends StatelessWidget {
+  const _VoiceFirstGuide();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      label:
+          '${context.l10n.voiceComesFirst}. ${context.l10n.voiceGuideDetail}',
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 18, 16, 4),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[Color(0xFF176B45), Color(0xFF0F5132)],
+          ),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            const Widget icon = DecoratedBox(
+              decoration: BoxDecoration(
+                color: Color(0x33FFFFFF),
+                shape: BoxShape.circle,
+              ),
+              child: SizedBox(
+                width: 72,
+                height: 72,
+                child: Icon(
+                  Icons.mic_rounded,
+                  size: 38,
+                  color: Colors.white,
+                ),
+              ),
+            );
+
+            final bool isNepali =
+                Localizations.localeOf(context).languageCode == 'ne';
+            final Widget words = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  context.l10n.voiceComesFirst,
+                  style: const TextStyle(
+                    fontSize: 23,
+                    height: 1.2,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.l10n.voiceGuideDetail,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    height: 1.45,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    _GuideStep(
+                      number: isNepali ? '१' : '1',
+                      label: context.l10n.openBook,
+                    ),
+                    _GuideStep(
+                      number: isNepali ? '२' : '2',
+                      label: context.l10n.chooseChapter,
+                    ),
+                    _GuideStep(
+                      number: isNepali ? '३' : '3',
+                      label: context.l10n.recordVoice,
+                    ),
+                  ],
+                ),
+              ],
+            );
+
+            if (constraints.maxWidth < 560) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  icon,
+                  const SizedBox(height: 16),
+                  words,
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                icon,
+                const SizedBox(width: 18),
+                Expanded(child: words),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _GuideStep extends StatelessWidget {
+  const _GuideStep({required this.number, required this.label});
+
+  final String number;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Container(
+            width: 24,
+            height: 24,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              number,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -446,14 +605,12 @@ class _ShelfFilterBar extends StatelessWidget {
   const _ShelfFilterBar({
     required this.shelves,
     required this.selected,
-    required this.query,
     required this.onShelf,
     required this.onQuery,
   });
 
   final List<String> shelves;
   final String selected;
-  final String query;
   final ValueChanged<String> onShelf;
   final ValueChanged<String> onQuery;
 
@@ -466,7 +623,9 @@ class _ShelfFilterBar extends StatelessWidget {
       children: <Widget>[
         for (final String shelf in shelves)
           _ShelfChip(
-            label: shelf,
+            label: shelf == _ProjectsViewState._allShelves
+                ? context.l10n.allCategories
+                : ProjectCategory.localizeCanonicalLabel(context, shelf),
             selected: shelf == selected,
             onTap: () => onShelf(shelf),
           ),
@@ -476,41 +635,45 @@ class _ShelfFilterBar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.lekhan_aiBorder),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.lekhan_aiBorder, width: 1.2),
         ),
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             final Widget search = SizedBox(
-              height: 38,
-              width: constraints.maxWidth < 640 ? double.infinity : 260,
+              width: constraints.maxWidth < 640 ? double.infinity : 300,
               child: TextField(
                 onChanged: onQuery,
-                style: const TextStyle(fontSize: 13),
+                style: const TextStyle(fontSize: 16),
                 decoration: InputDecoration(
-                  isDense: true,
-                  hintText: 'Search book title or author...',
+                  hintText: context.l10n.searchYourBooks,
                   hintStyle: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 16,
                     color: AppColors.textDisabled,
                   ),
                   prefixIcon: const Icon(
-                    Icons.search,
-                    size: 18,
-                    color: AppColors.textSecondary,
+                    Icons.search_rounded,
+                    size: 25,
+                    color: AppColors.primary,
                   ),
                   filled: true,
                   fillColor: AppColors.lekhan_aiSurfaceMuted,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
+                    horizontal: 14,
+                    vertical: 16,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColors.lekhan_aiBorder,
+                    ),
                   ),
                 ),
               ),
@@ -520,9 +683,9 @@ class _ShelfFilterBar extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  chips,
-                  const SizedBox(height: 10),
                   search,
+                  const SizedBox(height: 14),
+                  chips,
                 ],
               );
             }
@@ -558,7 +721,8 @@ class _ShelfChip extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        constraints: const BoxConstraints(minHeight: 48),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
         decoration: BoxDecoration(
           color: selected
               ? AppColors.success
@@ -571,8 +735,8 @@ class _ShelfChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
             color: selected ? Colors.white : AppColors.textSecondary,
           ),
         ),
@@ -596,23 +760,23 @@ class _PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: onTap,
-      icon: Icon(icon, size: 17, color: Colors.white),
+      icon: Icon(icon, size: 25, color: Colors.white),
       label: Text(
         label,
         style: const TextStyle(
-          fontSize: 13.5,
-          fontWeight: FontWeight.w700,
+          fontSize: 17,
+          fontWeight: FontWeight.w800,
           color: Colors.white,
         ),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.success,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
-        minimumSize: const Size(0, 44),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        minimumSize: const Size(0, 58),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
         ),
       ),
     );
@@ -624,30 +788,34 @@ class _NoMatches extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 56, horizontal: 32),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 56, horizontal: 32),
       child: Column(
         children: <Widget>[
-          Icon(
+          const Icon(
             Icons.search_off_outlined,
             size: 36,
             color: AppColors.textDisabled,
           ),
           SizedBox(height: 12),
           Text(
-            'Nothing on this shelf',
+                context.l10n.noBooksFound,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
+              fontSize: 21,
+              fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: 8),
           Text(
-            'Try another category, or clear the search.',
+            context.l10n.changeBookSearch,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: TextStyle(
+              fontSize: 16,
+              height: 1.4,
+              color: AppColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -684,7 +852,7 @@ class _ErrorView extends StatelessWidget {
               onPressed: () => context
                   .read<ProjectsBloc>()
                   .add(const ProjectsEvent.started()),
-              child: const Text('Try again'),
+              child: Text(context.l10n.tryAgain),
             ),
           ],
         ),

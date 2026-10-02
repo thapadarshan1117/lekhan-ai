@@ -7,7 +7,7 @@
     <!-- Recording source material in the app. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
-        android:label="lekkhan_ai"
+        android:label="Lekhan AI"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

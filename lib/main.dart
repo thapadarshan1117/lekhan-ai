@@ -19,7 +19,6 @@ import 'package:lekhan_ai/core/utils/observer.dart';
 import 'package:lekhan_ai/core/theme/domain/model/app_theme_config.dart';
 import 'package:lekhan_ai/core/theme/domain/repository/app_theme_repository.dart';
 import 'package:lekhan_ai/firebase_options.dart';
-import 'package:lekhan_ai/shared/language/presentation/language_bloc/language_bloc.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
@@ -59,7 +58,7 @@ Future<void> main() async {
           channelKey: 'generic_channel',
           channelName: 'Generic notifications',
           channelDescription: 'Notification channel for generic messages',
-          defaultColor: const Color(0xFF9D50DD),
+          defaultColor: const Color(0xFF176B45),
           ledColor: Colors.white,
           importance: NotificationImportance.High,
           channelShowBadge: true,
@@ -104,7 +103,13 @@ Future<void> main() async {
       (theme) => cachedTheme = theme,
     );
 
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // Support both portrait and landscape so users can choose the orientation
+    // that gives them the largest, clearest controls.
+    await SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
 
     if (kDebugMode) {
       Bloc.observer = AppBlocObserver();
@@ -116,18 +121,7 @@ Future<void> main() async {
       unawaited(firebaseApi.initNotifications());
     }
 
-    runApp(
-      MultiBlocProvider(
-        providers: [
-          BlocProvider<LanguageBloc>(
-            create: (context) =>
-                sl<LanguageBloc>()..add(FetchedSelectedLanguage()),
-          ),
-
-        ],
-        child: MyApp(initialThemeConfig: cachedTheme),
-      ),
-    );
+    runApp(MyApp(initialThemeConfig: cachedTheme));
   }, (error, stackTrace) {
     debugPrint(
         'runZonedGuarded: Caught error in my root zone. $error $stackTrace');

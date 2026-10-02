@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 OutlinedButtonThemeData outlinedButtonTheme(ColorScheme colorScheme) {
   return OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
-      side: BorderSide(width: 1, color: colorScheme.secondary),
+      side: BorderSide(width: 1.5, color: colorScheme.primary),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(14),
       ),
-      minimumSize: const Size(double.infinity, 50),
-      textStyle: TextStyle(
-        fontWeight: FontWeight.w500,
-        fontSize: 12,
-        fontFamily: GoogleFonts.outfit().fontFamily,
-        
-        color: colorScheme.secondary,
+      minimumSize: const Size(64, 56),
+      textStyle: const TextStyle(
+        fontWeight: FontWeight.w700,
+        fontSize: 16,
       ),
-      foregroundColor: colorScheme.secondary,
+      foregroundColor: colorScheme.primary,
       elevation: 0,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     ),
   );
 }

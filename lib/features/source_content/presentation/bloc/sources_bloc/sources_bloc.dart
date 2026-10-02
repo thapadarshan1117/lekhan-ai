@@ -105,7 +105,7 @@ class SourcesBloc extends Bloc<SourcesEvent, SourcesState> {
           displayName: event.displayName,
         ),
       ),
-      success: 'Saved on this device. It will upload automatically.',
+      success: 'Saved on this device. It will be backed up automatically.',
     );
   }
 
@@ -143,7 +143,7 @@ class SourcesBloc extends Bloc<SourcesEvent, SourcesState> {
     await _mutate(
       emit,
       () => retryUpload(event.sourceId),
-      success: 'Queued for another upload attempt.',
+      success: 'We will try the backup again.',
     );
   }
 

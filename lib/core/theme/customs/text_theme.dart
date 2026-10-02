@@ -1,100 +1,105 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+/// A comfortably sized text scale for an older audience.
+///
+/// Platform fonts are used deliberately: they are familiar, remain available
+/// offline and contain the accessibility refinements supplied by each OS.
+/// System text scaling is preserved in `MyApp`, so users can enlarge these
+/// sizes further from their phone settings.
 class TTextTheme {
   TTextTheme._();
 
   static TextTheme textTheme(Color textColor) {
     return TextTheme(
-      displayLarge: GoogleFonts.outfit(
-        fontSize: 57,
-        fontWeight: FontWeight.w400,
+      displayLarge: TextStyle(
+        fontSize: 54,
+        fontWeight: FontWeight.w700,
         color: textColor,
-        height: 1.13,
+        height: 1.14,
       ),
-      displayMedium: GoogleFonts.outfit(
-        fontSize: 45,
-        fontWeight: FontWeight.w400,
-        color: const Color(0xFF020202),
-        height: 1.15,
+      displayMedium: TextStyle(
+        fontSize: 42,
+        fontWeight: FontWeight.w700,
+        color: textColor,
+        height: 1.16,
       ),
-      displaySmall: GoogleFonts.outfit(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        color: const Color(0xFF020202),
-        height: 1.22,
+      displaySmall: TextStyle(
+        fontSize: 34,
+        fontWeight: FontWeight.w700,
+        color: textColor,
+        height: 1.2,
       ),
-      headlineLarge: GoogleFonts.outfit(
+      headlineLarge: TextStyle(
         fontSize: 32,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w700,
         color: textColor,
-        height: 1.25,
+        height: 1.24,
       ),
-      headlineMedium: GoogleFonts.outfit(
+      headlineMedium: TextStyle(
         fontSize: 28,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w700,
         color: textColor,
         height: 1.28,
       ),
-      headlineSmall: GoogleFonts.outfit(
-        fontSize: 20,
-        fontWeight: FontWeight.w500,
+      headlineSmall: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
         color: textColor,
-        height: 1.33,
+        height: 1.3,
       ),
-      titleLarge: GoogleFonts.outfit(
-        fontSize: 17,
-        fontWeight: FontWeight.w500,
+      titleLarge: TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
         color: textColor,
-        height: 1.5,
+        height: 1.35,
       ),
-      titleMedium: GoogleFonts.outfit(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: textColor,
-        height: 1.5,
-      ),
-      titleSmall: GoogleFonts.outfit(
-        fontSize: 14,
+      titleMedium: TextStyle(
+        fontSize: 18,
         fontWeight: FontWeight.w600,
         color: textColor,
-        height: 1.5,
+        height: 1.4,
       ),
-      bodyLarge: GoogleFonts.outfit(
-        fontSize: 14.5,
+      titleSmall: TextStyle(
+        fontSize: 16,
         fontWeight: FontWeight.w600,
         color: textColor,
-        height: 1.43,
+        height: 1.4,
       ),
-      bodyMedium: GoogleFonts.outfit(
-        fontSize: 14,
+      bodyLarge: TextStyle(
+        fontSize: 18,
         fontWeight: FontWeight.w400,
         color: textColor,
-        height: 1.43,
+        height: 1.5,
       ),
-      bodySmall: GoogleFonts.outfit(
-        fontSize: 12.5,
+      bodyMedium: TextStyle(
+        fontSize: 16,
         fontWeight: FontWeight.w400,
         color: textColor,
-        height: 1.33,
+        height: 1.5,
       ),
-      labelLarge: GoogleFonts.outfit(
+      bodySmall: TextStyle(
         fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: textColor,
-        height: 1.42,
-      ),
-      labelMedium: GoogleFonts.outfit(
-      fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: textColor,
-        height: 1.33,
-      ),
-      labelSmall: GoogleFonts.outfit(
-        fontSize: 10,
         fontWeight: FontWeight.w400,
         color: textColor,
         height: 1.45,
+      ),
+      labelLarge: TextStyle(
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        color: textColor,
+        height: 1.35,
+      ),
+      labelMedium: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: textColor,
+        height: 1.4,
+      ),
+      labelSmall: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: textColor,
+        height: 1.4,
       ),
     );
   }

@@ -14,7 +14,7 @@ class _TabMeta {
   });
 }
 
-const _primary = Color(0xFFFF6B00);
+const _primary = Color(0xFF176B45);
 const _success = Color(0xFF10B981);
 const _inactive = Color(0xFF6B7280);
 
@@ -47,7 +47,7 @@ class AppSpaScaffold extends StatelessWidget {
     final tabLabel = _tabs[currentIndex].label;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: const Color(0xFFF7FAF8),
       appBar: _buildAppBar(context, currentIndex, tabLabel),
       body: shell,
       bottomNavigationBar: _buildBottomNav(context, currentIndex),

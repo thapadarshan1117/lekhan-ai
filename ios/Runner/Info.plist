@@ -4,7 +4,7 @@
 <dict>
 	<!-- Recording source material in the app. -->
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Lekhan AI records interviews and notes as source material for your chapters.</string>
+	<string>Lekhan AI needs the microphone so you can record your memories and stories.</string>
 	<!-- Background sync: the OS decides when, so the app never promises a
 	     fixed interval. The identifiers must match the unique names registered
 	     in BackgroundSyncScheduler. -->
@@ -22,8 +22,13 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ne</string>
+	</array>
 	<key>CFBundleDisplayName</key>
-	<string>Lekkhan Ai</string>
+	<string>Lekhan AI</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -31,7 +36,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>lekkhan_ai</string>
+	<string>Lekhan AI</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

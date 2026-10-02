@@ -19,13 +19,11 @@ class AppThemeState {
   });
 
   factory AppThemeState.initial({AppThemeConfig? config}) {
-    final scheme = config == null
-        ? lightColorScheme
-        : _applyToBaseScheme(lightColorScheme, config);
-
+    // Lekhan AI now has a fixed, accessible green identity. Keep the cached
+    // config as metadata, but never let an older cached colour flash on launch.
     return AppThemeState(
       config: config,
-      colorScheme: scheme,
+      colorScheme: lightColorScheme,
       isRefreshing: false,
       lastError: null,
     );
@@ -85,7 +83,7 @@ class AppThemeCubit extends Cubit<AppThemeState> {
         emit(
           state.copyWith(
             config: theme,
-            colorScheme: _applyToBaseScheme(lightColorScheme, theme),
+            colorScheme: lightColorScheme,
             isRefreshing: false,
           ),
         );
@@ -111,29 +109,11 @@ class AppThemeCubit extends Cubit<AppThemeState> {
         emit(
           state.copyWith(
             config: theme,
-            colorScheme: _applyToBaseScheme(lightColorScheme, theme),
+            colorScheme: lightColorScheme,
             isRefreshing: false,
           ),
         );
       },
     );
   }
-}
-
-ColorScheme _applyToBaseScheme(ColorScheme base, AppThemeConfig config) {
-  final primary = config.primaryColor;
-  final secondary = config.secondaryColor;
-
-  Color onFor(Color bg) {
-    final brightness = ThemeData.estimateBrightnessForColor(bg);
-    return brightness == Brightness.dark ? Colors.white : Colors.black;
-  }
-
-  return base.copyWith(
-    primary: primary,
-    onPrimary: onFor(primary),
-    secondary: secondary,
-    onSecondary: onFor(secondary),
-    inversePrimary: primary,
-  );
 }

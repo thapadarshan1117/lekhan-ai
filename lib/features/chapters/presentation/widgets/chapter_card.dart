@@ -4,12 +4,12 @@ import 'package:lekhan_ai/core/enums/source_type.dart';
 import 'package:lekhan_ai/core/theme/app_color.dart';
 import 'package:lekhan_ai/features/chapters/domain/entities/chapter.dart';
 import 'package:lekhan_ai/features/source_content/domain/entities/chapter_source.dart';
+import 'package:lekhan_ai/l10n/l10n.dart';
 
-/// One chapter in the list, with the three desks a chapter needs: read the
-/// material, edit the draft, or hand it more source files.
+/// One chapter with voice recording presented as its clearest action.
 ///
-/// Chapters that already carry words or sources are tinted, so the eye finds
-/// the empty ones - the ones still waiting on an upload - first.
+/// The layout avoids dense toolbars and fixed-height rows so it remains usable
+/// when the operating system text size is enlarged.
 class ChapterCard extends StatelessWidget {
   const ChapterCard({
     super.key,
@@ -22,86 +22,126 @@ class ChapterCard extends StatelessWidget {
   });
 
   final Chapter chapter;
-
-  /// Opens the chapter's repository (its sources).
   final VoidCallback onTap;
   final VoidCallback? onEditDraft;
+
+  /// Opens the voice-first collection sheet.
   final VoidCallback? onUpload;
-
-  /// Destructive, so it stays behind an icon rather than a labelled button.
   final VoidCallback? onDelete;
-
-  /// Sources already on this device, when the caller has them: used for the
-  /// audio count in the meta line. Omitted by the project list, which only
-  /// knows the chapter.
   final List<ChapterSource> sources;
 
   @override
   Widget build(BuildContext context) {
     final bool hasContent =
-        chapter.currentWords > 0 || chapter.sourceCount > 0;
+        chapter.currentWords > 0 || chapter.sourceCount > 0 || sources.isNotEmpty;
+    final String title = chapter.title.isEmpty
+        ? context.l10n.chapterTitle(chapter.number)
+        : chapter.title;
 
-    return Material(
-      color: hasContent
-          ? AppColors.primary.withValues(alpha: 0.03)
-          : Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: hasContent
-              ? AppColors.primary.withValues(alpha: 0.30)
-              : AppColors.lekhan_aiBorder,
+    return Semantics(
+      container: true,
+      label: context.l10n.chapterSemantics(chapter.number, title),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(
+            color: hasContent
+                ? AppColors.primary.withValues(alpha: 0.42)
+                : AppColors.lekhan_aiBorder,
+            width: hasContent ? 1.5 : 1,
+          ),
         ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _NumberBadge(number: chapter.number, active: hasContent),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _NumberBadge(number: chapter.number, active: hasContent),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 420),
-                          child: Text(
-                            chapter.title.isEmpty
-                                ? 'Chapter ${chapter.number}'
-                                : chapter.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            height: 1.25,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
                           ),
                         ),
+                        const SizedBox(height: 8),
                         _StatusBadge(chapter: chapter),
                       ],
                     ),
-                    const SizedBox(height: 5),
-                    _MetaLine(chapter: chapter, sources: sources),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              _RowActions(
-                onUpload: onUpload,
-                onRepository: onTap,
-                onEditDraft: onEditDraft,
-                onDelete: onDelete,
+              if (chapter.summary.trim().isNotEmpty) ...<Widget>[
+                const SizedBox(height: 12),
+                Text(
+                  chapter.summary.trim(),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    height: 1.45,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 14),
+              _MetaLine(chapter: chapter, sources: sources),
+              const SizedBox(height: 16),
+              if (onUpload != null)
+                ElevatedButton.icon(
+                  key: const ValueKey<String>('record-voice-button'),
+                  onPressed: onUpload,
+                  icon: const Icon(Icons.mic_rounded, size: 27),
+                  label: Text(context.l10n.recordVoice),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 60),
+                  ),
+                ),
+              if (onUpload != null) const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: <Widget>[
+                  OutlinedButton.icon(
+                    onPressed: onTap,
+                    icon: const Icon(Icons.folder_open_outlined, size: 22),
+                    label: Text(context.l10n.openChapter),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 52),
+                    ),
+                  ),
+                  if (onEditDraft != null)
+                    TextButton.icon(
+                      onPressed: onEditDraft,
+                      icon: const Icon(Icons.edit_outlined, size: 22),
+                      label: Text(context.l10n.edit),
+                    ),
+                  if (onDelete != null)
+                    IconButton(
+                      onPressed: onDelete,
+                      tooltip: context.l10n.deleteChapter,
+                      style: IconButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                        backgroundColor: AppColors.errorContainer,
+                        minimumSize: const Size(52, 52),
+                      ),
+                      icon: const Icon(Icons.delete_outline_rounded),
+                    ),
+                ],
               ),
             ],
           ),
@@ -120,20 +160,18 @@ class _NumberBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 30,
-      height: 30,
+      width: 48,
+      height: 48,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: active
-            ? AppColors.primary
-            : AppColors.primary.withValues(alpha: 0.08),
+        color: active ? AppColors.primary : AppColors.primaryContainer,
         shape: BoxShape.circle,
       ),
       child: Text(
         '$number',
         style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
           color: active ? Colors.white : AppColors.primary,
         ),
       ),
@@ -148,29 +186,32 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _StatusLook look = _lookFor(chapter);
+    final _StatusLook look = _lookFor(context, chapter);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: look.color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: look.color.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Container(
-            width: 6,
-            height: 6,
+            width: 8,
+            height: 8,
             decoration: BoxDecoration(color: look.color, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 5),
-          Text(
-            look.label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: look.color,
+          const SizedBox(width: 7),
+          Flexible(
+            child: Text(
+              look.label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: look.color,
+              ),
             ),
           ),
         ],
@@ -178,24 +219,39 @@ class _StatusBadge extends StatelessWidget {
     );
   }
 
-  static _StatusLook _lookFor(Chapter chapter) {
-    final String draft =
-        chapter.draftVersion > 0 ? ' • Draft v1.${chapter.draftVersion}' : '';
+  static _StatusLook _lookFor(BuildContext context, Chapter chapter) {
+    final String draft = chapter.draftVersion > 0
+        ? ' • ${context.l10n.draftVersion(chapter.draftVersion)}'
+        : '';
 
     switch (chapter.status) {
       case ChapterStatus.notStarted:
         return _StatusLook(
-          chapter.sourceCount > 0 ? 'Content available$draft' : 'No content yet',
-          chapter.sourceCount > 0 ? AppColors.info : AppColors.textDisabled,
+          chapter.sourceCount > 0
+              ? '${context.l10n.voiceOrFilesAdded}$draft'
+              : context.l10n.readyToBegin,
+          chapter.sourceCount > 0 ? AppColors.info : AppColors.textSecondary,
         );
       case ChapterStatus.researching:
-        return _StatusLook('Collecting sources$draft', AppColors.info);
+        return _StatusLook(
+          '${context.l10n.collectingStories}$draft',
+          AppColors.info,
+        );
       case ChapterStatus.drafting:
-        return _StatusLook('Drafting$draft', AppColors.secondary);
+        return _StatusLook(
+          '${context.l10n.writingInProgress}$draft',
+          AppColors.secondary,
+        );
       case ChapterStatus.review:
-        return _StatusLook('In review$draft', const Color(0xFF6D28D9));
+        return _StatusLook(
+          '${context.l10n.readyToReview}$draft',
+          const Color(0xFF6B4E16),
+        );
       case ChapterStatus.completed:
-        return _StatusLook('Completed$draft', AppColors.success);
+        return _StatusLook(
+          '${context.l10n.completed}$draft',
+          AppColors.success,
+        );
     }
   }
 }
@@ -215,7 +271,7 @@ class _MetaLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int audioCount = sources
+    final int knownAudioCount = sources
         .where(
           (ChapterSource source) =>
               source.sourceType == SourceType.audio ||
@@ -223,38 +279,43 @@ class _MetaLine extends StatelessWidget {
               source.sourceType == SourceType.recording,
         )
         .length;
+    final int sourceCount = sources.isNotEmpty
+        ? sources.length
+        : chapter.sourceCount;
 
     return Wrap(
-      spacing: 10,
-      runSpacing: 4,
+      spacing: 14,
+      runSpacing: 10,
       children: <Widget>[
-        _MetaBit(
-          icon: Icons.description_outlined,
-          text: '${_grouped(chapter.currentWords)} words',
-        ),
-        if (sources.isNotEmpty) ...<Widget>[
+        if (sourceCount > 0)
           _MetaBit(
-            icon: Icons.graphic_eq,
-            text: audioCount > 0
-                ? '$audioCount audio file${audioCount == 1 ? '' : 's'}'
-                : '${chapter.sourceCount} source files',
-          ),
-        ] else if (chapter.sourceCount > 0) ...<Widget>[
+            icon: knownAudioCount > 0 ? Icons.mic_outlined : Icons.attach_file,
+            text: knownAudioCount > 0
+                ? context.l10n.voiceRecordingCount(knownAudioCount)
+                : context.l10n.savedItemCount(sourceCount),
+          )
+        else
           _MetaBit(
-            icon: Icons.attach_file,
-            text: '${chapter.sourceCount} source files',
+            icon: Icons.mic_none_rounded,
+            text: context.l10n.noVoiceRecording,
           ),
-        ],
+        if (chapter.currentWords > 0)
+          _MetaBit(
+            icon: Icons.description_outlined,
+            text: context.l10n.wordsWritten(_grouped(chapter.currentWords)),
+          ),
         if (chapter.pendingSourceCount > 0)
           _MetaBit(
             icon: Icons.cloud_upload_outlined,
-            text: '${chapter.pendingSourceCount} waiting to upload',
+            text: context.l10n.waitingBackupCount(
+              chapter.pendingSourceCount,
+            ),
             color: AppColors.warning,
           ),
         if (chapter.targetWords > 0)
           _MetaBit(
             icon: Icons.flag_outlined,
-            text: 'Target: ${_grouped(chapter.targetWords)} words',
+            text: context.l10n.goalWords(_grouped(chapter.targetWords)),
           ),
       ],
     );
@@ -285,141 +346,19 @@ class _MetaBit extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Icon(icon, size: 13, color: tint),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(fontSize: 12, color: tint),
+        Icon(icon, size: 19, color: tint),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: tint,
+            ),
+          ),
         ),
       ],
-    );
-  }
-}
-
-class _RowActions extends StatelessWidget {
-  const _RowActions({
-    required this.onUpload,
-    required this.onRepository,
-    required this.onEditDraft,
-    this.onDelete,
-  });
-
-  final VoidCallback? onUpload;
-  final VoidCallback onRepository;
-  final VoidCallback? onEditDraft;
-  final VoidCallback? onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      alignment: WrapAlignment.end,
-      children: <Widget>[
-        if (onEditDraft != null)
-          _RowButton(
-            icon: Icons.edit_note_outlined,
-            label: 'Edit Draft',
-            onTap: onEditDraft,
-          ),
-        _RowButton(
-          icon: Icons.folder_outlined,
-          label: 'Repository',
-          onTap: onRepository,
-        ),
-        if (onUpload != null)
-          _RowButton(
-            icon: Icons.cloud_upload_outlined,
-            label: 'Upload File',
-            filled: true,
-            onTap: onUpload,
-          ),
-        if (onDelete != null)
-          _DeleteButton(onTap: onDelete),
-      ],
-    );
-  }
-}
-
-/// The reference rows have no delete affordance, but the chapter has to stay
-/// removable - so it stays behind an icon that only shows when wired up.
-class _DeleteButton extends StatelessWidget {
-  const _DeleteButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 34,
-      width: 34,
-      child: IconButton(
-        onPressed: onTap,
-        tooltip: 'Delete chapter',
-        padding: EdgeInsets.zero,
-        visualDensity: VisualDensity.compact,
-        icon: const Icon(
-          Icons.delete_outline,
-          size: 16,
-          color: AppColors.error,
-        ),
-        style: IconButton.styleFrom(
-          backgroundColor: AppColors.lekhan_aiSurfaceMuted,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(9),
-            side: const BorderSide(color: AppColors.lekhan_aiBorder),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RowButton extends StatelessWidget {
-  const _RowButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.filled = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-  final bool filled;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color foreground = filled ? Colors.white : AppColors.textSecondary;
-
-    return SizedBox(
-      height: 34,
-      child: ElevatedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 14, color: foreground),
-        label: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: foreground,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: filled
-              ? AppColors.primary
-              : AppColors.lekhan_aiSurfaceMuted,
-          foregroundColor: foreground,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(9),
-            side: filled
-                ? BorderSide.none
-                : const BorderSide(color: AppColors.lekhan_aiBorder),
-          ),
-        ),
-      ),
     );
   }
 }

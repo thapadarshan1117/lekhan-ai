@@ -1,0 +1,593 @@
+{
+  "@@locale": "ne",
+  "appTitle": "लेखन एआई",
+  "next": "अर्को",
+  "language": "भाषा",
+  "changeLanguage": "भाषा बदल्नुहोस्",
+  "english": "अङ्ग्रेजी",
+  "nepali": "नेपाली",
+  "cancel": "रद्द गर्नुहोस्",
+  "save": "सुरक्षित गर्नुहोस्",
+  "tryAgain": "फेरि प्रयास गर्नुहोस्",
+  "edit": "सम्पादन गर्नुहोस्",
+  "close": "बन्द गर्नुहोस्",
+  "offline": "अफलाइन",
+  "allSaved": "सबै सुरक्षित छन्",
+  "upToDate": "सबै अद्यावधिक छ",
+  "saving": "सुरक्षित गर्दै",
+  "backupIssue": "अनलाइन प्रतिलिपिमा समस्या",
+  "yourBooks": "तपाईंका पुस्तकहरू",
+  "booksIntroduction": "आफ्ना सम्झना, अनुभव र विचारलाई सजिलो चरणमा पुस्तक बनाउनुहोस्।",
+  "startNewBook": "नयाँ पुस्तक सुरु गर्नुहोस्",
+  "voiceComesFirst": "तपाईंको आवाज पहिलो हो",
+  "voiceGuideDetail": "पुस्तक खोल्नुहोस्, अध्याय छान्नुहोस् र “आवाज रेकर्ड गर्नुहोस्” थिच्नुहोस्। स्वाभाविक रूपमा बोल्नुहोस् — रेकर्डिङ यही फोनमा सुरक्षित हुन्छ।",
+  "openBook": "पुस्तक खोल्नुहोस्",
+  "chooseChapter": "अध्याय छान्नुहोस्",
+  "recordVoice": "आवाज रेकर्ड गर्नुहोस्",
+  "deleteBookQuestion": "यो पुस्तक मेटाउने?",
+  "deleteBook": "पुस्तक मेटाउनुहोस्",
+  "bookDeleted": "पुस्तक मेटाइयो।",
+  "bookCouldNotBeDeleted": "पुस्तक मेटाउन सकिएन।",
+  "searchYourBooks": "आफ्ना पुस्तक खोज्नुहोस्",
+  "noBooksFound": "कुनै पुस्तक भेटिएन",
+  "changeBookSearch": "अर्को प्रकार छान्नुहोस् वा खोजाइ बदल्नुहोस्।",
+  "booksUnavailable": "तपाईंका पुस्तकहरू अहिले उपलब्ध छैनन्",
+  "noBooksYet": "अहिलेसम्म कुनै पुस्तक छैन",
+  "checkConnection": "इन्टरनेट जाँच्नुहोस् र फेरि प्रयास गर्न तल तान्नुहोस्।",
+  "emptyBooksHelp": "माथिको “नयाँ पुस्तक सुरु गर्नुहोस्” थिच्नुहोस्। बाँकी काम हामी चरणैपिच्छे देखाउँछौँ।",
+  "allCategories": "सबै",
+  "readyFirstChapter": "पहिलो अध्यायका लागि तयार",
+  "bookActions": "पुस्तकका कामहरू",
+  "editBook": "पुस्तक सम्पादन गर्नुहोस्",
+  "today": "आज",
+  "yesterday": "हिजो",
+  "categoryBook": "पुस्तक",
+  "categoryMemoir": "संस्मरण / आत्मकथा",
+  "categoryTravel": "यात्रा र अन्वेषण",
+  "categoryMilitary": "सैनिक र भूराजनीति",
+  "categoryHeritage": "गैर-आख्यान / सांस्कृतिक सम्पदा",
+  "categoryPhilosophy": "दर्शन र सजगता",
+  "categoryBusiness": "व्यवसाय र नेतृत्व",
+  "categoryFiction": "आख्यान र कथाहरू",
+  "projectStatusDraft": "मस्यौदा",
+  "projectStatusAssigned": "तोकिएको",
+  "projectStatusInProgress": "काम हुँदैछ",
+  "projectStatusOnHold": "रोकिएको",
+  "projectStatusCompleted": "पूरा भयो",
+  "projectStatusArchived": "सङ्ग्रहित",
+  "editBookPage": "पुस्तक सम्पादन गर्नुहोस्",
+  "bookFormIntro": "शीर्षकबाट सुरु गर्नुहोस्। यी विवरण पछि बदल्न सकिन्छ।",
+  "bookTitle": "पुस्तकको शीर्षक",
+  "bookTitleHint": "उदाहरण: मेरो जीवन कथा",
+  "bookTitleRequired": "कृपया पुस्तकको शीर्षक लेख्नुहोस्।",
+  "bookAbout": "यो पुस्तक केबारे हो?",
+  "bookAboutHint": "छोटो विवरण (ऐच्छिक)",
+  "bookKind": "पुस्तकको प्रकार",
+  "writingProgress": "लेखनको प्रगति",
+  "saveChanges": "परिवर्तन सुरक्षित गर्नुहोस्",
+  "createMyBook": "मेरो पुस्तक बनाउनुहोस्",
+  "bookBackupHelp": "पहिले यही फोनमा सुरक्षित हुन्छ। इन्टरनेट हुँदा अनलाइन प्रतिलिपि आफैँ बन्छ।",
+  "bookTypeBiography": "जीवनी",
+  "bookTypeMemoir": "संस्मरण",
+  "bookTypeSelfHelp": "आत्म-सहायता",
+  "bookTypeFiction": "आख्यान",
+  "bookTypeBusiness": "व्यवसाय",
+  "bookTypeAcademic": "शैक्षिक",
+  "couldNotOpenBook": "यो फोनमा पुस्तक खोल्न सकिएन।",
+  "untitled": "शीर्षक नभएको",
+  "bookFallback": "पुस्तक",
+  "readyShareMemory": "एउटा सम्झना सुनाउन तयार हुनुहुन्छ?",
+  "chapterRecordingGuide": "तल अध्याय छान्नुहोस् र ठूलो हरियो “आवाज रेकर्ड गर्नुहोस्” बटन थिच्नुहोस्।",
+  "yourChapters": "तपाईंका अध्यायहरू",
+  "searchChapters": "अध्याय खोज्नुहोस्",
+  "deleteChapterQuestion": "अध्याय मेटाउने?",
+  "deleteChapter": "अध्याय मेटाउनुहोस्",
+  "chapterDeleted": "अध्याय मेटाइयो।",
+  "chapterCouldNotBeDeleted": "अध्याय मेटाउन सकिएन।",
+  "noChaptersYet": "अहिलेसम्म कुनै अध्याय छैन",
+  "noChaptersHelp": "पहिलो रेकर्डिङका लागि ठाउँ बनाउन माथिको “अध्याय थप्नुहोस्” थिच्नुहोस्।",
+  "noChapterMatches": "खोजाइसँग मिल्ने अध्याय भेटिएन",
+  "addChapter": "अध्याय थप्नुहोस्",
+  "planned": "योजना गरिएको",
+  "collecting": "कथा सङ्कलन",
+  "drafting": "लेख्दै",
+  "inReview": "समीक्षामा",
+  "completed": "पूरा भयो",
+  "waitingForBackup": "अनलाइन प्रतिलिपिको प्रतीक्षामा",
+  "noChaptersInBook": "यस पुस्तकमा अहिलेसम्म अध्याय छैन।",
+  "overall": "समग्र",
+  "wordCount": "शब्द सङ्ख्या",
+  "wordsWrittenSoFar": "अहिलेसम्म लेखिएका शब्द",
+  "chapterNotFound": "यो फोनमा अध्याय भेटिएन।",
+  "yourChapter": "तपाईंको अध्याय",
+  "recordVoiceChapterSemantics": "यस अध्यायका लागि आफ्नो आवाज रेकर्ड गर्नुहोस्",
+  "recordVoiceTitle": "आवाज रेकर्ड गर्नुहोस्",
+  "yourRecordingsAndFiles": "तपाईंका रेकर्डिङ र फाइलहरू",
+  "removeSourceQuestion": "यो सामग्री हटाउने?",
+  "onlineCopyAlsoRemoved": " इन्टरनेट हुँदा यसको अनलाइन प्रतिलिपि पनि हटाइनेछ।",
+  "keep": "राख्नुहोस्",
+  "remove": "हटाउनुहोस्",
+  "updateProgress": "प्रगति बदल्नुहोस्",
+  "noRecordingsYet": "अहिलेसम्म रेकर्डिङ छैन",
+  "noRecordingsHelp": "तलको हरियो “आवाज रेकर्ड गर्नुहोस्” बटन थिच्नुहोस्। आरामसँग बोल्नुहोस् — इन्टरनेट बिना पनि रेकर्ड हुन्छ।",
+  "editChapter": "अध्याय सम्पादन गर्नुहोस्",
+  "addAChapter": "अध्याय थप्नुहोस्",
+  "chapterFormIntro": "कथाको यस भागलाई सजिलो नाम दिनुहोस्। पछि बदल्न सकिन्छ।",
+  "chapterNumber": "अध्याय नम्बर",
+  "chapterNumberError": "कृपया १ वा बढी लेख्नुहोस्।",
+  "chapterTitleLabel": "अध्यायको शीर्षक",
+  "chapterTitleHint": "उदाहरण: मेरो बाल्यकाल",
+  "chapterPrompt": "तपाईं केबारे बोल्न चाहनुहुन्छ?",
+  "chapterPromptHint": "सम्झन मद्दत गर्ने छोटो टिपोट (ऐच्छिक)",
+  "wordGoal": "शब्द लक्ष्य (ऐच्छिक)",
+  "addThisChapter": "यो अध्याय थप्नुहोस्",
+  "parentBookLoading": "पुस्तक अझै खुल्दैछ।",
+  "openChapter": "अध्याय खोल्नुहोस्",
+  "voiceOrFilesAdded": "आवाज वा फाइल थपिएको",
+  "readyToBegin": "सुरु गर्न तयार",
+  "collectingStories": "कथा सङ्कलन हुँदैछ",
+  "writingInProgress": "लेखन हुँदैछ",
+  "readyToReview": "समीक्षाका लागि तयार",
+  "noVoiceRecording": "अहिलेसम्म आवाज रेकर्ड गरिएको छैन",
+  "fileOpenError": "त्यो फाइल खोल्न सकिएन। कृपया अर्को फाइल छान्नुहोस्।",
+  "allowMicrophoneSuffix": "कृपया माइक्रोफोनको अनुमति दिनुहोस् र फेरि प्रयास गर्नुहोस्।",
+  "pleaseTryAgainSuffix": "कृपया फेरि प्रयास गर्नुहोस्।",
+  "couldNotSaveRecording": "त्यो रेकर्डिङ सुरक्षित गर्न सकिएन।",
+  "discardRecordingQuestion": "यो रेकर्डिङ मेटाउने?",
+  "unsavedRecordingWarning": "हालको रेकर्डिङ अझै सुरक्षित भएको छैन।",
+  "keepRecording": "रेकर्डिङ जारी राख्नुहोस्",
+  "discard": "मेटाउनुहोस्",
+  "recordingYourVoice": "तपाईंको आवाज रेकर्ड हुँदैछ",
+  "tellYourStory": "आफ्नो कथा सुनाउनुहोस्",
+  "speakNaturally": "स्वाभाविक रूपमा र आरामसँग बोल्नुहोस्।",
+  "voiceIsEasiest": "सम्झना र विचार थप्ने सबैभन्दा सजिलो तरिका बोलेर रेकर्ड गर्नु हो।",
+  "startRecordingSemantics": "आवाज रेकर्ड सुरु गर्नुहोस्। सिफारिस गरिएको।",
+  "startRecordingHint": "एक पटक थिचेर बोल्न सुरु गर्नुहोस्।",
+  "recommended": "सिफारिस गरिएको",
+  "openingMicrophone": "माइक्रोफोन खोल्दै…",
+  "startVoiceRecording": "आवाज रेकर्ड सुरु गर्नुहोस्",
+  "tapThenSpeak": "एक पटक थिचेर बोल्नुहोस्। रोक्दा रेकर्डिङ सुरक्षित हुनेछ।",
+  "otherWaysToAdd": "जानकारी थप्ने अन्य तरिका",
+  "chooseFile": "फोटो, अडियो वा कागजात छान्नुहोस्",
+  "recordingNow": "अहिले रेकर्ड हुँदैछ",
+  "speakAtOwnPace": "आफ्नै गतिमा बोल्नुहोस्। हतार गर्नुपर्दैन।",
+  "savingRecording": "रेकर्डिङ सुरक्षित गर्दै…",
+  "stopAndSave": "रोकेर सुरक्षित गर्नुहोस्",
+  "discardAndRestart": "मेटाएर फेरि सुरु गर्नुहोस्",
+  "openPhoneSettings": "फोनको सेटिङ खोल्नुहोस्",
+  "offlineRecordingSafe": "पहिले यही फोनमा सुरक्षित हुन्छ। इन्टरनेट बिना पनि रेकर्ड गर्न सकिन्छ।",
+  "fileUnavailable": "यो फाइल अब उपलब्ध छैन।",
+  "voiceRecording": "आवाज रेकर्डिङ",
+  "savedFile": "सुरक्षित फाइल",
+  "doubleTapListen": "सुन्न दुई पटक थिच्नुहोस्।",
+  "doubleTapOpen": "खोल्न दुई पटक थिच्नुहोस्।",
+  "tapToListen": "सुन्न थिच्नुहोस्",
+  "removeThisItem": "यो सामग्री हटाउनुहोस्",
+  "video": "भिडियो",
+  "image": "तस्बिर",
+  "document": "कागजात",
+  "processingNotStarted": "काम सुरु भएको छैन",
+  "processingQueued": "पर्खिरहेको",
+  "processingTranscribing": "बोलीलाई लेखाइमा बदल्दै",
+  "processingDiarizing": "बोल्ने व्यक्ति छुट्याउँदै",
+  "processingIngesting": "सामग्री पढ्दै",
+  "processingReady": "तयार",
+  "processingFailed": "सामग्री तयार गर्न सकिएन",
+  "backedUp": "अनलाइन प्रतिलिपि बन्यो",
+  "savedOnDevice": "फोनमा सुरक्षित",
+  "gettingReadyBackup": "अनलाइन प्रतिलिपि बनाउन तयार हुँदै",
+  "pausedForConnection": "रोकिएको — राम्रो इन्टरनेटको प्रतीक्षामा",
+  "backupFailed": "अनलाइन प्रतिलिपि बन्न सकेन",
+  "retry": "फेरि प्रयास गर्नुहोस्",
+  "audioNotFound": "अडियो फाइल भेटिएन",
+  "listenToRecording": "रेकर्डिङ सुन्नुहोस्",
+  "recordingPosition": "रेकर्डिङको समय",
+  "backTenSeconds": "१० सेकेन्ड पछाडि जानुहोस्",
+  "pauseRecording": "रेकर्डिङ रोक्नुहोस्",
+  "playRecording": "रेकर्डिङ बजाउनुहोस्",
+  "forwardTenSeconds": "१० सेकेन्ड अगाडि जानुहोस्",
+  "playing": "बजिरहेको छ",
+  "paused": "रोकिएको छ",
+  "backupStatus": "अनलाइन प्रतिलिपिको अवस्था",
+  "needsAttention": "ध्यान दिनुहोस्",
+  "tryAllAgain": "सबै फेरि प्रयास गर्नुहोस्",
+  "nothingWaiting": "केही पनि बाँकी छैन। फोनका सबै सामग्रीको अनलाइन प्रतिलिपि बनेको छ।",
+  "everythingSaved": "सबै सुरक्षित छन्",
+  "noOnlineCopyYet": "अहिलेसम्म अनलाइन प्रतिलिपि छैन।",
+  "backupNow": "अहिले अनलाइन प्रतिलिपि बनाउनुहोस्",
+  "retryFailed": "असफल सामग्री फेरि प्रयास गर्नुहोस्",
+  "taskNeedsHelp": "सहायता चाहिन्छ",
+  "taskWaiting": "पर्खिरहेको",
+  "taskProject": "पुस्तकको विवरण",
+  "taskBook": "पुस्तक",
+  "taskChapter": "अध्याय",
+  "taskSource": "रेकर्डिङ वा फाइल",
+  "taskBackup": "अनलाइन प्रतिलिपि",
+  "taskProgress": "लेखनको प्रगति",
+  "taskCreate": "सुरक्षित गर्नुहोस्",
+  "taskUpdate": "अद्यावधिक गर्नुहोस्",
+  "taskDelete": "हटाउनुहोस्",
+  "taskUpload": "अनलाइन प्रतिलिपि बनाउनुहोस्",
+  "taskDownload": "अद्यावधिक जाँच्नुहोस्",
+  "noInternet": "इन्टरनेट छैन। तपाईंको काम यही फोनमा सुरक्षित छ।",
+  "microphonePermissionNeeded": "रेकर्ड गर्न माइक्रोफोनको अनुमति चाहिन्छ। अनुमति दिएर फेरि प्रयास गर्नुहोस्।",
+  "recordingStartFailed": "यस फोनमा रेकर्डिङ सुरु गर्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
+  "nothingRecording": "अहिले केही पनि रेकर्ड भइरहेको छैन।",
+  "emptyRecording": "त्यो रेकर्डिङ खाली थियो। फेरि प्रयास गरेर रेकर्ड थिचेपछि बोल्नुहोस्।",
+  "sourcesReadError": "यस फोनका रेकर्डिङ र फाइल पढ्न सकिएन।",
+  "savedAndBackedUpLater": "यस फोनमा सुरक्षित भयो। अनलाइन प्रतिलिपि आफैँ बन्नेछ।",
+  "recordingSavedOnDevice": "रेकर्डिङ यस फोनमा सुरक्षित भयो।",
+  "sourceRemoved": "सामग्री हटाइयो।",
+  "backupWillRetry": "अनलाइन प्रतिलिपि फेरि प्रयास गरिनेछ।",
+  "countWaiting": "{count} वटा पर्खिरहेका छन्",
+  "@countWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteBookBody": "“{name}” का सबै अध्याय, रेकर्डिङ र फाइल यस फोनबाट मेटिनेछन्। यसलाई यहाँबाट फिर्ता ल्याउन सकिँदैन।",
+  "@deleteBookBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDeleteBook": "पुस्तक मेटाउन सकिएन: {error}",
+  "@couldNotDeleteBook": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "bookSemantics": "पुस्तक: {title}",
+  "@bookSemantics": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "byAuthor": "लेखक: {author}",
+  "@byAuthor": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "chaptersComplete": "{total} मध्ये {completed} अध्याय पूरा",
+  "@chaptersComplete": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "wordsOfGoal": "{target} मध्ये {written} शब्द",
+  "@wordsOfGoal": {
+    "placeholders": {
+      "written": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "updatedWhen": "{when} अद्यावधिक",
+  "@updatedWhen": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "daysAgo": "{count} दिनअघि",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthsAgo": "{count} महिनाअघि",
+  "@monthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "yearsAgo": "{count} वर्षअघि",
+  "@yearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chooseMemoryForBook": "अर्को सम्झना “{title}” को कुन अध्यायमा राख्ने हो छान्नुहोस्।",
+  "@chooseMemoryForBook": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "chapterTitle": "अध्याय {number}",
+  "@chapterTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteChapterBody": "“{title}” का रेकर्डिङ र फाइल यस फोनबाट मेटिनेछन्। इन्टरनेट हुँदा अनलाइन प्रतिलिपि पनि मेटिनेछ।",
+  "@deleteChapterBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotDeleteChapter": "अध्याय मेटाउन सकिएन: {error}",
+  "@couldNotDeleteChapter": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "lastActive": "पछिल्लो काम: {when}",
+  "@lastActive": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "percentDone": "{percent}% पूरा",
+  "@percentDone": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "wordsCount": "{count} शब्द",
+  "@wordsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "overallPercent": "समग्र: {percent}%",
+  "@overallPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterSemantics": "अध्याय {number}, {title}",
+  "@chapterSemantics": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "draftVersion": "मस्यौदा {version}",
+  "@draftVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceRecordingCount": "{count} आवाज रेकर्डिङ",
+  "@voiceRecordingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedItemCount": "{count} सुरक्षित सामग्री",
+  "@savedItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wordsWritten": "{count} शब्द लेखिएका",
+  "@wordsWritten": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingBackupCount": "{count} अनलाइन प्रतिलिपिको प्रतीक्षामा",
+  "@waitingBackupCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "goalWords": "लक्ष्य: {count} शब्द",
+  "@goalWords": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "chapterWordsProgress": "{target} मध्ये {current} शब्द",
+  "@chapterWordsProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "removeSourceBody": "“{name}” यस फोनबाट मेटाइनेछ।",
+  "@removeSourceBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "failureWithSuffix": "{failure} {suffix}",
+  "@failureWithSuffix": {
+    "placeholders": {
+      "failure": {
+        "type": "String"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "recordingElapsed": "रेकर्ड हुँदैछ। {minutes} मिनेट {seconds} सेकेन्ड भयो।",
+  "@recordingElapsed": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceSemantics": "{type}: {name}",
+  "@sourceSemantics": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceDetails": "आवाज रेकर्डिङ · {size}{duration}",
+  "@voiceDetails": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "videoDetails": "भिडियो · {size}",
+  "@videoDetails": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "imageDetails": "तस्बिर · {size}",
+  "@imageDetails": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "documentDetails": "कागजात · {size}",
+  "@documentDetails": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "processingStatus": "तयार हुँदै · {status}",
+  "@processingStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "backingUpPercent": "अनलाइन प्रतिलिपि बनाउँदै {percent}%",
+  "@backingUpPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "audioLoadError": "अडियो खोल्दा समस्या भयो: {error}",
+  "@audioLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "positionOfDuration": "{duration} मध्ये {position}",
+  "@positionOfDuration": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "itemsNeedAttention": "{count} सामग्रीमा ध्यान दिनुहोस्",
+  "@itemsNeedAttention": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "itemsWaitingBackup": "{count} सामग्री अनलाइन प्रतिलिपिको प्रतीक्षामा छन्",
+  "@itemsWaitingBackup": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lastBackup": "पछिल्लो अनलाइन प्रतिलिपि: {time}",
+  "@lastBackup": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "attemptCount": "{count} पटक प्रयास गरियो",
+  "@attemptCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}
